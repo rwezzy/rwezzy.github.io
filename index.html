@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keith Rwezahura</title>
+  <meta name="description" content="Keith Rwezahura, computer engineering student at NJIT. Robot arms you steer with your eyes, TinyML on microcontrollers, and computer vision research.">
+  <meta property="og:title" content="Keith Rwezahura">
+  <meta property="og:description" content="Robot arms you steer with your eyes, TinyML on microcontrollers, and computer vision research.">
+  <meta property="og:image" content="images/og-cover.jpg">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141414'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23F05A1F' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23F05A1F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip" href="#work">Skip to projects</a>
+
+<header class="nav" id="nav">
+  <a class="nav__mark" href="#top" aria-label="Back to top">KR<span>/</span></a>
+  <nav class="nav__links" aria-label="Sections">
+    <a href="#now">Now</a>
+    <a href="#work">Work</a>
+    <a href="#map">Map</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#beyond">Beyond</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="nav__clocks mono" aria-label="Local times">
+    <span>NWK <b id="clock-nwk">--:--</b></span>
+    <span>KLA <b id="clock-kla">--:--</b></span>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============================================================ HERO -->
+  <section class="hero" aria-label="Introduction">
+    <canvas id="arm" class="hero__canvas" aria-hidden="true"></canvas>
+    <div class="hero__text">
+      <p class="kicker mono">Computer Engineering · NJIT · from Kampala, Uganda</p>
+      <h1 class="hero__name">Keith<br><em>Rwezahura</em></h1>
+      <p class="hero__lede">I build machines that pay attention: a robot arm you steer with your eyes, a gesture ring with a neural net on a coin-sized chip, and models that learn where you are looking from a plain webcam.</p>
+      <p class="hero__hint mono"><span class="blink">▸</span> move your cursor, the arm follows. click to grab a block.</p>
+    </div>
+    <ul class="hero__stats" aria-label="Highlights">
+      <li><b>1st</b><span>Viam robotics hackathon</span></li>
+      <li><b><span data-count="2.48" data-decimals="2">2.48</span>°</b><span>webcam gaze error</span></li>
+      <li><b data-count="163">163</b><span>tests on the robot arm</span></li>
+      <li><b><span data-count="180">180</span>+</b><span>students reached by Urban Arbor</span></li>
+    </ul>
+    <div class="hero__readout mono" id="arm-readout" aria-hidden="true"></div>
+  </section>
+
+  <!-- ============================================================ NOW -->
+  <section class="section now" id="now">
+    <header class="section__head">
+      <p class="fig mono">§1</p>
+      <h2>Right now</h2>
+      <p class="section__note mono">last updated Oct 2026</p>
+    </header>
+    <div class="now__board">
+      <article class="now__item reveal">
+        <span class="pill pill--sw">training</span>
+        <h3>Teaching a webcam to see where you look</h3>
+        <p>Undergraduate research at NJIT. My current model gets within 2.48° of a Tobii eye tracker using nothing but a laptop camera.</p>
+      </article>
+      <article class="now__item reveal">
+        <span class="pill pill--hw">building</span>
+        <h3>OmniRing, a gesture ring</h3>
+        <p>A 4 KB neural net on an nRF52840 that turns wrist motion into commands. Testing how reliable it is before it controls anything real.</p>
+      </article>
+      <article class="now__item reveal">
+        <span class="pill">organizing</span>
+        <h3>Bringing engineers to campus</h3>
+        <p>Outreach Officer for NJIT's IEEE branch: I find the industry speakers for our events.</p>
+      </article>
+      <article class="now__item reveal">
+        <span class="pill">representing</span>
+        <h3>200+ computer engineers</h3>
+        <p>Elected Computer Engineering Senator in NJIT's Student Senate.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================ WORK -->
+  <section class="section work" id="work">
+    <header class="section__head">
+      <p class="fig mono">§2</p>
+      <h2>Selected work</h2>
+      <p class="section__note mono">every demo below runs in your browser · <span class="key key--hw">hardware</span> <span class="key key--sw">software</span></p>
+    </header>
+
+    <!-- EXP 01 · GAZE ARM -->
+    <article class="exp" id="gaze-arm" data-kind="hw">
+      <aside class="exp__meta">
+        <p class="exp__no mono">Exp. 01</p>
+        <h3>Gaze Arm</h3>
+        <p class="exp__badge mono">★ Winner · Viam "Fine Motor Skills" Hackathon</p>
+        <dl class="mono">
+          <dt>when</dt><dd>Sept 2026</dd>
+          <dt>role</dt><dd>concept, gaze + grasp code</dd>
+          <dt>stack</dt><dd>Python · MediaPipe · OpenCV · Viam SDK · RealSense D435 · xArm6</dd>
+        </dl>
+        <p class="exp__links mono"><a href="https://github.com/rwezzy/gaze-arm" target="_blank" rel="noopener">code ↗</a></p>
+      </aside>
+      <div class="exp__body">
+        <p class="exp__lede">A robot arm for people who can't use their hands. Look at an object and the arm picks it up; look at an empty spot and it sets it down. The only extra hardware is the laptop's webcam.</p>
+        <p>I pitched it with people I know in mind: adults and children with cerebral palsy, people with missing limbs, patients confined to bed. Their eyes still work perfectly well, so the eyes should be enough. I built the gaze calibration, the selection logic, and the grasp safety checks; my teammate built the object detector and the depth pipeline.</p>
+        <div class="demo" id="demo-dwell">
+          <div class="demo__bar mono"><span>fig 1.1 · dwell selector</span><span class="demo__hint">rest your cursor on an object</span></div>
+          <canvas aria-label="Interactive demo: hover over an object to fill its selection evidence until it locks"></canvas>
+          <p class="demo__cap mono">This is the selection rule from the real arm: evidence builds while you look, decays with a 1.5 s time constant when you look away, and an object only locks once it has 0.9 s of evidence and twice the runner-up's.</p>
+        </div>
+        <ul class="specs">
+          <li><b data-count="163">163</b><span>passing unit tests</span></li>
+          <li><b>5 mm / 2°</b><span>arm must settle before the jaws close</span></li>
+          <li><b data-count="700">700</b><span>mm reach limit, refused before moving</span></li>
+          <li><b>~30 fps</b><span>gaze display after moving camera fetches off the main loop</span></li>
+        </ul>
+        <div class="gallery">
+          <figure class="slot" data-src="images/gaze-arm-1.jpg" data-caption="The xArm6 at the Viam hackathon"></figure>
+          <figure class="slot" data-video="videos/gaze-arm-demo.mp4" data-caption="Demo run: look, lock, pick, place"></figure>
+        </div>
+      </div>
+    </article>
+
+    <!-- EXP 02 · GAZE ESTIMATION -->
+    <article class="exp" id="gaze-research" data-kind="sw">
+      <aside class="exp__meta">
+        <p class="exp__no mono">Exp. 02</p>
+        <h3>Webcam gaze estimation</h3>
+        <p class="exp__badge mono">Undergraduate research · NJIT</p>
+        <dl class="mono">
+          <dt>when</dt><dd>Mar 2026 – now</dd>
+          <dt>model</dt><dd>26M params · 2× ResNet-18 + transformer</dd>
+          <dt>stack</dt><dd>PyTorch · OpenCV · pandas · FFmpeg</dd>
+        </dl>
+      </aside>
+      <div class="exp__body">
+        <p class="exp__lede">Can an ordinary webcam stand in for a research-grade eye tracker? I train a network that fuses face and eye crops to predict where on the screen you're looking, using recordings that come with Tobii eye-tracker ground truth.</p>
+        <p>The biggest jump didn't come from the model. Auditing the data, I found laptop videos paired with gaze about half a second late, eye-tracker clocks that jumped backwards in seven sessions, and duplicate timestamps on 44% of frames. Fixing the labels alone cut the old model's error by 16% without retraining it.</p>
+        <div class="demo" id="demo-gaze">
+          <div class="demo__bar mono">
+            <span>fig 2.1 · your cursor is the eye tracker</span>
+            <span class="seg" role="group" aria-label="Model version">
+              <button class="on" data-err="2.48">now 2.48°</button><button data-err="3.62">before 3.62°</button>
+            </span>
+          </div>
+          <canvas aria-label="Interactive demo: a predicted gaze point follows your cursor with the model's measured error"></canvas>
+          <p class="demo__cap mono">Simulated: the orange dot is your cursor plus noise sized to the model's measured error on 10 held-out people. The yellow line is the error, like the overlay in my evaluation videos.</p>
+        </div>
+        <ul class="specs">
+          <li><b><span data-count="2.48" data-decimals="2">2.48</span>°</b><span>mean error on held-out people, down from 3.62°</span></li>
+          <li><b><span data-count="65">65</span>%</b><span>below a calibrated eye-landmark baseline</span></li>
+          <li><b data-count="98">98</b><span>k training frames, 30 participants</span></li>
+          <li><b>±10 px</b><span>seed noise floor I measured before trusting any gain</span></li>
+        </ul>
+        <div class="gallery">
+          <figure class="slot" data-src="images/gaze-research-1.jpg" data-caption="Error trace from an evaluation run"></figure>
+        </div>
+      </div>
+    </article>
+
+    <!-- EXP 03 · ZONELOGIC -->
+    <article class="exp" id="zonelogic" data-kind="sw">
+      <aside class="exp__meta">
+        <p class="exp__no mono">Exp. 03</p>
+        <h3>ZoneLogic &amp; Occlusive Logic</h3>
+        <p class="exp__badge mono">VAST Builders Challenge · NYC · solo</p>
+        <dl class="mono">
+          <dt>when</dt><dd>Oct 2026, one day</dd>
+          <dt>size</dt><dd>2.8k lines · 20+ endpoints</dd>
+          <dt>stack</dt><dd>FastAPI · SQLite · JavaScript · pytest</dd>
+        </dl>
+        <p class="exp__links mono"><a href="https://github.com/rwezzy/ZoneLogic-Tripwire" target="_blank" rel="noopener">code ↗</a></p>
+      </aside>
+      <div class="exp__body">
+        <p class="exp__lede">Programmable tripwires for camera footage. Draw a zone on a fixed camera, pick what counts (a car stopped on a crosswalk for 3 seconds, say), and it replays a video archive's detections into timestamped incident tickets with evidence.</p>
+        <p>Occlusive Logic adds Boolean rules across objects: <i>person AND car in the crosswalk</i> means a possible conflict; <i>NOT person</i> only means nobody was detected, which is why every incident goes to a human for review.</p>
+        <div class="demo" id="demo-zone">
+          <div class="demo__bar mono">
+            <span>fig 3.1 · compound rule over the crosswalk</span>
+            <span class="seg" role="group" aria-label="Operator">
+              <button class="on" data-op="AND">A AND B</button><button data-op="OR">A OR B</button><button data-op="XOR">A XOR B</button><button data-op="NOTA">NOT A</button>
+            </span>
+          </div>
+          <canvas aria-label="Animated demo: pedestrians and cars cross a zone and a Boolean rule raises incidents"></canvas>
+          <div class="zone__log mono" aria-live="polite"></div>
+          <p class="demo__cap mono">A = a person's box center is in the zone, B = a car's is. An incident fires only on a false → true change, with a 5 s cooldown, the same as the real engine.</p>
+        </div>
+        <ul class="specs">
+          <li><b data-count="117">117</b><span>passing pytest tests</span></li>
+          <li><b data-count="1">1</b><span>day, built solo</span></li>
+          <li><b>AND/OR/NOT/XOR</b><span>over per-frame detections</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- EXP 04 · OMNIRING -->
+    <article class="exp" id="omniring" data-kind="hw">
+      <aside class="exp__meta">
+        <p class="exp__no mono">Exp. 04</p>
+        <h3>OmniRing</h3>
+        <p class="exp__badge mono">TinyML · in progress</p>
+        <dl class="mono">
+          <dt>when</dt><dd>Aug 2026 – now</dd>
+          <dt>chip</dt><dd>nRF52840 (Cortex-M4F) · LSM6DS3 IMU over I2C</dd>
+          <dt>stack</dt><dd>C++ · Edge Impulse · TensorFlow Lite (int8)</dd>
+        </dl>
+      </aside>
+      <div class="exp__body">
+        <p class="exp__lede">A ring that lets you control a computer without a camera. A 6-axis motion sensor samples your hand 100 times a second, and a tiny classifier on the chip decides which gesture you made.</p>
+        <p>The whole model, quantized to 8-bit integers, is about 4 KB and runs in a 1.4 KB memory arena. It takes 78 frequency features from each one-second window and separates four gestures, plus an anomaly score for motion it has never seen.</p>
+        <div class="demo" id="demo-gesture">
+          <div class="demo__bar mono"><span>fig 4.1 · draw a gesture</span><span class="demo__hint">press and drag: a circle, side to side, up and down, or barely move</span></div>
+          <div class="gesture">
+            <canvas class="gesture__pad" aria-label="Drawing pad: draw a gesture with your mouse or finger"></canvas>
+            <div class="gesture__out mono" aria-live="polite">
+              <div class="bars"></div>
+              <canvas class="gesture__trace" aria-hidden="true"></canvas>
+              <p class="gesture__axes">trace: x, y velocity (the ring uses 3-axis accel + 3-axis gyro)</p>
+            </div>
+          </div>
+          <p class="demo__cap mono">A browser imitation: your mouse stands in for the IMU and simple features stand in for the trained network.</p>
+        </div>
+        <ul class="specs">
+          <li><b>~4 KB</b><span>int8 model</span></li>
+          <li><b>1.4 KB</b><span>tensor arena</span></li>
+          <li><b data-count="100">100</b><span>Hz, 6 axes</span></li>
+          <li><b data-count="4">4</b><span>gestures + anomaly detection</span></li>
+        </ul>
+        <div class="gallery">
+          <figure class="slot" data-src="images/omniring-1.jpg" data-caption="The XIAO nRF52840 Sense prototype"></figure>
+        </div>
+      </div>
+    </article>
+
+    <!-- EXP 05 · OPTICS -->
+    <article class="exp" id="optics" data-kind="sw">
+      <aside class="exp__meta">
+        <p class="exp__no mono">Exp. 05</p>
+        <h3>Optical deconvolution</h3>
+        <p class="exp__badge mono">Undergraduate research · NJIT</p>
+        <dl class="mono">
+          <dt>when</dt><dd>Sept – Dec 2025</dd>
+          <dt>model</dt><dd>54.6k-param complex-valued CNN</dd>
+          <dt>stack</dt><dd>Python · PyTorch · NumPy FFT · MATLAB data</dd>
+        </dl>
+      </aside>
+      <div class="exp__body">
+        <p class="exp__lede">Optical images blur more the deeper you look. I reconstructed complex-valued images from experimental data (1024×1024×128 samples per depth, nine depths from 5 to 45 µm) and trained a CNN that works directly on complex numbers to undo the blur.</p>
+        <p>Along the way: modeling the 455 nm beam's spread with depth (and catching a bracket error in the beam-width formula), building Wiener-filtered targets, and downsampling to 512² so training fit on a laptop GPU with 75% less memory.</p>
+        <div class="demo" id="demo-optics">
+          <div class="demo__bar mono">
+            <span>fig 5.1 · depth vs. blur</span>
+            <span class="seg" role="group" aria-label="View"><button class="on" data-view="raw">measured</button><button data-view="deconv">deconvolved</button></span>
+          </div>
+          <canvas aria-label="Demo: a resolution target blurs as depth increases, and sharpens when deconvolved"></canvas>
+          <label class="slider mono">depth <input type="range" min="5" max="45" step="5" value="25" aria-label="Depth in micrometres"> <output>25 µm</output></label>
+          <p class="demo__cap mono">Illustration: blur grows with the Gaussian beam width w(z); "deconvolved" shows the idea, not my network's actual output.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- SMALLER WORK -->
+    <div class="minis">
+      <article class="mini" id="einstein" data-kind="sw">
+        <p class="exp__no mono">Exp. 06 · Aug 2025</p>
+        <h3>Einstein, a tutoring chatbot</h3>
+        <p>A Gemini 2.5 Flash tutor (LangChain + Gradio) that asks what you already know before it explains anything, then sets you a practice problem.</p>
+        <div class="chat mono" id="demo-chat" aria-label="Example conversation">
+          <p class="chat__u">how do I integrate x·eˣ?</p>
+          <p class="chat__b">Before we start: have you met integration by parts?</p>
+          <p class="chat__u">kind of</p>
+          <p class="chat__b">Then let's build it from the product rule first…</p>
+        </div>
+        <p class="exp__links mono"><a href="https://github.com/rwezzy/Einstein" target="_blank" rel="noopener">code ↗</a></p>
+        <figure class="slot" data-src="images/einstein-ui.png" data-caption="The Gradio chat interface"></figure>
+      </article>
+      <article class="mini" id="robot" data-kind="hw">
+        <p class="exp__no mono">Exp. 07 · Mar 2025</p>
+        <h3>Obstacle-avoiding robot</h3>
+        <p>My first robot, from first-year engineering at NJIT: an Arduino Uno reads an ultrasonic sensor in C++ and steers away from whatever is in front of it.</p>
+        <canvas id="demo-bot" class="bot" aria-label="Animation of a small robot turning away from walls"></canvas>
+        <figure class="slot" data-src="images/obstacle-robot.jpg" data-caption="The Arduino robot"></figure>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================ MAP -->
+  <section class="section map" id="map">
+    <header class="section__head">
+      <p class="fig mono">§3</p>
+      <h2>Where my work sits</h2>
+      <p class="section__note mono">hover a point</p>
+    </header>
+    <div class="map__wrap">
+      <svg id="map-svg" viewBox="0 0 1000 560" role="img" aria-label="Projects plotted from hardware to software and from research to built things"></svg>
+      <div class="map__tip mono" id="map-tip" hidden></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ TIMELINE -->
+  <section class="section timeline" id="timeline">
+    <header class="section__head">
+      <p class="fig mono">§4</p>
+      <h2>How I got here</h2>
+      <p class="section__note mono">Kampala → Newark</p>
+    </header>
+    <div class="tl" id="tl">
+      <ol class="tl__track">
+        <li><time class="mono">Oct 2022</time><h4>Ngamba Island</h4><p>Feeding and building enrichment for rescued chimpanzees.</p></li>
+        <li><time class="mono">2022–23</time><h4>Minister of Sports</h4><p>Student council: organized 26 school-wide events, then mentored my successor.</p></li>
+        <li><time class="mono">Jan 2023</time><h4>Urban Arbor begins</h4><p>A plan to plant 100 trees in Kampala.</p></li>
+        <li><time class="mono">Jun 2023</time><h4>Hospital labs</h4><p>Summer intern at Lancet Laboratories and the Joint Clinical Research Center, running blood tests for malaria and HIV.</p></li>
+        <li><time class="mono">Nov 2023</time><h4>First research</h4><p>An independent lab study of the microbial properties of five common herbs.</p></li>
+        <li><time class="mono">Aug 2024</time><h4>Centurion Media</h4><p>Sales &amp; marketing intern: estimates for design and fabrication jobs.</p></li>
+        <li><time class="mono">2025</time><h4>NJIT</h4><p>Computer Engineering, Albert Dorman Honors College. First robot in March.</p></li>
+        <li><time class="mono">Sept 2025</time><h4>Optics research</h4><p>Complex-valued CNNs for deconvolution.</p></li>
+        <li><time class="mono">Oct 2025</time><h4>Senator</h4><p>Elected to represent Computer Engineering.</p></li>
+        <li><time class="mono">Mar 2026</time><h4>Gaze research</h4><p>Webcam gaze estimation begins.</p></li>
+        <li><time class="mono">Jul 2026</time><h4>Tutor</h4><p>Taught 50 incoming students in the Educational Opportunity Program.</p></li>
+        <li><time class="mono">Sept 2026</time><h4>Viam win · Edge AI cert</h4><p>Gaze Arm wins; Edge Impulse's Edge AI for Microcontrollers specialization.</p></li>
+        <li><time class="mono">Oct 2026</time><h4>VAST NYC</h4><p>ZoneLogic, built solo in a day.</p></li>
+        <li class="tl__next"><time class="mono">next</time><h4>?</h4><p>Looking for internships in robotics, embedded systems, and computer vision.</p></li>
+      </ol>
+    </div>
+    <p class="tl__swipe mono">swipe sideways →</p>
+  </section>
+
+  <!-- ============================================================ BEYOND -->
+  <section class="section beyond" id="beyond">
+    <header class="section__head">
+      <p class="fig mono">§5</p>
+      <h2>Beyond the lab</h2>
+      <p class="section__note mono">drag the photos around</p>
+    </header>
+    <div class="beyond__grid">
+      <article class="arbor">
+        <p class="exp__no mono">Pro Bono Environment · project leader · 2023 – now</p>
+        <h3>Urban Arbor</h3>
+        <p>I started Urban Arbor to plant 100 trees across Kampala. The first went in at the Kampala School for the Physically Handicapped, home to 180+ students, alongside donated sanitary, gardening, and ergonomic equipment, with partners Stanbic Bank, Finca Verde, Roofings Ltd, and Kampala Capital City Authority.</p>
+        <div class="trees" aria-label="20 of 100 trees planted">
+          <div class="trees__row" id="trees"></div>
+          <p class="mono"><b>20</b> / 100 trees planted · <b>860,000 UGX</b> of equipment donated</p>
+        </div>
+      </article>
+      <div class="polaroids" id="polaroids">
+        <figure class="slot polaroid" data-src="images/urban-arbor-1.jpg" data-caption="Planting day at KSPH"></figure>
+        <figure class="slot polaroid" data-src="images/urban-arbor-2.jpg" data-caption="The donated equipment"></figure>
+        <figure class="slot polaroid" data-src="images/ngamba.jpg" data-caption="Ngamba Island"></figure>
+        <figure class="slot polaroid" data-src="images/newark.jpg" data-caption="Newark volunteering"></figure>
+      </div>
+      <ul class="beyond__list">
+        <li><h4>Newark, 2025</h4><p>Taught technology lessons to seniors at a care center, revitalized a community garden, cared for therapy animals with Spring Reins of Hope, and restored habitat at Somerset County Park.</p></li>
+        <li><h4>IEEE · Student Senate · EOP</h4><p>I recruit speakers for IEEE, represent 200+ computer engineers, and taught 50 incoming students Python, math, physics, and English.</p></li>
+        <li><h4>Before engineering</h4><p>Hospital lab internships, an herbal antimicrobial study, and a lot of organizing. The curiosity is the same; the tools changed.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ CONTACT -->
+  <section class="section contact" id="contact">
+    <p class="fig mono">§6</p>
+    <h2 class="contact__big">Got a robot<br>that needs <em>eyes?</em></h2>
+    <p class="contact__sub">I'm looking for internships in robotics, embedded systems, and computer vision.</p>
+    <ul class="contact__links mono">
+      <li><a href="mailto:kdr29@njit.edu">kdr29@njit.edu</a></li>
+      <li><a href="https://github.com/rwezzy" target="_blank" rel="noopener">github.com/rwezzy ↗</a></li>
+      <li><a href="https://www.linkedin.com/in/keith-rwezahura" target="_blank" rel="noopener">linkedin ↗</a></li>
+      <li><a href="resume.pdf" class="resume-link" target="_blank" rel="noopener">résumé (pdf) ↗</a></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="foot mono">
+  <span>© 2026 Keith Rwezahura</span>
+  <span>Newark, NJ · Kampala, UG</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="js/slots.js"></script>
+<script src="js/arm.js"></script>
+<script src="js/demos.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
