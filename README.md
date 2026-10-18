@@ -18,19 +18,17 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 |---|---|
 | `images/gaze-arm-1.jpg` | Gaze Arm: the xArm6 at the hackathon |
 | `videos/gaze-arm-demo.mp4` | Gaze Arm: a short demo clip (muted, loops) |
-| `images/gaze-research-1.jpg` | Gaze research: an error-trace frame or a results plot |
 | `images/omniring-1.jpg` | OmniRing: the XIAO prototype |
 | `images/einstein-ui.png` | Einstein: a screenshot of the Gradio chat |
 | `images/obstacle-robot.jpg` | Obstacle-avoiding robot |
-| `images/urban-arbor-1.jpg` | Polaroid: planting day at KSPH |
-| `images/urban-arbor-2.jpg` | Polaroid: the donated equipment |
-| `images/ngamba.jpg` | Polaroid: Ngamba Island |
-| `images/newark.jpg` | Polaroid: Newark volunteering |
-| `images/og-cover.jpg` | The preview image when someone shares your link (1200×630) |
+| `images/urban-arbor-1.jpg` | Urban Arbor: planting day at KSPH |
+| `images/urban-arbor-2.jpg` | Urban Arbor: the donated equipment |
+| `images/ngamba.jpg` | Service: Ngamba Island |
+| `images/newark.jpg` | Service: Newark volunteering |
 | `resume.pdf` | The résumé button in the contact section |
 
 Tips:
-- Landscape photos at about 1600 px wide look best. Polaroids are cropped square.
+- Landscape photos at about 1600 px wide look best (they're shown 4:3).
 - Keep videos short (10–20 s) and under ~15 MB. To shrink one: `ffmpeg -i in.mp4 -vf scale=1280:-2 -an -crf 28 videos/gaze-arm-demo.mp4`
 - Don't use frames from the Eye of the Typer dataset that show participants' faces; use plots or your own face instead.
 - Want a new photo spot? Copy any `<figure class="slot" data-src="images/NAME.jpg" data-caption="...">` line in `index.html`.
@@ -39,7 +37,11 @@ Tips:
 
 ## Edit the words
 
-Everything is in `index.html`, in the order it appears on the page. Each section starts with a comment like `<!-- EXP 03 · ZONELOGIC -->`. The "Right now" section has a "last updated" date: change it when you change the cards.
+Everything is in `index.html`, in the order it appears on the page. Each section starts with a comment like `<!-- 03 ZONELOGIC -->`. Update the "Right now" strip whenever what you're doing changes.
+
+**Your 10K best:** in `index.html`, find `id="pace" data-pb=""` and put your time in, e.g. `data-pb="43:12"`. The running card then shows your best, your pace, and how many seconds per km you still need to cut. Leave it empty to show only the goal.
+
+The hobby lines (cooking, writing) are short on purpose; rewrite them in your own words.
 
 ## Put it online (free, GitHub Pages)
 
@@ -61,10 +63,14 @@ Everything is in `index.html`, in the order it appears on the page. Each section
 | File | What it does |
 |---|---|
 | `index.html` | All the content |
-| `css/style.css` | The look: graph paper, ink, safety orange (hardware) and cobalt (software) |
-| `js/arm.js` | The hero robot arm (FABRIK inverse kinematics; click to grab) |
-| `js/demos.js` | The figure demos: dwell selector, gaze error, crosswalk logic, gesture classifier, optics blur, obstacle robot |
-| `js/main.js` | Clocks, smooth scrolling, reveals, counters, the project map, timeline, trees, draggable polaroids |
+| `css/style.css` | The look: near-black forest greens with sunlit-leaf green, neon green, turquoise, and teal |
+| `js/hero3d.js` | The hero: a real UFactory xArm6 + gripper in three.js, built from UFactory's meshes and kinematics, reaching for the cursor with CCD inverse kinematics |
+| `js/demos.js` | Live demos: COCO-SSD object detection (Gaze Arm dwell selection, ZoneLogic rules on real footage), MediaPipe face/iris tracking on the visitor's webcam, phone motion sensors for OmniRing, and FFT Wiener deconvolution for the optics project |
+| `js/main.js` | Clocks, smooth scrolling, reveals, counters, the project map, timeline, trees, 10K pace bar |
 | `js/slots.js` | Photo/video spots and their placeholders |
+| `models/xarm6/` | xArm6 and gripper meshes from github.com/xArm-Developer/xarm_ros (BSD-3, license included) |
+| `assets/` | Stock photos (Pexels), the crosswalk clip (Mixkit), the USAF 1951 chart (Wikimedia Commons, CC BY-SA 2.5), and the book cover |
 
-Libraries (loaded from CDNs, all free): GSAP + ScrollTrigger for scroll animation, Lenis for smooth scrolling. Fonts: Instrument Serif, Bricolage Grotesque, and JetBrains Mono from Google Fonts. If a CDN is down, the page still works without the animations.
+Libraries (loaded from CDNs, all free): three.js, TensorFlow.js + COCO-SSD, MediaPipe Tasks Vision, GSAP + ScrollTrigger, Lenis, qrcode-generator. Fonts: Archivo, Geist, and Geist Mono from Google Fonts. The webcam demo only starts when a visitor clicks the button, and nothing leaves their browser.
+
+Note: the OmniRing demo uses phone motion sensors, which browsers only allow on HTTPS, so test it on the live GitHub Pages site, not on localhost from your phone.

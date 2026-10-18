@@ -1,416 +1,462 @@
-/* Interactive figures for each project. Each runs only while on screen. */
+/* Live demos: a real object detector, real face tracking, real motion sensors,
+ * and real FFT deconvolution, all in the browser. Each starts when scrolled to. */
 (function () {
-  const C = { ink: '#151515', ink2: '#4a4843', ink3: '#8b877c', paper: '#fbfaf5', rule: 'rgba(21,21,21,.10)', hw: '#f05a1f', sw: '#2a4bd7', hl: '#f2c94c', green: '#2f7d3b' };
-  const MONO = '"JetBrains Mono", ui-monospace, monospace';
+  const C = { neon: '#3cff8f', leaf: '#b6f05a', turq: '#2de2d0', teal: '#14b8a6', tealD: '#0d5c55', text: '#e4f1ea', text2: '#a6bfb4', text3: '#6f8a80', bg: '#050a08' };
+  const MONO = '"Geist Mono", ui-monospace, monospace';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Canvas helper: DPR sizing, pointer tracking, visibility-gated animation loop. */
-  function stage(canvas, draw) {
-    const ctx = canvas.getContext('2d');
-    const s = { ctx, w: 0, h: 0, p: { x: 0, y: 0, in: false, down: false, t: 0 }, visible: false, t: 0 };
-    function size() {
-      const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
-      s.w = r.width; s.h = r.height;
-      canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (s.onresize) s.onresize();
-    }
-    const pos = e => { const r = canvas.getBoundingClientRect(); s.p.x = e.clientX - r.left; s.p.y = e.clientY - r.top; s.p.t = performance.now(); };
-    canvas.addEventListener('pointermove', e => { pos(e); s.p.in = true; });
-    canvas.addEventListener('pointerenter', e => { pos(e); s.p.in = true; });
-    canvas.addEventListener('pointerleave', () => { s.p.in = false; s.p.down = false; });
-    canvas.addEventListener('pointerdown', e => { pos(e); s.p.in = true; s.p.down = true; if (s.ondown) s.ondown(e); });
-    addEventListener('pointerup', e => { if (s.p.down) { s.p.down = false; if (s.onup) s.onup(e); } });
-    new IntersectionObserver(es => { s.visible = es[0].isIntersecting; }, { rootMargin: '80px' }).observe(canvas);
+  const onVisible = (el, fn, margin = '200px') => {
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: margin });
+    io.observe(el);
+  };
+  const watchVisible = (el, cb) => new IntersectionObserver(es => cb(es[0].isIntersecting), { rootMargin: '60px' }).observe(el);
+  function fit(canvas) {
+    const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w: r.width, h: r.height };
+  }
+  function label(ctx, s, x, y, bg, fg = C.bg) {
+    ctx.font = `500 11px ${MONO}`;
+    const w = ctx.measureText(s).width + 10;
+    ctx.fillStyle = bg; ctx.fillRect(x, y - 16, w, 16);
+    ctx.fillStyle = fg; ctx.fillText(s, x + 5, y - 4);
+  }
+  function script(src) {
+    return new Promise((res, rej) => {
+      if (document.querySelector(`script[src="${src}"]`)) return res();
+      const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s);
+    });
+  }
+  let detector = null;
+  function loadDetector() {
+    if (!detector) detector = script('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js')
+      .then(() => script('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js'))
+      .then(() => window.cocoSsd.load({ base: 'lite_mobilenet_v2' }));
+    return detector;
+  }
+  function seg(root, attr, cb) {
+    const btns = root.querySelectorAll('.seg button');
+    btns.forEach(b => b.addEventListener('click', () => { btns.forEach(x => x.classList.toggle('on', x === b)); cb(b.dataset[attr]); }));
+  }
+
+  /* ================================================ fig 1 · dwell selector */
+  (function dwell() {
+    const root = document.getElementById('demo-dwell'); if (!root) return;
+    const img = root.querySelector('img'), canvas = root.querySelector('canvas'), state = root.querySelector('[data-state]');
+    // gaze_lock.py: SELECT 0.9 s, TAU 1.5 s, DOMINANCE 2, cap 1.5×SELECT, soft score exp(-(d/σ)^2)
+    const SELECT = 0.9, TAU = 1.5, DOM = 2, CAP = SELECT * 1.5;
+    let objs = [], gaze = null, gazeAt = 0, locked = null, lockT = 0, running = false, visible = false, auto = 0;
+    canvas.addEventListener('pointermove', e => { const r = canvas.getBoundingClientRect(); gaze = { x: e.clientX - r.left, y: e.clientY - r.top }; gazeAt = performance.now(); });
+    canvas.addEventListener('pointerdown', e => { const r = canvas.getBoundingClientRect(); gaze = { x: e.clientX - r.left, y: e.clientY - r.top }; gazeAt = performance.now(); });
+    watchVisible(root, v => { visible = v; });
+
+    onVisible(root, async () => {
+      try {
+        if (!img.complete) await new Promise(r => img.onload = r);
+        state.textContent = 'loading detector…';
+        const model = await loadDetector();
+        // detect on a detached copy so boxes come back in natural-resolution pixels
+        const full = new Image(); full.src = img.currentSrc || img.src; await full.decode();
+        const preds = await model.detect(full, 20, 0.3);
+        // like the real arm: only tabletop objects, and ignore boxes that swallow the whole scene
+        const TABLE = new Set(['cup', 'bottle', 'wine glass', 'bowl', 'laptop', 'cell phone', 'book', 'keyboard', 'mouse', 'remote', 'scissors', 'vase', 'clock', 'potted plant', 'teddy bear', 'banana', 'apple', 'orange']);
+        objs = preds.filter(p => TABLE.has(p.class) && p.bbox[2] * p.bbox[3] < full.naturalWidth * full.naturalHeight * 0.5)
+          .map(p => ({ cls: p.class, score: p.score, bb: p.bbox, ev: 0 }));
+        state.textContent = `${objs.length} objects · COCO-SSD`;
+        running = true; requestAnimationFrame(loop);
+      } catch (err) { state.textContent = 'detector failed to load'; }
+    });
+
     let last = performance.now();
     function loop(now) {
       requestAnimationFrame(loop);
-      const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      if (!s.visible) return;
-      s.t += dt;
-      draw(s, dt);
-    }
-    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(size, 100); });
-    size();
-    requestAnimationFrame(loop);
-    return s;
-  }
-
-  function seg(root, attr, cb) {
-    const btns = root.querySelectorAll('.seg button');
-    btns.forEach(b => b.addEventListener('click', () => {
-      btns.forEach(x => x.classList.toggle('on', x === b));
-      cb(b.dataset[attr]);
-    }));
-  }
-
-  function text(ctx, s, x, y, color = C.ink, size = 11, align = 'left') {
-    ctx.fillStyle = color; ctx.font = `${size}px ${MONO}`; ctx.textAlign = align; ctx.fillText(s, x, y);
-  }
-
-  /* ----------------------------------------------------- 1.1 dwell selector */
-  (function dwell() {
-    const root = document.getElementById('demo-dwell'); if (!root) return;
-    // Same rule as arm-control-grid/gaze_lock.py, scaled to a small canvas.
-    const SELECT = 0.9, TAU = 1.5, DOM = 2.0, SIGMA = 46, CAP = SELECT * 1.5;
-    const items = [
-      { label: 'cup', color: C.sw, conf: 0.91 }, { label: 'block', color: C.hw, conf: 0.88 }, { label: 'can', color: C.ink, conf: 0.84 }
-    ].map(o => ({ ...o, ev: 0 }));
-    let locked = null, lockT = 0, auto = 0;
-    const s = stage(root.querySelector('canvas'), (s, dt) => {
-      const { ctx, w, h } = s;
-      ctx.clearRect(0, 0, w, h);
-      // boxes laid out across the "camera feed"
-      const bw = Math.min(150, w * 0.22), bh = Math.min(130, h * 0.42), gap = (w - 3 * bw) / 4, y0 = h * 0.5 - bh / 2;
-      items.forEach((o, i) => { o.x0 = gap + i * (bw + gap); o.y0 = y0; o.x1 = o.x0 + bw; o.y1 = y0 + bh; });
-      // table line
-      ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y0 + bh * 0.86); ctx.lineTo(w, y0 + bh * 0.86); ctx.stroke();
-
-      // gaze point: pointer, or a wandering demo gaze when idle
-      let g = null;
-      if (s.p.in && performance.now() - s.p.t < 4000) g = { x: s.p.x, y: s.p.y };
-      else if (!reduced) { auto += dt; const k = (Math.sin(auto * 0.35) + 1) / 2; g = { x: w * (0.15 + 0.7 * k) + Math.sin(auto * 7) * 10, y: h * 0.5 + Math.cos(auto * 5) * 14 }; }
-
-      if (locked) {
-        lockT += dt;
-        if (lockT > 2.4) { locked = null; items.forEach(o => o.ev = 0); }
-      } else {
-        items.forEach(o => {
-          let sc = 0;
+      const dt = Math.min(0.2, (now - last) / 1000); last = now;
+      if (!visible || !running) return;
+      const { ctx, w, h } = fit(canvas);
+      const sx = w / img.naturalWidth, sy = h / img.naturalHeight, sigma = 0.07 * w;
+      let g = gaze && now - gazeAt < 3500 ? gaze : null;
+      if (!g && !reduced && objs.length) { // demo gaze drifts between objects when idle
+        auto += dt; const i = Math.floor(auto / 3.2) % objs.length, b = objs[i].bb;
+        g = { x: (b[0] + b[2] / 2) * sx + Math.sin(auto * 6) * 8, y: (b[1] + b[3] / 2) * sy + Math.cos(auto * 5) * 8 };
+      }
+      if (locked) { lockT += dt; if (lockT > 2.6) { locked = null; objs.forEach(o => o.ev = 0); } }
+      else {
+        objs.forEach(o => {
+          let s = 0;
           if (g) {
-            const dx = Math.max(o.x0 - g.x, 0, g.x - o.x1), dy = Math.max(o.y0 - g.y, 0, g.y - o.y1);
-            sc = Math.exp(-((dx * dx + dy * dy) / (SIGMA * SIGMA)));
+            const x0 = o.bb[0] * sx, y0 = o.bb[1] * sy, x1 = x0 + o.bb[2] * sx, y1 = y0 + o.bb[3] * sy;
+            const dx = Math.max(x0 - g.x, 0, g.x - x1), dy = Math.max(y0 - g.y, 0, g.y - y1);
+            s = Math.exp(-(dx * dx + dy * dy) / (sigma * sigma));
           }
-          o.ev = Math.min(CAP, o.ev * Math.exp(-dt * (1 - sc) / TAU) + sc * dt);
+          o.ev = Math.min(CAP, o.ev * Math.exp(-dt * (1 - s) / TAU) + s * dt);
         });
-        const r = [...items].sort((a, b) => b.ev - a.ev);
-        if (r[0].ev >= SELECT && r[0].ev >= DOM * r[1].ev) { locked = r[0]; lockT = 0; }
+        // nested boxes: the innermost one under the gaze gets full credit (handled by sort on area when tied)
+        const r = [...objs].sort((a, b) => b.ev - a.ev);
+        if (r.length && r[0].ev >= SELECT && r[0].ev >= DOM * (r[1] ? r[1].ev : 0)) { locked = r[0]; lockT = 0; }
       }
-
-      items.forEach(o => {
-        const isLock = locked === o;
-        // object glyph
-        const cx = (o.x0 + o.x1) / 2, by = o.y0 + bh * 0.86;
-        ctx.fillStyle = o.color; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
-        if (o.label === 'cup') { ctx.beginPath(); ctx.moveTo(cx - 24, by - 58); ctx.lineTo(cx + 24, by - 58); ctx.lineTo(cx + 17, by); ctx.lineTo(cx - 17, by); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-        else if (o.label === 'block') { ctx.fillRect(cx - 26, by - 52, 52, 52); ctx.strokeRect(cx - 26, by - 52, 52, 52); }
-        else { ctx.fillRect(cx - 18, by - 64, 36, 64); ctx.strokeRect(cx - 18, by - 64, 36, 64); ctx.fillStyle = '#9a978d'; ctx.beginPath(); ctx.ellipse(cx, by - 64, 18, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-        // detection box
-        ctx.strokeStyle = isLock ? C.hl : (o.ev / SELECT > 0.13 ? C.green : C.ink3);
-        ctx.lineWidth = isLock ? 4 : 2;
-        ctx.strokeRect(o.x0, o.y0, bw, bh);
-        text(ctx, `${o.label} ${o.conf.toFixed(2)}`, o.x0, o.y0 - 7, ctx.strokeStyle === C.ink3 ? C.ink2 : C.ink);
-        // evidence bar
-        const pr = Math.min(1, o.ev / SELECT);
-        ctx.fillStyle = C.rule; ctx.fillRect(o.x0, o.y1 + 10, bw, 6);
-        ctx.fillStyle = isLock ? C.hl : C.hw; ctx.fillRect(o.x0, o.y1 + 10, bw * pr, 6);
-        text(ctx, `${o.ev.toFixed(2)} s`, o.x1, o.y1 + 30, C.ink2, 10.5, 'right');
-      });
-
-      if (g && !locked) {
-        ctx.strokeStyle = C.sw; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(g.x, g.y, 10, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = C.sw; ctx.beginPath(); ctx.arc(g.x, g.y, 3, 0, Math.PI * 2); ctx.fill();
-      }
-      if (locked) {
-        const msg = lockT < 1.2 ? `LOCKED: ${locked.label} · frame frozen` : `→ 3D target from depth · planning grasp`;
-        ctx.fillStyle = C.ink; ctx.fillRect(12, 12, ctx.measureText(msg).width + 40, 26);
-        text(ctx, msg, 22, 30, C.hl, 12);
-      } else {
-        text(ctx, 'select ≥ 0.90 s evidence and ≥ 2× runner-up', 12, 22, C.ink3, 10.5);
-      }
-    });
-  })();
-
-  /* ------------------------------------------------ 2.1 gaze error simulator */
-  (function gaze() {
-    const root = document.getElementById('demo-gaze'); if (!root) return;
-    let errDeg = 2.48;
-    seg(root, 'err', v => { errDeg = parseFloat(v); errSum = 0; errN = 0; });
-    // Ornstein-Uhlenbeck noise: a slow per-session bias plus fast frame jitter.
-    const bias = { x: 0, y: 0 }, jit = { x: 0, y: 0 };
-    let pred = null, trail = [], errSum = 0, errN = 0, auto = 0;
-    function ou(v, tau, sigma, dt) {
-      const a = Math.exp(-dt / tau), k = sigma * Math.sqrt(1 - a * a);
-      v.x = v.x * a + k * gauss(); v.y = v.y * a + k * gauss();
-    }
-    function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-
-    stage(root.querySelector('canvas'), (s, dt) => {
-      const { ctx, w, h } = s;
-      // 115 px of error at 2.48° on a 1440 px-wide laptop screen, scaled to this canvas
-      const pxPerDeg = (115 / 2.48) * (w / 1440);
-      const meanErr = errDeg * pxPerDeg, sigma = meanErr / 1.2533 / Math.SQRT2;
-      ou(bias, 2.5, sigma, dt); ou(jit, 0.12, sigma, dt);
-
-      let truth;
-      if (s.p.in && performance.now() - s.p.t < 4000) truth = { x: s.p.x, y: s.p.y };
-      else { // idle: walk the nine calibration dots
-        auto += dt * (reduced ? 0 : 1);
-        const k = Math.floor(auto / 1.4) % 9, f = (auto % 1.4) / 1.4, pts = [];
-        for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) pts.push({ x: w * (0.15 + 0.35 * c), y: h * (0.18 + 0.32 * r) });
-        const a = pts[k], b = pts[(k + 1) % 9], e = f < 0.6 ? 0 : (f - 0.6) / 0.4;
-        truth = { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e };
-      }
-      const raw = { x: truth.x + bias.x + jit.x, y: truth.y + bias.y + jit.y };
-      pred = pred ? { x: pred.x + (raw.x - pred.x) * 0.35, y: pred.y + (raw.y - pred.y) * 0.35 } : raw;
-      trail.push({ ...pred }); if (trail.length > 40) trail.shift();
-      const e = Math.hypot(pred.x - truth.x, pred.y - truth.y);
-      errSum += e; errN++;
-
       ctx.clearRect(0, 0, w, h);
-      // screen bezel
-      ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.strokeRect(8, 8, w - 16, h - 16);
-      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(w / 2, 8, 3, 0, Math.PI * 2); ctx.fill();
-      text(ctx, 'webcam', w / 2 + 8, 22, C.ink3, 10);
-      // trail
-      ctx.strokeStyle = 'rgba(240,90,31,.25)'; ctx.lineWidth = 2; ctx.beginPath();
-      trail.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
-      // error line
-      ctx.strokeStyle = C.hl; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(truth.x, truth.y); ctx.lineTo(pred.x, pred.y); ctx.stroke();
-      // truth crosshair (the eye tracker)
-      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath();
-      ctx.moveTo(truth.x - 9, truth.y); ctx.lineTo(truth.x + 9, truth.y); ctx.moveTo(truth.x, truth.y - 9); ctx.lineTo(truth.x, truth.y + 9); ctx.stroke();
-      // prediction
-      ctx.fillStyle = C.hw; ctx.beginPath(); ctx.arc(pred.x, pred.y, 7, 0, Math.PI * 2); ctx.fill();
-      const avg = errSum / errN;
-      text(ctx, `error now ${(e / pxPerDeg).toFixed(2)}°   running mean ${(avg / pxPerDeg).toFixed(2)}°`, 18, h - 18, C.ink2, 11);
-      if (w < 560) text(ctx, '+ tobii  ● model', 18, 26, C.ink2, 11);
-      else text(ctx, '+ tobii   ● model', w - 18, h - 18, C.ink2, 11, 'right');
-    });
+      if (locked) { ctx.fillStyle = 'rgba(2,8,6,.45)'; ctx.fillRect(0, 0, w, h); }
+      const lead = [...objs].sort((a, b) => b.ev - a.ev)[0];
+      objs.forEach(o => {
+        const x = o.bb[0] * sx, y = o.bb[1] * sy, bw = o.bb[2] * sx, bh = o.bb[3] * sy;
+        const isL = locked === o, isLead = !locked && o === lead && o.ev > 0.12;
+        const col = isL ? C.leaf : isLead ? C.neon : C.turq;
+        ctx.lineWidth = isL ? 4 : isLead ? 3 : 1.5; ctx.strokeStyle = col; ctx.strokeRect(x, y, bw, bh);
+        label(ctx, `${o.cls} ${o.score.toFixed(2)}`, x, Math.max(16, y), col);
+        const pr = Math.min(1, o.ev / SELECT);
+        if (pr > 0.01 || isL) { ctx.fillStyle = 'rgba(2,8,6,.6)'; ctx.fillRect(x, y + bh - 6, bw, 6); ctx.fillStyle = col; ctx.fillRect(x, y + bh - 6, bw * (isL ? 1 : pr), 6); }
+      });
+      if (g && !locked) {
+        ctx.strokeStyle = C.neon; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.x, g.y, 13, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = C.neon; ctx.beginPath(); ctx.arc(g.x, g.y, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+      if (locked) label(ctx, lockT < 1.3 ? `LOCKED · ${locked.cls} · frame frozen` : `→ 3D target from depth · planning grasp`, 12, 30, C.leaf);
+    }
   })();
 
-  /* ------------------------------------------------- 3.1 compound zone rule */
+  /* ============================================== fig 2 · face landmarker */
+  (function face() {
+    const root = document.getElementById('demo-face'); if (!root) return;
+    const video = root.querySelector('video'), canvas = root.querySelector('canvas'), gate = root.querySelector('.cam__gate');
+    const btn = root.querySelector('[data-start]'), state = root.querySelector('[data-state]'), readout = root.querySelector('.cam__readout');
+    const q = s => root.querySelector(s);
+    const VB = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+    let lm = null, stream = null, visible = false, lastT = -1;
+    watchVisible(root, v => { visible = v; });
+
+    async function start() {
+      btn.disabled = true; btn.textContent = 'starting…';
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+        video.srcObject = stream; await video.play();
+        state.textContent = 'loading face model…';
+        if (!lm) {
+          const vision = await import(VB + '/vision_bundle.mjs');
+          const files = await vision.FilesetResolver.forVisionTasks(VB + '/wasm');
+          lm = await vision.FaceLandmarker.createFromOptions(files, {
+            baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate: 'GPU' },
+            runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true, outputFacialTransformationMatrixes: true
+          });
+        }
+        gate.classList.add('off'); readout.hidden = false;
+        state.innerHTML = 'camera on · <a href="#" data-stop>stop</a>';
+        state.querySelector('[data-stop]').addEventListener('click', e => { e.preventDefault(); stop(); });
+        requestAnimationFrame(loop);
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Turn on camera';
+        state.textContent = err && err.name === 'NotAllowedError' ? 'camera permission denied' : 'camera unavailable';
+      }
+    }
+    function stop() {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      stream = null; video.srcObject = null;
+      gate.classList.remove('off'); readout.hidden = true; btn.disabled = false; btn.textContent = 'Turn on camera';
+      state.textContent = 'camera off';
+      const { ctx, w, h } = fit(canvas); ctx.clearRect(0, 0, w, h);
+    }
+    btn.addEventListener('click', start);
+
+    const ratio = (p, a, b) => { const vx = b.x - a.x, vy = b.y - a.y, L = vx * vx + vy * vy || 1; return ((p.x - a.x) * vx + (p.y - a.y) * vy) / L; };
+    function loop() {
+      if (!stream) return;
+      requestAnimationFrame(loop);
+      if (!visible || video.readyState < 2 || video.currentTime === lastT) return;
+      lastT = video.currentTime;
+      const res = lm.detectForVideo(video, performance.now());
+      const { ctx, w, h } = fit(canvas);
+      ctx.clearRect(0, 0, w, h);
+      const pts = res.faceLandmarks && res.faceLandmarks[0];
+      if (!pts) { q('[data-ix]').textContent = 'no face'; return; }
+      // map normalized coords into the object-fit:cover, mirrored video box
+      const vw = video.videoWidth, vh = video.videoHeight, s = Math.max(w / vw, h / vh), ox = (w - vw * s) / 2, oy = (h - vh * s) / 2;
+      const P = p => ({ x: w - (ox + p.x * vw * s), y: oy + p.y * vh * s });
+      ctx.fillStyle = 'rgba(45,226,208,.55)';
+      for (let i = 0; i < 468; i += 2) { const p = P(pts[i]); ctx.fillRect(p.x - 1, p.y - 1, 2, 2); }
+      [[468, 33, 133], [473, 362, 263]].forEach(([iris, a, b]) => {
+        const c = P(pts[iris]), e1 = P(pts[a]), e2 = P(pts[b]);
+        ctx.strokeStyle = C.leaf; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e1.x, e1.y); ctx.lineTo(e2.x, e2.y); ctx.stroke();
+        const r = Math.hypot(P(pts[iris + 1]).x - c.x, P(pts[iris + 1]).y - c.y);
+        ctx.strokeStyle = C.neon; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c.x, c.y, Math.max(3, r), 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = C.neon; ctx.beginPath(); ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+      const rx = (ratio(pts[468], pts[33], pts[133]) + ratio(pts[473], pts[362], pts[263])) / 2;
+      const ry = (ratio(pts[468], pts[159], pts[145]) + ratio(pts[473], pts[386], pts[374])) / 2;
+      q('[data-ix]').textContent = rx.toFixed(2); q('[data-iy]').textContent = ry.toFixed(2);
+      const m = res.facialTransformationMatrixes && res.facialTransformationMatrixes[0];
+      if (m) {
+        const d = m.data; // column-major 4×4
+        const yaw = Math.atan2(d[8], d[10]) * 180 / Math.PI, pitch = Math.asin(Math.max(-1, Math.min(1, -d[9]))) * 180 / Math.PI;
+        q('[data-yaw]').textContent = (-yaw).toFixed(0) + '°'; q('[data-pitch]').textContent = pitch.toFixed(0) + '°';
+      }
+      const bs = res.faceBlendshapes && res.faceBlendshapes[0];
+      if (bs) {
+        const get = n => (bs.categories.find(c => c.categoryName === n) || { score: 0 }).score;
+        q('[data-blink]').textContent = (get('eyeBlinkLeft') + get('eyeBlinkRight')) / 2 > 0.45 ? 'yes' : 'no';
+      }
+    }
+  })();
+
+  /* ============================================ fig 3 · zone rule on video */
   (function zone() {
     const root = document.getElementById('demo-zone'); if (!root) return;
-    const log = root.querySelector('.zone__log');
-    let op = 'AND', prev = null, cooldownUntil = -1, people = [], cars = [], nextP = 0, nextC = 0, flash = 0;
-    seg(root, 'op', v => { op = v; prev = null; log.innerHTML = ''; });
-    const evalOp = (A, B) => op === 'AND' ? A && B : op === 'OR' ? A || B : op === 'XOR' ? A !== B : !A;
+    const video = root.querySelector('video'), canvas = root.querySelector('canvas'), state = root.querySelector('[data-state]'), log = root.querySelector('.zone__log');
+    const elA = root.querySelector('[data-a]'), elB = root.querySelector('[data-b]'), elR = root.querySelector('[data-r]');
+    const VEH = new Set(['car', 'truck', 'bus', 'motorcycle']);
+    let op = 'AND', zonePts = [[0.22, 0.79], [0.96, 0.77], [1.0, 0.995], [0.2, 0.995]];
+    let model = null, preds = [], busy = false, prev = null, cooldownUntil = -1, lastVT = 0, visible = false, drag = -1;
     const opText = { AND: 'person AND car', OR: 'person OR car', XOR: 'person XOR car', NOTA: 'NOT person' };
-    function inPoly(p, poly) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; }
+    const evalOp = (A, B) => op === 'AND' ? A && B : op === 'OR' ? A || B : op === 'XOR' ? A !== B : !A;
+    seg(root, 'op', v => { op = v; prev = null; });
+    watchVisible(root, v => { visible = v; if (!model) return; v ? video.play().catch(() => {}) : video.pause(); });
 
-    stage(root.querySelector('canvas'), (s, dt) => {
-      const { ctx, w, h, t } = s;
-      const roadTop = h * 0.3, roadBot = h * 0.78, cx = w * 0.52, zw = Math.min(150, w * 0.18);
-      const zonePoly = [{ x: cx - zw / 2 - 12, y: roadTop }, { x: cx + zw / 2 - 12, y: roadTop }, { x: cx + zw / 2 + 12, y: roadBot }, { x: cx - zw / 2 + 12, y: roadBot }];
+    function inPoly(x, y, poly) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+    const norm = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, r]; };
+    canvas.addEventListener('pointerdown', e => {
+      const [x, y, r] = norm(e);
+      drag = zonePts.findIndex(p => Math.hypot((p[0] - x) * r.width, (p[1] - y) * r.height) < 22);
+      if (drag >= 0) { canvas.setPointerCapture(e.pointerId); e.preventDefault(); }
+    });
+    canvas.addEventListener('pointermove', e => {
+      const [x, y, r] = norm(e);
+      if (drag >= 0) { zonePts[drag] = [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))]; prev = null; return; }
+      canvas.style.cursor = zonePts.some(p => Math.hypot((p[0] - x) * r.width, (p[1] - y) * r.height) < 22) ? 'grab' : 'default';
+    });
+    canvas.addEventListener('pointerup', () => { drag = -1; });
 
-      if (t > nextP) { people.push({ x: cx + (Math.random() - 0.5) * zw * 0.7, y: Math.random() < 0.5 ? h + 6 : -6, v: (24 + Math.random() * 18) }); people[people.length - 1].dir = people[people.length - 1].y < 0 ? 1 : -1; nextP = t + 2.2 + Math.random() * 3.5; }
-      if (t > nextC) { const lane = Math.random() < 0.5; cars.push({ x: lane ? -60 : w + 60, y: lane ? roadTop + (roadBot - roadTop) * 0.3 : roadTop + (roadBot - roadTop) * 0.72, v: (lane ? 1 : -1) * (90 + Math.random() * 50), stop: Math.random() < 0.45 ? 1.5 + Math.random() * 2 : 0 }); nextC = t + 1.6 + Math.random() * 2.8; }
-      people.forEach(p => p.y += p.dir * p.v * dt);
-      cars.forEach(c => {
-        const inside = Math.abs(c.x - cx) < 10;
-        if (inside && c.stop > 0) c.stop -= dt; else c.x += c.v * dt;
-      });
-      people = people.filter(p => p.y > -20 && p.y < h + 20);
-      cars = cars.filter(c => c.x > -80 && c.x < w + 80);
+    onVisible(root, async () => {
+      state.textContent = 'loading detector…';
+      try { model = await loadDetector(); } catch (e) { state.textContent = 'detector failed to load'; return; }
+      video.preload = 'auto';
+      try { await video.play(); } catch (e) { state.innerHTML = '<a href="#">play</a>'; state.querySelector('a').onclick = ev => { ev.preventDefault(); video.play(); }; }
+      state.textContent = 'detecting live';
+      requestAnimationFrame(loop);
+    });
 
-      const A = people.some(p => inPoly(p, zonePoly)), B = cars.some(c => inPoly(c, zonePoly)), R = evalOp(A, B);
-      if (prev === false && R && t >= cooldownUntil) {
-        cooldownUntil = t + 5; flash = 1;
-        const row = document.createElement('p');
-        row.innerHTML = `<span class="inc">● incident</span> t=${t.toFixed(1)}s · ${opText[op]} in crosswalk · A=${+A} B=${+B}`;
-        log.prepend(row); while (log.children.length > 4) log.lastChild.remove();
-      }
+    async function detect() {
+      if (busy || video.paused || video.readyState < 2) return;
+      busy = true;
+      try { preds = (await model.detect(video, 30, 0.4)).filter(p => p.class === 'person' || VEH.has(p.class)); } catch (e) { }
+      busy = false;
+    }
+    function snapshot(t, A, B) {
+      const li = document.createElement('li'), c = document.createElement('canvas');
+      c.width = 300; c.height = 168; const x = c.getContext('2d');
+      x.drawImage(video, 0, 0, 300, 168);
+      const vw = video.videoWidth, vh = video.videoHeight;
+      x.strokeStyle = C.neon; x.lineWidth = 2; x.beginPath(); zonePts.forEach((p, i) => i ? x.lineTo(p[0] * 300, p[1] * 168) : x.moveTo(p[0] * 300, p[1] * 168)); x.closePath(); x.stroke();
+      preds.forEach(p => { x.strokeStyle = p.class === 'person' ? C.leaf : C.turq; x.strokeRect(p.bbox[0] / vw * 300, p.bbox[1] / vh * 168, p.bbox[2] / vw * 300, p.bbox[3] / vh * 168); });
+      const s = document.createElement('span'); s.textContent = `● t=${t.toFixed(1)}s · ${opText[op]}`;
+      li.append(c, s); log.prepend(li); while (log.children.length > 6) log.lastChild.remove();
+    }
+    let lastDetect = 0;
+    function loop(now) {
+      requestAnimationFrame(loop);
+      if (!visible) return;
+      if (now - lastDetect > 110) { lastDetect = now; detect(); }
+      const { ctx, w, h } = fit(canvas);
+      const vw = video.videoWidth || 1280, vh = video.videoHeight || 720, sx = w / vw, sy = h / vh;
+      const t = video.currentTime;
+      if (t < lastVT - 0.5) { prev = null; cooldownUntil = -1; } // looped
+      lastVT = t;
+      const centers = preds.map(p => ({ p, cx: (p.bbox[0] + p.bbox[2] / 2) / vw, cy: (p.bbox[1] + p.bbox[3] / 2) / vh }));
+      const A = centers.some(c => c.p.class === 'person' && inPoly(c.cx, c.cy, zonePts));
+      const B = centers.some(c => VEH.has(c.p.class) && inPoly(c.cx, c.cy, zonePts));
+      const R = evalOp(A, B);
+      if (prev === false && R && t >= cooldownUntil) { cooldownUntil = t + 5; snapshot(t, A, B); }
       prev = R;
-      flash = Math.max(0, flash - dt * 1.5);
+      elA.textContent = +A; elB.textContent = +B; elR.textContent = +R;
+      elA.classList.toggle('on', A); elB.classList.toggle('on', B); elR.classList.toggle('on', R);
 
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#e4e0d4'; ctx.fillRect(0, roadTop, w, roadBot - roadTop);
-      ctx.strokeStyle = C.ink3; ctx.setLineDash([16, 12]); ctx.beginPath(); ctx.moveTo(0, (roadTop + roadBot) / 2); ctx.lineTo(w, (roadTop + roadBot) / 2); ctx.stroke(); ctx.setLineDash([]);
-      // crosswalk stripes
-      ctx.save(); ctx.beginPath(); zonePoly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.clip();
-      ctx.fillStyle = '#fbfaf5'; for (let y = roadTop + 4; y < roadBot; y += 16) ctx.fillRect(0, y, w, 8);
-      if (flash) { ctx.fillStyle = `rgba(240,90,31,${0.35 * flash})`; ctx.fillRect(0, 0, w, h); }
-      ctx.restore();
-      ctx.strokeStyle = R ? C.hw : C.sw; ctx.lineWidth = 2.5; ctx.beginPath(); zonePoly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.stroke();
-      text(ctx, 'zone: crosswalk', zonePoly[0].x, roadTop - 8, C.ink2, 10.5);
-
-      cars.forEach(c => {
-        ctx.fillStyle = C.sw; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
-        ctx.fillRect(c.x - 30, c.y - 14, 60, 28); ctx.strokeRect(c.x - 30, c.y - 14, 60, 28);
-        ctx.strokeStyle = 'rgba(21,21,21,.5)'; ctx.setLineDash([3, 3]); ctx.strokeRect(c.x - 34, c.y - 18, 68, 36); ctx.setLineDash([]);
-        ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); zonePts.forEach((p, i) => i ? ctx.lineTo(p[0] * w, p[1] * h) : ctx.moveTo(p[0] * w, p[1] * h)); ctx.closePath();
+      ctx.fillStyle = R ? 'rgba(60,255,143,.18)' : 'rgba(45,226,208,.10)'; ctx.fill();
+      ctx.strokeStyle = R ? C.neon : C.turq; ctx.lineWidth = 2; ctx.setLineDash(R ? [] : [7, 5]); ctx.stroke(); ctx.setLineDash([]);
+      zonePts.forEach(p => { ctx.fillStyle = C.bg; ctx.strokeStyle = C.turq; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p[0] * w, p[1] * h, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+      centers.forEach(({ p, cx, cy }) => {
+        const isP = p.class === 'person', inside = inPoly(cx, cy, zonePts), col = isP ? C.leaf : C.turq;
+        ctx.strokeStyle = col; ctx.lineWidth = inside ? 2.5 : 1.2; ctx.globalAlpha = inside ? 1 : 0.7;
+        ctx.strokeRect(p.bbox[0] * sx, p.bbox[1] * sy, p.bbox[2] * sx, p.bbox[3] * sy);
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx * w, cy * h, 3, 0, Math.PI * 2); ctx.fill();
+        if (w > 520) label(ctx, `${p.class} ${p.score.toFixed(2)}`, p.bbox[0] * sx, Math.max(16, p.bbox[1] * sy), col);
+        ctx.globalAlpha = 1;
       });
-      people.forEach(p => {
-        ctx.fillStyle = C.hw; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.strokeStyle = 'rgba(21,21,21,.5)'; ctx.setLineDash([3, 3]); ctx.strokeRect(p.x - 12, p.y - 14, 24, 28); ctx.setLineDash([]);
-      });
-
-      // state panel
-      const bx = 12, by = 12;
-      ctx.fillStyle = C.ink; ctx.fillRect(bx, by, 188, 30);
-      text(ctx, `A ${+A}  B ${+B}  →  ${opText[op].replace('person', 'A').replace('car', 'B')} = ${+R}`, bx + 10, by + 19, R ? C.hl : '#fbfaf5', 11);
-      if (t < cooldownUntil) text(ctx, `cooldown ${(cooldownUntil - t).toFixed(1)} s`, bx, by + 48, C.ink3, 10.5);
-    });
+      if (t < cooldownUntil) label(ctx, `incident · cooldown ${(cooldownUntil - t).toFixed(1)} s`, 10, h - 8, C.neon);
+    }
   })();
 
-  /* ---------------------------------------------------- 4.1 gesture classifier */
-  (function gesture() {
-    const root = document.getElementById('demo-gesture'); if (!root) return;
-    const bars = root.querySelector('.bars'), traceCv = root.querySelector('.gesture__trace');
-    const CLASSES = ['circle', 'left-right', 'up-down', 'rest'];
-    CLASSES.forEach(c => { const d = document.createElement('div'); d.className = 'bar'; d.innerHTML = `<span>${c}</span><i></i><b>0.00</b>`; bars.append(d); });
-    const anomaly = document.createElement('p'); anomaly.style.margin = '0'; bars.after(anomaly);
-    let pts = [], recording = false, result = null;
-    const tctx = traceCv.getContext('2d');
-
-    function features(p) {
-      if (p.length < 3) return null;
-      let len = 0, turn = 0, rx = 0, ry = 0, lastDx = 0, lastDy = 0, lastA = null;
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      for (let i = 1; i < p.length; i++) {
-        const dx = p[i].x - p[i - 1].x, dy = p[i].y - p[i - 1].y, d = Math.hypot(dx, dy);
-        len += d;
-        if (Math.abs(dx) > 1.5) { if (lastDx && Math.sign(dx) !== Math.sign(lastDx)) rx++; lastDx = dx; }
-        if (Math.abs(dy) > 1.5) { if (lastDy && Math.sign(dy) !== Math.sign(lastDy)) ry++; lastDy = dy; }
-        if (d > 2) { const a = Math.atan2(dy, dx); if (lastA !== null) { let da = a - lastA; da = Math.atan2(Math.sin(da), Math.cos(da)); turn += da; } lastA = a; }
-      }
-      p.forEach(q => { minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y); });
-      const bw = maxX - minX, bh = maxY - minY, closure = Math.hypot(p[0].x - p[p.length - 1].x, p[0].y - p[p.length - 1].y) / Math.max(len, 1);
-      return { len, turn: Math.abs(turn), rx, ry, bw, bh, closure };
+  /* ================================================== fig 4 · motion sensor */
+  (function imu() {
+    const root = document.getElementById('demo-imu'); if (!root) return;
+    const plot = root.querySelector('.imu__plot'), gate = root.querySelector('.imu__gate'), state = root.querySelector('[data-state]');
+    const bars = root.querySelector('.bars'), anom = root.querySelector('.imu__anom');
+    const phone = root.querySelector('.imu__phone'), desk = root.querySelector('.imu__desk');
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    phone.style.display = coarse ? '' : 'none'; desk.style.display = coarse ? 'none' : '';
+    const CLS = ['circle', 'left-right', 'up-down', 'rest'];
+    CLS.forEach(c => { const d = document.createElement('div'); d.className = 'bar'; d.innerHTML = `<span>${c}</span><i></i><b>–</b>`; bars.append(d); });
+    // QR code to open this demo on a phone
+    if (window.qrcode && !coarse) {
+      const qr = qrcode(0, 'M'); qr.addData(location.href.split('#')[0] + '#omniring'); qr.make();
+      root.querySelector('.qr').innerHTML = qr.createSvgTag({ cellSize: 3, margin: 0 });
     }
-    function classify(f) {
-      if (!f) return [0, 0, 0, 1];
-      const aspect = (f.bw + 1) / (f.bh + 1), extent = Math.max(f.bw, f.bh), moving = Math.min(1, extent / 45);
+    const buf = []; // {t, ax, ay, az, g}
+    let source = null, visible = false, mouse = null;
+    watchVisible(root, v => { visible = v; });
+
+    function push(ax, ay, az, g) { const t = performance.now(); buf.push({ t, ax, ay, az, g }); while (buf.length && t - buf[0].t > 3000) buf.shift(); }
+    function startMotion() {
+      const go = () => {
+        source = 'phone'; gate.classList.add('off'); state.textContent = 'reading your phone\'s IMU';
+        addEventListener('devicemotion', e => {
+          const a = e.acceleration && e.acceleration.x != null ? e.acceleration : e.accelerationIncludingGravity; if (!a) return;
+          const r = e.rotationRate || {};
+          push(a.x || 0, a.y || 0, a.z || 0, Math.hypot(r.alpha || 0, r.beta || 0, r.gamma || 0) / 100);
+        });
+      };
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(p => p === 'granted' ? go() : (state.textContent = 'permission denied')).catch(() => state.textContent = 'permission denied');
+      } else if ('DeviceMotionEvent' in window) go(); else state.textContent = 'no motion sensor';
+    }
+    root.querySelector('[data-motion]').addEventListener('click', startMotion);
+    // desktop fallback: mouse velocity stands in for acceleration
+    plot.addEventListener('pointerdown', e => { if (coarse) return; source = 'mouse'; gate.classList.add('off'); state.textContent = 'mouse as IMU · keep dragging'; mouse = { x: e.clientX, y: e.clientY, t: performance.now() }; plot.setPointerCapture(e.pointerId); });
+    plot.addEventListener('pointermove', e => { if (!mouse) return; const t = performance.now(), dt = Math.max(8, t - mouse.t); push((e.clientX - mouse.x) / dt * 6, -(e.clientY - mouse.y) / dt * 6, 0, 0); mouse = { x: e.clientX, y: e.clientY, t }; });
+    plot.addEventListener('pointerup', () => { mouse = null; });
+
+    function classify() {
+      const now = performance.now(), win = buf.filter(s => now - s.t < 1000);
+      if (win.length < 8) return null;
+      const mean = k => win.reduce((a, s) => a + s[k], 0) / win.length;
+      const mx = mean('ax'), my = mean('ay'), mz = mean('az');
+      const en = k => Math.sqrt(win.reduce((a, s) => a + (s[k] - (k === 'ax' ? mx : k === 'ay' ? my : mz)) ** 2, 0) / win.length);
+      const ex = en('ax'), ey = en('ay'), ez = en('az'), tot = ex + ey + ez;
+      let cxy = 0; win.forEach(s => cxy += (s.ax - mx) * (s.ay - my)); cxy /= win.length * (ex * ey || 1);
+      const act = Math.min(1, tot / 2.2), ev = Math.max(ey, ez);
+      const r = Math.min(ex, ev) / (Math.max(ex, ev) || 1); // 1 = motion split evenly between axes (circle), 0 = one axis (a line)
+      const clamp = v => Math.max(0, Math.min(1, v));
       const sc = [
-        2.6 * moving * Math.min(1, f.turn / (2 * Math.PI)) * (1 - Math.min(1, f.closure * 2)) * Math.min(1, Math.min(aspect, 1 / aspect) * 1.6),
-        2.2 * moving * Math.min(1, aspect / 3) * Math.min(1, (f.rx + 1) / 3),
-        2.2 * moving * Math.min(1, (1 / aspect) / 3) * Math.min(1, (f.ry + 1) / 3),
-        extent < 25 ? 3 : Math.max(0, 1.5 - extent / 50)
+        act * 3.2 * clamp((r - 0.35) / 0.45) * (1 - Math.abs(cxy)),
+        act * 3 * (ex >= ev ? 1 : 0.2) * clamp(1 - r * 1.3),
+        act * 3 * (ev > ex ? 1 : 0.2) * clamp(1 - r * 1.3),
+        tot < 0.6 ? 3 : Math.max(0, 1.5 - tot)
       ];
-      const ex = sc.map(v => Math.exp(v * 2.2)), sum = ex.reduce((a, b) => a + b, 0);
-      return ex.map(v => v / sum);
+      const e = sc.map(v => Math.exp(v * 2)), sum = e.reduce((a, b) => a + b, 0);
+      return { p: e.map(v => v / sum), tot };
     }
-    function show(prob, idle) {
-      const top = idle ? -1 : prob.indexOf(Math.max(...prob));
-      [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (prob[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = prob[i].toFixed(2); });
-      const odd = !idle && Math.max(...prob) < 0.5;
-      anomaly.textContent = idle ? 'waiting for a gesture' : odd ? 'anomaly: motion unlike anything trained' : 'anomaly: none';
-      anomaly.style.color = odd ? C.hw : C.ink3;
-    }
-    function drawTrace() {
-      const dpr = Math.min(devicePixelRatio || 1, 2), r = traceCv.getBoundingClientRect();
-      if (traceCv.width !== Math.round(r.width * dpr)) { traceCv.width = Math.round(r.width * dpr); traceCv.height = Math.round(r.height * dpr); }
-      tctx.setTransform(dpr, 0, 0, dpr, 0, 0); tctx.clearRect(0, 0, r.width, r.height);
-      tctx.strokeStyle = C.rule; tctx.beginPath(); tctx.moveTo(0, r.height / 2); tctx.lineTo(r.width, r.height / 2); tctx.stroke();
-      if (pts.length < 3) return;
-      [['x', C.hw], ['y', C.sw]].forEach(([k, col]) => {
-        tctx.strokeStyle = col; tctx.lineWidth = 1.5; tctx.beginPath();
-        for (let i = 1; i < pts.length; i++) {
-          const v = (pts[i][k] - pts[i - 1][k]) / Math.max(1, (pts[i].t - pts[i - 1].t)) * 16;
-          const x = (i / (pts.length - 1)) * r.width, y = r.height / 2 - Math.max(-1, Math.min(1, v / 40)) * (r.height / 2 - 4);
-          i === 1 ? tctx.moveTo(x, y) : tctx.lineTo(x, y);
-        }
-        tctx.stroke();
-      });
-    }
-    show([0.25, 0.25, 0.25, 0.25], true);
-
-    const s = stage(root.querySelector('.gesture__pad'), (s) => {
-      const { ctx, w, h } = s;
-      if (recording && s.p.down) {
-        const last = pts[pts.length - 1];
-        if (!last || Math.hypot(last.x - s.p.x, last.y - s.p.y) > 1) pts.push({ x: s.p.x, y: s.p.y, t: performance.now() });
-        if (pts.length % 4 === 0) { show(classify(features(pts))); drawTrace(); }
-      }
+    let last = 0;
+    function loop(now) {
+      requestAnimationFrame(loop);
+      if (!visible) return;
+      const { ctx, w, h } = fit(plot);
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
-      for (let x = 20; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-      for (let y = 20; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-      if (!pts.length) { text(ctx, 'press and draw here', w / 2, h / 2, C.ink3, 12, 'center'); return; }
-      ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-      ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
-      ctx.fillStyle = C.hw; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 5, 0, Math.PI * 2); ctx.fill();
-      if (result) text(ctx, `→ ${result}`, 12, 22, C.hw, 13);
-    });
-    s.ondown = () => { pts = []; result = null; recording = true; };
-    s.onup = () => {
-      recording = false;
-      const prob = classify(features(pts)); show(prob); drawTrace();
-      result = CLASSES[prob.indexOf(Math.max(...prob))];
-    };
+      ctx.strokeStyle = 'rgba(150,255,220,.08)'; ctx.lineWidth = 1;
+      for (let y = h / 4; y < h; y += h / 4) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      if (buf.length > 1) {
+        const t1 = performance.now(), sc = h / 2 / 12;
+        [['ax', C.neon], ['ay', C.turq], ['az', C.leaf], ['g', 'rgba(166,191,180,.5)']].forEach(([k, col]) => {
+          ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath();
+          buf.forEach((s, i) => { const x = w - (t1 - s.t) / 3000 * w, y = h / 2 - Math.max(-12, Math.min(12, s[k])) * sc; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+          ctx.stroke();
+        });
+        ctx.font = `11px ${MONO}`; [['accel x', C.neon], ['accel y', C.turq], ['accel z', C.leaf], ['gyro', C.text3]].forEach(([s, c], i) => { ctx.fillStyle = c; ctx.fillText(s, 10 + i * 70, 18); });
+      }
+      if (now - last > 200 && source) {
+        last = now;
+        const r = classify(); if (!r) return;
+        const top = r.p.indexOf(Math.max(...r.p));
+        [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (r.p[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = r.p[i].toFixed(2); });
+        const odd = Math.max(...r.p) < 0.5 && r.tot > 0.6;
+        anom.textContent = odd ? 'anomaly: motion unlike any gesture' : 'anomaly: none'; anom.style.color = odd ? C.neon : C.text3;
+      }
+    }
+    requestAnimationFrame(loop);
   })();
 
-  /* ------------------------------------------------------ 5.1 optics blur */
+  /* ============================================ fig 5 · Wiener deconvolution */
   (function optics() {
     const root = document.getElementById('demo-optics'); if (!root) return;
-    const range = root.querySelector('input'), out = root.querySelector('output');
-    let view = 'raw', depth = 25;
-    seg(root, 'view', v => { view = v; });
-    range.addEventListener('input', () => { depth = +range.value; out.textContent = depth + ' µm'; });
-    const off = document.createElement('canvas');
-    const W0 = 1.0, LAMBDA = 0.455, ZR = Math.PI * W0 * W0 / LAMBDA; // µm
-    const wz = z => W0 * Math.sqrt(1 + (z / ZR) ** 2);
+    const N = 256, cBlur = root.querySelector('[data-panel="blur"]'), cW = root.querySelector('[data-panel="wiener"]');
+    const dIn = root.querySelector('[data-depth]'), nIn = root.querySelector('[data-noise]');
+    const dOut = root.querySelector('[data-depth-out]'), nOut = root.querySelector('[data-noise-out]');
+    const pB = root.querySelector('[data-psnr-blur]'), pW = root.querySelector('[data-psnr-wiener]'), state = root.querySelector('[data-state]');
+    let sharp = null, Fre = null, Fim = null;
 
-    function paintTarget(w, h) {
-      off.width = w; off.height = h;
-      const c = off.getContext('2d');
-      c.fillStyle = '#fbfaf5'; c.fillRect(0, 0, w, h);
-      c.fillStyle = C.ink;
-      // bar groups of shrinking width (a resolution target)
-      const k = Math.min(1, w / 820);
-      let x = 24 * k + 8;
-      [12, 9, 6, 4, 3, 2].map(b => Math.max(1, b * k)).forEach(bwid => {
-        for (let k = 0; k < 3; k++) c.fillRect(x + k * bwid * 2, h * 0.1, bwid, h * 0.28);
-        for (let k = 0; k < 3; k++) c.fillRect(x, h * 0.46 + k * bwid * 2, bwid * 5, bwid);
-        x += bwid * 7 + 14 * k;
-      });
-      // siemens star
-      const sx = w * 0.78, sy = h * 0.5, R = Math.min(h * 0.36, w * 0.17);
-      for (let i = 0; i < 36; i += 2) { c.beginPath(); c.moveTo(sx, sy); c.arc(sx, sy, R, i * Math.PI / 18, (i + 1) * Math.PI / 18); c.closePath(); c.fill(); }
+    // in-place iterative radix-2 FFT on (re, im) at stride s, offset o
+    function fft1(re, im, o, s, inv) {
+      for (let i = 1, j = 0; i < N; i++) { let b = N >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { const a = o + i * s, c = o + j * s; [re[a], re[c]] = [re[c], re[a]]; [im[a], im[c]] = [im[c], im[a]]; } }
+      for (let len = 2; len <= N; len <<= 1) {
+        const ang = (inv ? 2 : -2) * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+        for (let i = 0; i < N; i += len) {
+          let cr = 1, ci = 0;
+          for (let k = 0; k < len / 2; k++) {
+            const a = o + (i + k) * s, b = o + (i + k + len / 2) * s;
+            const xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+            re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+            const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+          }
+        }
+      }
     }
-    const canvas = root.querySelector('canvas');
-    const supportsFilter = 'filter' in canvas.getContext('2d');
-    const s = stage(canvas, (s) => {
-      const { ctx, w, h } = s;
-      if (off.width !== Math.round(w) || off.height !== Math.round(h)) paintTarget(Math.round(w), Math.round(h));
-      const blur = wz(depth) * 1.15, shown = view === 'raw' ? blur : Math.max(0.3, blur * 0.22);
-      ctx.clearRect(0, 0, w, h);
-      if (supportsFilter) { ctx.filter = `blur(${shown}px)${view === 'raw' ? '' : ' contrast(1.15)'}`; ctx.drawImage(off, 0, 0, w, h); ctx.filter = 'none'; }
-      else { ctx.drawImage(off, 0, 0, w, h); }
-      // PSF profile inset
-      const ix = 14, iy = h - 70, iw = 150, ih = 52;
-      ctx.fillStyle = 'rgba(251,250,245,.92)'; ctx.fillRect(ix - 6, iy - 18, iw + 12, ih + 30);
-      ctx.strokeStyle = C.ink3; ctx.strokeRect(ix - 6, iy - 18, iw + 12, ih + 30);
-      text(ctx, `PSF  w(z) = ${wz(depth).toFixed(2)} µm`, ix, iy - 4, C.ink, 10.5);
-      ctx.strokeStyle = C.hw; ctx.lineWidth = 2; ctx.beginPath();
-      for (let i = 0; i <= iw; i++) { const r = (i - iw / 2) / 10, y = Math.exp(-2 * r * r / (wz(depth) ** 2)); i ? ctx.lineTo(ix + i, iy + ih - y * (ih - 6)) : ctx.moveTo(ix + i, iy + ih - y * (ih - 6)); }
-      ctx.stroke();
-    });
-    if (!supportsFilter) {
-      const upd = () => { canvas.style.filter = `blur(${view === 'raw' ? wz(depth) : wz(depth) * 0.22}px)`; };
-      range.addEventListener('input', upd); root.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', upd)); upd();
+    function fft2(re, im, inv) {
+      for (let r = 0; r < N; r++) fft1(re, im, r * N, 1, inv);
+      for (let c = 0; c < N; c++) fft1(re, im, c, N, inv);
+      if (inv) { const k = 1 / (N * N); for (let i = 0; i < N * N; i++) { re[i] *= k; im[i] *= k; } }
     }
-  })();
+    // Gaussian beam: w(z) = w0·sqrt(1 + (z/zR)^2), zR = π·w0²/λ (w0 = 1 µm, λ = 0.455 µm)
+    const wz = z => Math.sqrt(1 + (z / (Math.PI / 0.455)) ** 2);
+    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
 
-  /* ------------------------------------------------- 7 obstacle robot */
-  (function bot() {
-    const cv = document.getElementById('demo-bot'); if (!cv) return;
-    const r = { x: 60, y: 60, a: 0.6, turn: 0 };
-    let obstacles = [];
-    const s = stage(cv, (s, dt) => {
-      const { ctx, w, h } = s;
-      if (!obstacles.length || s.resized) { obstacles = [{ x: w * 0.45, y: h * 0.35, w: 40, h: 40 }, { x: w * 0.72, y: h * 0.6, w: 54, h: 30 }]; s.resized = false; }
-      // ultrasonic ray
-      let d = 0; const max = 140;
-      for (; d < max; d += 2) {
-        const px = r.x + Math.cos(r.a) * d, py = r.y + Math.sin(r.a) * d;
-        if (px < 4 || py < 4 || px > w - 4 || py > h - 4 || obstacles.some(o => px > o.x && px < o.x + o.w && py > o.y && py < o.y + o.h)) break;
+    function draw(canvas, arr) {
+      canvas.width = N; canvas.height = N;
+      const ctx = canvas.getContext('2d'), im = ctx.createImageData(N, N);
+      for (let i = 0; i < N * N; i++) { const v = Math.max(0, Math.min(255, arr[i] * 255)); im.data[i * 4] = v * 0.86; im.data[i * 4 + 1] = v; im.data[i * 4 + 2] = v * 0.93; im.data[i * 4 + 3] = 255; }
+      ctx.putImageData(im, 0, 0);
+    }
+    const psnr = a => { let m = 0; for (let i = 0; i < N * N; i++) m += (a[i] - sharp[i]) ** 2; m /= N * N; return (10 * Math.log10(1 / m)).toFixed(1) + ' dB PSNR'; };
+
+    function run() {
+      const z = +dIn.value, noise = +nIn.value / 100;
+      dOut.textContent = z + ' µm'; nOut.textContent = (+nIn.value).toFixed(1) + '%';
+      const sigma = wz(z) * 0.95; // pixels at this sampling
+      const Hf = new Float64Array(N * N);
+      for (let v = 0; v < N; v++) for (let u = 0; u < N; u++) {
+        const fu = (u < N / 2 ? u : u - N) / N, fv = (v < N / 2 ? v : v - N) / N;
+        Hf[v * N + u] = Math.exp(-2 * Math.PI * Math.PI * sigma * sigma * (fu * fu + fv * fv));
       }
-      if (!reduced) {
-        if (d < 46) { if (!r.turn) r.turn = Math.random() < 0.5 ? -1 : 1; r.a += r.turn * 2.6 * dt; }
-        else { r.turn = 0; r.x += Math.cos(r.a) * 55 * dt; r.y += Math.sin(r.a) * 55 * dt; }
-      }
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = C.ink; obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-      ctx.fillStyle = d < 46 ? 'rgba(240,90,31,.18)' : 'rgba(42,75,215,.12)';
-      ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.arc(r.x, r.y, d, r.a - 0.26, r.a + 0.26); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = C.hw; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
-      ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.a); ctx.fillRect(-12, -10, 24, 20); ctx.strokeRect(-12, -10, 24, 20); ctx.fillStyle = C.ink; ctx.fillRect(8, -6, 5, 4); ctx.fillRect(8, 2, 5, 4); ctx.restore();
-      text(ctx, `ultrasonic d = ${(d / 4).toFixed(0)} cm${d < 46 ? ' · turning' : ''}`, 10, h - 10, C.ink2, 10.5);
+      // blur: G = F·H, back to space, add noise
+      const re = new Float64Array(N * N), im = new Float64Array(N * N);
+      for (let i = 0; i < N * N; i++) { re[i] = Fre[i] * Hf[i]; im[i] = Fim[i] * Hf[i]; }
+      fft2(re, im, true);
+      seed = 7;
+      const g = new Float64Array(N * N);
+      for (let i = 0; i < N * N; i++) g[i] = re[i] + noise * gauss();
+      // Wiener: F̂ = G·H / (H² + K), with K from the noise-to-signal ratio
+      const K = Math.max(2e-4, (noise * noise) / 0.08);
+      const gr = Float64Array.from(g), gi = new Float64Array(N * N);
+      fft2(gr, gi, false);
+      for (let i = 0; i < N * N; i++) { const f = Hf[i] / (Hf[i] * Hf[i] + K); gr[i] *= f; gi[i] *= f; }
+      fft2(gr, gi, true);
+      draw(cBlur, g); draw(cW, gr);
+      pB.textContent = psnr(g); pW.textContent = psnr(gr);
+      state.textContent = `w(z) = ${wz(z).toFixed(2)} µm · K = ${K.toExponential(1)}`;
+    }
+
+    onVisible(root, () => {
+      const img = new Image(); img.src = 'assets/usaf-1951.jpg';
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = N; c.height = N;
+        const x = c.getContext('2d'), side = Math.min(img.width, img.height) * 0.62;
+        x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2 + img.height * 0.04, side, side, 0, 0, N, N);
+        const d = x.getImageData(0, 0, N, N).data;
+        sharp = new Float64Array(N * N); for (let i = 0; i < N * N; i++) sharp[i] = d[i * 4] / 255;
+        Fre = Float64Array.from(sharp); Fim = new Float64Array(N * N); fft2(Fre, Fim, false);
+        run();
+      };
     });
-    s.onresize = () => { s.resized = true; r.x = Math.min(r.x, s.w - 20); r.y = Math.min(r.y, s.h - 20); };
+    let t; const deb = () => { clearTimeout(t); t = setTimeout(() => sharp && run(), 30); };
+    dIn.addEventListener('input', deb); nIn.addEventListener('input', deb);
   })();
 })();
