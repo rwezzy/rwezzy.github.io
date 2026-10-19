@@ -16,6 +16,7 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 
 | File | Where it shows |
 |---|---|
+| `images/me.jpg` | You, next to the intro (portrait, 4:5) |
 | `images/gaze-arm-1.jpg` | Gaze Arm: the xArm6 at the hackathon |
 | `videos/gaze-arm-demo.mp4` | Gaze Arm: a short demo clip (muted, loops) |
 | `images/omniring-1.jpg` | OmniRing: the XIAO prototype |
@@ -63,14 +64,12 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 | File | What it does |
 |---|---|
 | `index.html` | All the content |
-| `css/style.css` | The look: near-black forest greens with sunlit-leaf green, neon green, turquoise, and teal |
-| `js/hero3d.js` | The hero: a real UFactory xArm6 + gripper in three.js, built from UFactory's meshes and kinematics, reaching for the cursor with CCD inverse kinematics |
-| `js/demos.js` | Live demos: COCO-SSD object detection (Gaze Arm dwell selection, ZoneLogic rules on real footage), MediaPipe face/iris tracking on the visitor's webcam, phone motion sensors for OmniRing, and FFT Wiener deconvolution for the optics project |
-| `js/main.js` | Clocks, smooth scrolling, reveals, counters, the project map, timeline, trees, 10K pace bar |
+| `css/style.css` | The look: white and pale mint with leaf green, turquoise, teal, pink, and blue |
+| `js/pick.js` | "Pick something up with your eyes": a 3D SO-ARM100 arm (three.js) with inverse kinematics and pick-and-place, driven by webcam gaze (MediaPipe face tracking + 3-dot calibration) or by the mouse |
+| `js/demos.js` | ZoneLogic rules on real street footage (COCO-SSD), the OmniRing gesture pad, FFT Wiener deconvolution, and the research chart drawn from real training logs |
+| `js/main.js` | Clocks, nav, reveals, the project map, trees, 10K pace bar |
 | `js/slots.js` | Photo/video spots and their placeholders |
-| `models/xarm6/` | xArm6 and gripper meshes from github.com/xArm-Developer/xarm_ros (BSD-3, license included) |
+| `models/so100/` | SO-ARM100 meshes from Google DeepMind's MuJoCo Menagerie (Apache 2.0, LICENSE + NOTICE included) |
 | `assets/` | Stock photos (Pexels), the crosswalk clip (Mixkit), the USAF 1951 chart (Wikimedia Commons, CC BY-SA 2.5), and the book cover |
 
-Libraries (loaded from CDNs, all free): three.js, TensorFlow.js + COCO-SSD, MediaPipe Tasks Vision, GSAP + ScrollTrigger, Lenis, qrcode-generator. Fonts: Archivo, Geist, and Geist Mono from Google Fonts. The webcam demo only starts when a visitor clicks the button, and nothing leaves their browser.
-
-Note: the OmniRing demo uses phone motion sensors, which browsers only allow on HTTPS, so test it on the live GitHub Pages site, not on localhost from your phone.
+Libraries (loaded from CDNs, all free): three.js, MediaPipe Tasks Vision, TensorFlow.js + COCO-SSD. Fonts: Fraunces, Figtree, and DM Mono from Google Fonts. The webcam only turns on when a visitor clicks the button, and the video never leaves their browser. Webcams need HTTPS (or localhost), which GitHub Pages provides.

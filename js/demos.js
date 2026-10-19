@@ -1,14 +1,14 @@
-/* Live demos: a real object detector, real face tracking, real motion sensors,
- * and real FFT deconvolution, all in the browser. Each starts when scrolled to. */
+/* Project demos: street-footage rules (COCO-SSD), the OmniRing gesture pad,
+ * FFT Wiener deconvolution, and a chart drawn from my real training logs. */
 (function () {
-  const C = { neon: '#3cff8f', leaf: '#b6f05a', turq: '#2de2d0', teal: '#14b8a6', tealD: '#0d5c55', text: '#e4f1ea', text2: '#a6bfb4', text3: '#6f8a80', bg: '#050a08' };
-  const MONO = '"Geist Mono", ui-monospace, monospace';
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const onVisible = (el, fn, margin = '200px') => {
-    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: margin });
-    io.observe(el);
+  // light-theme colours (names kept from the canvas code that uses them)
+  const C = {
+    neon: '#3ddc84', leaf: '#ff8fbd', turq: '#8fbcff', teal: '#14b5aa', bg: '#10241f', text3: '#85978f',
+    hw: '#e8578f', sw: '#3d7be0', rule: '#e1eae5', ink: '#17302a', ink3: '#85978f', green: '#27a35f'
   };
+  const MONO = '"DM Mono", ui-monospace, monospace';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const onVisible = (el, fn, margin = '200px') => { const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: margin }); io.observe(el); };
   const watchVisible = (el, cb) => new IntersectionObserver(es => cb(es[0].isIntersecting), { rootMargin: '60px' }).observe(el);
   function fit(canvas) {
     const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
@@ -22,6 +22,9 @@
     const w = ctx.measureText(s).width + 10;
     ctx.fillStyle = bg; ctx.fillRect(x, y - 16, w, 16);
     ctx.fillStyle = fg; ctx.fillText(s, x + 5, y - 4);
+  }
+  function text(ctx, s, x, y, color = C.ink, size = 11, align = 'left') {
+    ctx.fillStyle = color; ctx.font = `${size}px ${MONO}`; ctx.textAlign = align; ctx.fillText(s, x, y);
   }
   function script(src) {
     return new Promise((res, rej) => {
@@ -41,162 +44,49 @@
     btns.forEach(b => b.addEventListener('click', () => { btns.forEach(x => x.classList.toggle('on', x === b)); cb(b.dataset[attr]); }));
   }
 
-  /* ================================================ fig 1 · dwell selector */
-  (function dwell() {
-    const root = document.getElementById('demo-dwell'); if (!root) return;
-    const img = root.querySelector('img'), canvas = root.querySelector('canvas'), state = root.querySelector('[data-state]');
-    // gaze_lock.py: SELECT 0.9 s, TAU 1.5 s, DOMINANCE 2, cap 1.5×SELECT, soft score exp(-(d/σ)^2)
-    const SELECT = 0.9, TAU = 1.5, DOM = 2, CAP = SELECT * 1.5;
-    let objs = [], gaze = null, gazeAt = 0, locked = null, lockT = 0, running = false, visible = false, auto = 0;
-    canvas.addEventListener('pointermove', e => { const r = canvas.getBoundingClientRect(); gaze = { x: e.clientX - r.left, y: e.clientY - r.top }; gazeAt = performance.now(); });
-    canvas.addEventListener('pointerdown', e => { const r = canvas.getBoundingClientRect(); gaze = { x: e.clientX - r.left, y: e.clientY - r.top }; gazeAt = performance.now(); });
-    watchVisible(root, v => { visible = v; });
-
-    onVisible(root, async () => {
-      try {
-        if (!img.complete) await new Promise(r => img.onload = r);
-        state.textContent = 'loading detector…';
-        const model = await loadDetector();
-        // detect on a detached copy so boxes come back in natural-resolution pixels
-        const full = new Image(); full.src = img.currentSrc || img.src; await full.decode();
-        const preds = await model.detect(full, 20, 0.3);
-        // like the real arm: only tabletop objects, and ignore boxes that swallow the whole scene
-        const TABLE = new Set(['cup', 'bottle', 'wine glass', 'bowl', 'laptop', 'cell phone', 'book', 'keyboard', 'mouse', 'remote', 'scissors', 'vase', 'clock', 'potted plant', 'teddy bear', 'banana', 'apple', 'orange']);
-        objs = preds.filter(p => TABLE.has(p.class) && p.bbox[2] * p.bbox[3] < full.naturalWidth * full.naturalHeight * 0.5)
-          .map(p => ({ cls: p.class, score: p.score, bb: p.bbox, ev: 0 }));
-        state.textContent = `${objs.length} objects · COCO-SSD`;
-        running = true; requestAnimationFrame(loop);
-      } catch (err) { state.textContent = 'detector failed to load'; }
-    });
-
+  /* Canvas helper: DPR sizing, pointer tracking, visibility-gated animation loop. */
+  function stage(canvas, draw) {
+    const ctx = canvas.getContext('2d');
+    const s = { ctx, w: 0, h: 0, p: { x: 0, y: 0, in: false, down: false, t: 0 }, visible: false, t: 0 };
+    function size() {
+      const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
+      s.w = r.width; s.h = r.height;
+      canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (s.onresize) s.onresize();
+    }
+    const pos = e => { const r = canvas.getBoundingClientRect(); s.p.x = e.clientX - r.left; s.p.y = e.clientY - r.top; s.p.t = performance.now(); };
+    canvas.addEventListener('pointermove', e => { pos(e); s.p.in = true; });
+    canvas.addEventListener('pointerenter', e => { pos(e); s.p.in = true; });
+    canvas.addEventListener('pointerleave', () => { s.p.in = false; s.p.down = false; });
+    canvas.addEventListener('pointerdown', e => { pos(e); s.p.in = true; s.p.down = true; if (s.ondown) s.ondown(e); });
+    addEventListener('pointerup', e => { if (s.p.down) { s.p.down = false; if (s.onup) s.onup(e); } });
+    new IntersectionObserver(es => { s.visible = es[0].isIntersecting; }, { rootMargin: '80px' }).observe(canvas);
     let last = performance.now();
     function loop(now) {
       requestAnimationFrame(loop);
-      const dt = Math.min(0.2, (now - last) / 1000); last = now;
-      if (!visible || !running) return;
-      const { ctx, w, h } = fit(canvas);
-      const sx = w / img.naturalWidth, sy = h / img.naturalHeight, sigma = 0.07 * w;
-      let g = gaze && now - gazeAt < 3500 ? gaze : null;
-      if (!g && !reduced && objs.length) { // demo gaze drifts between objects when idle
-        auto += dt; const i = Math.floor(auto / 3.2) % objs.length, b = objs[i].bb;
-        g = { x: (b[0] + b[2] / 2) * sx + Math.sin(auto * 6) * 8, y: (b[1] + b[3] / 2) * sy + Math.cos(auto * 5) * 8 };
-      }
-      if (locked) { lockT += dt; if (lockT > 2.6) { locked = null; objs.forEach(o => o.ev = 0); } }
-      else {
-        objs.forEach(o => {
-          let s = 0;
-          if (g) {
-            const x0 = o.bb[0] * sx, y0 = o.bb[1] * sy, x1 = x0 + o.bb[2] * sx, y1 = y0 + o.bb[3] * sy;
-            const dx = Math.max(x0 - g.x, 0, g.x - x1), dy = Math.max(y0 - g.y, 0, g.y - y1);
-            s = Math.exp(-(dx * dx + dy * dy) / (sigma * sigma));
-          }
-          o.ev = Math.min(CAP, o.ev * Math.exp(-dt * (1 - s) / TAU) + s * dt);
-        });
-        // nested boxes: the innermost one under the gaze gets full credit (handled by sort on area when tied)
-        const r = [...objs].sort((a, b) => b.ev - a.ev);
-        if (r.length && r[0].ev >= SELECT && r[0].ev >= DOM * (r[1] ? r[1].ev : 0)) { locked = r[0]; lockT = 0; }
-      }
-      ctx.clearRect(0, 0, w, h);
-      if (locked) { ctx.fillStyle = 'rgba(2,8,6,.45)'; ctx.fillRect(0, 0, w, h); }
-      const lead = [...objs].sort((a, b) => b.ev - a.ev)[0];
-      objs.forEach(o => {
-        const x = o.bb[0] * sx, y = o.bb[1] * sy, bw = o.bb[2] * sx, bh = o.bb[3] * sy;
-        const isL = locked === o, isLead = !locked && o === lead && o.ev > 0.12;
-        const col = isL ? C.leaf : isLead ? C.neon : C.turq;
-        ctx.lineWidth = isL ? 4 : isLead ? 3 : 1.5; ctx.strokeStyle = col; ctx.strokeRect(x, y, bw, bh);
-        label(ctx, `${o.cls} ${o.score.toFixed(2)}`, x, Math.max(16, y), col);
-        const pr = Math.min(1, o.ev / SELECT);
-        if (pr > 0.01 || isL) { ctx.fillStyle = 'rgba(2,8,6,.6)'; ctx.fillRect(x, y + bh - 6, bw, 6); ctx.fillStyle = col; ctx.fillRect(x, y + bh - 6, bw * (isL ? 1 : pr), 6); }
-      });
-      if (g && !locked) {
-        ctx.strokeStyle = C.neon; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.x, g.y, 13, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = C.neon; ctx.beginPath(); ctx.arc(g.x, g.y, 3.5, 0, Math.PI * 2); ctx.fill();
-      }
-      if (locked) label(ctx, lockT < 1.3 ? `LOCKED · ${locked.cls} · frame frozen` : `→ 3D target from depth · planning grasp`, 12, 30, C.leaf);
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (!s.visible) return;
+      s.t += dt;
+      draw(s, dt);
     }
-  })();
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(size, 100); });
+    size();
+    requestAnimationFrame(loop);
+    return s;
+  }
 
-  /* ============================================== fig 2 · face landmarker */
-  (function face() {
-    const root = document.getElementById('demo-face'); if (!root) return;
-    const video = root.querySelector('video'), canvas = root.querySelector('canvas'), gate = root.querySelector('.cam__gate');
-    const btn = root.querySelector('[data-start]'), state = root.querySelector('[data-state]'), readout = root.querySelector('.cam__readout');
-    const q = s => root.querySelector(s);
-    const VB = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-    let lm = null, stream = null, visible = false, lastT = -1;
-    watchVisible(root, v => { visible = v; });
+  function seg(root, attr, cb) {
+    const btns = root.querySelectorAll('.seg button');
+    btns.forEach(b => b.addEventListener('click', () => {
+      btns.forEach(x => x.classList.toggle('on', x === b));
+      cb(b.dataset[attr]);
+    }));
+  }
 
-    async function start() {
-      btn.disabled = true; btn.textContent = 'starting…';
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
-        video.srcObject = stream; await video.play();
-        state.textContent = 'loading face model…';
-        if (!lm) {
-          const vision = await import(VB + '/vision_bundle.mjs');
-          const files = await vision.FilesetResolver.forVisionTasks(VB + '/wasm');
-          lm = await vision.FaceLandmarker.createFromOptions(files, {
-            baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate: 'GPU' },
-            runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true, outputFacialTransformationMatrixes: true
-          });
-        }
-        gate.classList.add('off'); readout.hidden = false;
-        state.innerHTML = 'camera on · <a href="#" data-stop>stop</a>';
-        state.querySelector('[data-stop]').addEventListener('click', e => { e.preventDefault(); stop(); });
-        requestAnimationFrame(loop);
-      } catch (err) {
-        btn.disabled = false; btn.textContent = 'Turn on camera';
-        state.textContent = err && err.name === 'NotAllowedError' ? 'camera permission denied' : 'camera unavailable';
-      }
-    }
-    function stop() {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      stream = null; video.srcObject = null;
-      gate.classList.remove('off'); readout.hidden = true; btn.disabled = false; btn.textContent = 'Turn on camera';
-      state.textContent = 'camera off';
-      const { ctx, w, h } = fit(canvas); ctx.clearRect(0, 0, w, h);
-    }
-    btn.addEventListener('click', start);
-
-    const ratio = (p, a, b) => { const vx = b.x - a.x, vy = b.y - a.y, L = vx * vx + vy * vy || 1; return ((p.x - a.x) * vx + (p.y - a.y) * vy) / L; };
-    function loop() {
-      if (!stream) return;
-      requestAnimationFrame(loop);
-      if (!visible || video.readyState < 2 || video.currentTime === lastT) return;
-      lastT = video.currentTime;
-      const res = lm.detectForVideo(video, performance.now());
-      const { ctx, w, h } = fit(canvas);
-      ctx.clearRect(0, 0, w, h);
-      const pts = res.faceLandmarks && res.faceLandmarks[0];
-      if (!pts) { q('[data-ix]').textContent = 'no face'; return; }
-      // map normalized coords into the object-fit:cover, mirrored video box
-      const vw = video.videoWidth, vh = video.videoHeight, s = Math.max(w / vw, h / vh), ox = (w - vw * s) / 2, oy = (h - vh * s) / 2;
-      const P = p => ({ x: w - (ox + p.x * vw * s), y: oy + p.y * vh * s });
-      ctx.fillStyle = 'rgba(45,226,208,.55)';
-      for (let i = 0; i < 468; i += 2) { const p = P(pts[i]); ctx.fillRect(p.x - 1, p.y - 1, 2, 2); }
-      [[468, 33, 133], [473, 362, 263]].forEach(([iris, a, b]) => {
-        const c = P(pts[iris]), e1 = P(pts[a]), e2 = P(pts[b]);
-        ctx.strokeStyle = C.leaf; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e1.x, e1.y); ctx.lineTo(e2.x, e2.y); ctx.stroke();
-        const r = Math.hypot(P(pts[iris + 1]).x - c.x, P(pts[iris + 1]).y - c.y);
-        ctx.strokeStyle = C.neon; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c.x, c.y, Math.max(3, r), 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = C.neon; ctx.beginPath(); ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2); ctx.fill();
-      });
-      const rx = (ratio(pts[468], pts[33], pts[133]) + ratio(pts[473], pts[362], pts[263])) / 2;
-      const ry = (ratio(pts[468], pts[159], pts[145]) + ratio(pts[473], pts[386], pts[374])) / 2;
-      q('[data-ix]').textContent = rx.toFixed(2); q('[data-iy]').textContent = ry.toFixed(2);
-      const m = res.facialTransformationMatrixes && res.facialTransformationMatrixes[0];
-      if (m) {
-        const d = m.data; // column-major 4×4
-        const yaw = Math.atan2(d[8], d[10]) * 180 / Math.PI, pitch = Math.asin(Math.max(-1, Math.min(1, -d[9]))) * 180 / Math.PI;
-        q('[data-yaw]').textContent = (-yaw).toFixed(0) + '°'; q('[data-pitch]').textContent = pitch.toFixed(0) + '°';
-      }
-      const bs = res.faceBlendshapes && res.faceBlendshapes[0];
-      if (bs) {
-        const get = n => (bs.categories.find(c => c.categoryName === n) || { score: 0 }).score;
-        q('[data-blink]').textContent = (get('eyeBlinkLeft') + get('eyeBlinkRight')) / 2 > 0.45 ? 'yes' : 'no';
-      }
-    }
-  })();
+  function text(ctx, s, x, y, color = C.ink, size = 11, align = 'left') {
+    ctx.fillStyle = color; ctx.font = `${size}px ${MONO}`; ctx.textAlign = align; ctx.fillText(s, x, y);
+  }
 
   /* ============================================ fig 3 · zone rule on video */
   (function zone() {
@@ -286,92 +176,92 @@
     }
   })();
 
-  /* ================================================== fig 4 · motion sensor */
-  (function imu() {
-    const root = document.getElementById('demo-imu'); if (!root) return;
-    const plot = root.querySelector('.imu__plot'), gate = root.querySelector('.imu__gate'), state = root.querySelector('[data-state]');
-    const bars = root.querySelector('.bars'), anom = root.querySelector('.imu__anom');
-    const phone = root.querySelector('.imu__phone'), desk = root.querySelector('.imu__desk');
-    const coarse = matchMedia('(pointer: coarse)').matches;
-    phone.style.display = coarse ? '' : 'none'; desk.style.display = coarse ? 'none' : '';
-    const CLS = ['circle', 'left-right', 'up-down', 'rest'];
-    CLS.forEach(c => { const d = document.createElement('div'); d.className = 'bar'; d.innerHTML = `<span>${c}</span><i></i><b>–</b>`; bars.append(d); });
-    // QR code to open this demo on a phone
-    if (window.qrcode && !coarse) {
-      const qr = qrcode(0, 'M'); qr.addData(location.href.split('#')[0] + '#omniring'); qr.make();
-      root.querySelector('.qr').innerHTML = qr.createSvgTag({ cellSize: 3, margin: 0 });
-    }
-    const buf = []; // {t, ax, ay, az, g}
-    let source = null, visible = false, mouse = null;
-    watchVisible(root, v => { visible = v; });
 
-    function push(ax, ay, az, g) { const t = performance.now(); buf.push({ t, ax, ay, az, g }); while (buf.length && t - buf[0].t > 3000) buf.shift(); }
-    function startMotion() {
-      const go = () => {
-        source = 'phone'; gate.classList.add('off'); state.textContent = 'reading your phone\'s IMU';
-        addEventListener('devicemotion', e => {
-          const a = e.acceleration && e.acceleration.x != null ? e.acceleration : e.accelerationIncludingGravity; if (!a) return;
-          const r = e.rotationRate || {};
-          push(a.x || 0, a.y || 0, a.z || 0, Math.hypot(r.alpha || 0, r.beta || 0, r.gamma || 0) / 100);
-        });
-      };
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        DeviceMotionEvent.requestPermission().then(p => p === 'granted' ? go() : (state.textContent = 'permission denied')).catch(() => state.textContent = 'permission denied');
-      } else if ('DeviceMotionEvent' in window) go(); else state.textContent = 'no motion sensor';
-    }
-    root.querySelector('[data-motion]').addEventListener('click', startMotion);
-    // desktop fallback: mouse velocity stands in for acceleration
-    plot.addEventListener('pointerdown', e => { if (coarse) return; source = 'mouse'; gate.classList.add('off'); state.textContent = 'mouse as IMU · keep dragging'; mouse = { x: e.clientX, y: e.clientY, t: performance.now() }; plot.setPointerCapture(e.pointerId); });
-    plot.addEventListener('pointermove', e => { if (!mouse) return; const t = performance.now(), dt = Math.max(8, t - mouse.t); push((e.clientX - mouse.x) / dt * 6, -(e.clientY - mouse.y) / dt * 6, 0, 0); mouse = { x: e.clientX, y: e.clientY, t }; });
-    plot.addEventListener('pointerup', () => { mouse = null; });
+  /* ==================================================== OmniRing gesture pad */
+  (function gesture() {
+    const root = document.getElementById('demo-gesture'); if (!root) return;
+    const bars = root.querySelector('.bars'), traceCv = root.querySelector('.gesture__trace');
+    const CLASSES = ['circle', 'left-right', 'up-down', 'rest'];
+    CLASSES.forEach(c => { const d = document.createElement('div'); d.className = 'bar'; d.innerHTML = `<span>${c}</span><i></i><b>0.00</b>`; bars.append(d); });
+    const anomaly = document.createElement('p'); anomaly.style.margin = '0'; bars.after(anomaly);
+    let pts = [], recording = false, result = null;
+    const tctx = traceCv.getContext('2d');
 
-    function classify() {
-      const now = performance.now(), win = buf.filter(s => now - s.t < 1000);
-      if (win.length < 8) return null;
-      const mean = k => win.reduce((a, s) => a + s[k], 0) / win.length;
-      const mx = mean('ax'), my = mean('ay'), mz = mean('az');
-      const en = k => Math.sqrt(win.reduce((a, s) => a + (s[k] - (k === 'ax' ? mx : k === 'ay' ? my : mz)) ** 2, 0) / win.length);
-      const ex = en('ax'), ey = en('ay'), ez = en('az'), tot = ex + ey + ez;
-      let cxy = 0; win.forEach(s => cxy += (s.ax - mx) * (s.ay - my)); cxy /= win.length * (ex * ey || 1);
-      const act = Math.min(1, tot / 2.2), ev = Math.max(ey, ez);
-      const r = Math.min(ex, ev) / (Math.max(ex, ev) || 1); // 1 = motion split evenly between axes (circle), 0 = one axis (a line)
-      const clamp = v => Math.max(0, Math.min(1, v));
+    function features(p) {
+      if (p.length < 3) return null;
+      let len = 0, turn = 0, rx = 0, ry = 0, lastDx = 0, lastDy = 0, lastA = null;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (let i = 1; i < p.length; i++) {
+        const dx = p[i].x - p[i - 1].x, dy = p[i].y - p[i - 1].y, d = Math.hypot(dx, dy);
+        len += d;
+        if (Math.abs(dx) > 1.5) { if (lastDx && Math.sign(dx) !== Math.sign(lastDx)) rx++; lastDx = dx; }
+        if (Math.abs(dy) > 1.5) { if (lastDy && Math.sign(dy) !== Math.sign(lastDy)) ry++; lastDy = dy; }
+        if (d > 2) { const a = Math.atan2(dy, dx); if (lastA !== null) { let da = a - lastA; da = Math.atan2(Math.sin(da), Math.cos(da)); turn += da; } lastA = a; }
+      }
+      p.forEach(q => { minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y); });
+      const bw = maxX - minX, bh = maxY - minY, closure = Math.hypot(p[0].x - p[p.length - 1].x, p[0].y - p[p.length - 1].y) / Math.max(len, 1);
+      return { len, turn: Math.abs(turn), rx, ry, bw, bh, closure };
+    }
+    function classify(f) {
+      if (!f) return [0, 0, 0, 1];
+      const aspect = (f.bw + 1) / (f.bh + 1), extent = Math.max(f.bw, f.bh), moving = Math.min(1, extent / 45);
       const sc = [
-        act * 3.2 * clamp((r - 0.35) / 0.45) * (1 - Math.abs(cxy)),
-        act * 3 * (ex >= ev ? 1 : 0.2) * clamp(1 - r * 1.3),
-        act * 3 * (ev > ex ? 1 : 0.2) * clamp(1 - r * 1.3),
-        tot < 0.6 ? 3 : Math.max(0, 1.5 - tot)
+        2.6 * moving * Math.min(1, f.turn / (2 * Math.PI)) * (1 - Math.min(1, f.closure * 2)) * Math.min(1, Math.min(aspect, 1 / aspect) * 1.6),
+        2.2 * moving * Math.min(1, aspect / 3) * Math.min(1, (f.rx + 1) / 3),
+        2.2 * moving * Math.min(1, (1 / aspect) / 3) * Math.min(1, (f.ry + 1) / 3),
+        extent < 25 ? 3 : Math.max(0, 1.5 - extent / 50)
       ];
-      const e = sc.map(v => Math.exp(v * 2)), sum = e.reduce((a, b) => a + b, 0);
-      return { p: e.map(v => v / sum), tot };
+      const ex = sc.map(v => Math.exp(v * 2.2)), sum = ex.reduce((a, b) => a + b, 0);
+      return ex.map(v => v / sum);
     }
-    let last = 0;
-    function loop(now) {
-      requestAnimationFrame(loop);
-      if (!visible) return;
-      const { ctx, w, h } = fit(plot);
+    function show(prob, idle) {
+      const top = idle ? -1 : prob.indexOf(Math.max(...prob));
+      [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (prob[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = prob[i].toFixed(2); });
+      const odd = !idle && Math.max(...prob) < 0.5;
+      anomaly.textContent = idle ? 'waiting for a gesture' : odd ? 'anomaly: motion unlike anything trained' : 'anomaly: none';
+      anomaly.style.color = odd ? C.hw : C.ink3;
+    }
+    function drawTrace() {
+      const dpr = Math.min(devicePixelRatio || 1, 2), r = traceCv.getBoundingClientRect();
+      if (traceCv.width !== Math.round(r.width * dpr)) { traceCv.width = Math.round(r.width * dpr); traceCv.height = Math.round(r.height * dpr); }
+      tctx.setTransform(dpr, 0, 0, dpr, 0, 0); tctx.clearRect(0, 0, r.width, r.height);
+      tctx.strokeStyle = C.rule; tctx.beginPath(); tctx.moveTo(0, r.height / 2); tctx.lineTo(r.width, r.height / 2); tctx.stroke();
+      if (pts.length < 3) return;
+      [['x', C.hw], ['y', C.sw]].forEach(([k, col]) => {
+        tctx.strokeStyle = col; tctx.lineWidth = 1.5; tctx.beginPath();
+        for (let i = 1; i < pts.length; i++) {
+          const v = (pts[i][k] - pts[i - 1][k]) / Math.max(1, (pts[i].t - pts[i - 1].t)) * 16;
+          const x = (i / (pts.length - 1)) * r.width, y = r.height / 2 - Math.max(-1, Math.min(1, v / 40)) * (r.height / 2 - 4);
+          i === 1 ? tctx.moveTo(x, y) : tctx.lineTo(x, y);
+        }
+        tctx.stroke();
+      });
+    }
+    show([0.25, 0.25, 0.25, 0.25], true);
+
+    const s = stage(root.querySelector('.gesture__pad'), (s) => {
+      const { ctx, w, h } = s;
+      if (recording && s.p.down) {
+        const last = pts[pts.length - 1];
+        if (!last || Math.hypot(last.x - s.p.x, last.y - s.p.y) > 1) pts.push({ x: s.p.x, y: s.p.y, t: performance.now() });
+        if (pts.length % 4 === 0) { show(classify(features(pts))); drawTrace(); }
+      }
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = 'rgba(150,255,220,.08)'; ctx.lineWidth = 1;
-      for (let y = h / 4; y < h; y += h / 4) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-      if (buf.length > 1) {
-        const t1 = performance.now(), sc = h / 2 / 12;
-        [['ax', C.neon], ['ay', C.turq], ['az', C.leaf], ['g', 'rgba(166,191,180,.5)']].forEach(([k, col]) => {
-          ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath();
-          buf.forEach((s, i) => { const x = w - (t1 - s.t) / 3000 * w, y = h / 2 - Math.max(-12, Math.min(12, s[k])) * sc; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-          ctx.stroke();
-        });
-        ctx.font = `11px ${MONO}`; [['accel x', C.neon], ['accel y', C.turq], ['accel z', C.leaf], ['gyro', C.text3]].forEach(([s, c], i) => { ctx.fillStyle = c; ctx.fillText(s, 10 + i * 70, 18); });
-      }
-      if (now - last > 200 && source) {
-        last = now;
-        const r = classify(); if (!r) return;
-        const top = r.p.indexOf(Math.max(...r.p));
-        [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (r.p[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = r.p[i].toFixed(2); });
-        const odd = Math.max(...r.p) < 0.5 && r.tot > 0.6;
-        anom.textContent = odd ? 'anomaly: motion unlike any gesture' : 'anomaly: none'; anom.style.color = odd ? C.neon : C.text3;
-      }
-    }
-    requestAnimationFrame(loop);
+      ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
+      for (let x = 20; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = 20; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      if (!pts.length) { text(ctx, 'press and draw here', w / 2, h / 2, C.ink3, 12, 'center'); return; }
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+      ctx.fillStyle = C.hw; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 5, 0, Math.PI * 2); ctx.fill();
+      if (result) text(ctx, `→ ${result}`, 12, 22, C.hw, 13);
+    });
+    s.ondown = () => { pts = []; result = null; recording = true; };
+    s.onup = () => {
+      recording = false;
+      const prob = classify(features(pts)); show(prob); drawTrace();
+      result = CLASSES[prob.indexOf(Math.max(...prob))];
+    };
   })();
 
   /* ============================================ fig 5 · Wiener deconvolution */
@@ -458,5 +348,39 @@
     });
     let t; const deb = () => { clearTimeout(t); t = setTimeout(() => sharp && run(), 30); };
     dIn.addEventListener('input', deb); nIn.addEventListener('input', deb);
+  })();
+
+  /* ====================================== research chart from training logs */
+  (function chart() {
+    const svg = document.querySelector('#chart-gaze svg'); if (!svg) return;
+    // runs/gazefusion_v3_geo_cm/history.csv (val_deg per epoch) and docs/FIXES_V3.md
+    const epochs = [3.506, 2.797, 2.636, 2.481, 2.588, 2.578, 2.631, 2.631];
+    const stages = [['old model', 3.62, '#cdd9d3'], ['labels fixed', 2.99, '#8fbcff'], ['new model', 2.48, '#27a35f']];
+    const ns = 'http://www.w3.org/2000/svg', el = (t, a, p = svg) => { const n = document.createElementNS(ns, t); for (const k in a) n.setAttribute(k, a[k]); p.append(n); return n; };
+    const T = (s, x, y, a = {}) => { const t = el('text', { x, y, ...a }); t.textContent = s; return t; };
+    // left: validation error per epoch
+    const x0 = 44, x1 = 290, y0 = 40, y1 = 250, lo = 2.3, hi = 3.7;
+    const X = i => x0 + (i / (epochs.length - 1)) * (x1 - x0), Y = v => y1 - (v - lo) / (hi - lo) * (y1 - y0);
+    [2.5, 3.0, 3.5].forEach(v => { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: '#e1eae5' }); T(v.toFixed(1) + '°', x0 - 8, Y(v) + 4, { 'text-anchor': 'end' }); });
+    T('validation error by epoch', x0, 22, { fill: '#4b615a' });
+    el('path', { d: epochs.map((v, i) => (i ? 'L' : 'M') + X(i) + ' ' + Y(v)).join(' '), fill: 'none', stroke: '#14b5aa', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', class: 'chart__line' });
+    epochs.forEach((v, i) => el('circle', { cx: X(i), cy: Y(v), r: i === 3 ? 6 : 3.5, fill: i === 3 ? '#e8578f' : '#14b5aa', stroke: '#fff', 'stroke-width': 2 }));
+    T('best: 2.48° (epoch 4)', X(3) + 8, Y(2.481) + 22, { fill: '#e8578f' });
+    epochs.forEach((_, i) => T(String(i + 1), X(i), y1 + 18, { 'text-anchor': 'middle' }));
+    T('epoch', (x0 + x1) / 2, y1 + 38, { 'text-anchor': 'middle' });
+    // right: where each fix moved it
+    const bx = 340, bw = 44, gap = 16;
+    T('after each fix', bx, 22, { fill: '#4b615a' });
+    stages.forEach(([name, v, col], i) => {
+      const x = bx + i * (bw + gap), h = (v / 4) * (y1 - y0);
+      el('rect', { x, y: y1 - h, width: bw, height: h, rx: 8, fill: col });
+      T(v.toFixed(2) + '°', x + bw / 2, y1 - h - 8, { 'text-anchor': 'middle', fill: '#17302a' });
+      name.split(' ').forEach((w, k) => T(w, x + bw / 2, y1 + 18 + k * 14, { 'text-anchor': 'middle' }));
+    });
+    const line = svg.querySelector('.chart__line');
+    if (line && !reduced && line.getTotalLength) {
+      const L = line.getTotalLength(); line.style.strokeDasharray = L; line.style.strokeDashoffset = L;
+      onVisible(svg, () => { line.style.transition = 'stroke-dashoffset 1.6s ease'; requestAnimationFrame(() => { line.style.strokeDashoffset = 0; }); }, '0px');
+    }
   })();
 })();

@@ -1,0 +1,7 @@
+SO-ARM100 robot model
+
+Meshes from the MuJoCo Menagerie package trs_so_arm100
+(https://github.com/google-deepmind/mujoco_menagerie/tree/main/trs_so_arm100),
+derived from the Standard Open Arm-100 by The Robot Studio
+(https://github.com/TheRobotStudio/SO-ARM100). Licensed under Apache 2.0 (see LICENSE).
+Kinematics transcribed from so_arm100.xml in that package.
