@@ -45,7 +45,7 @@
     <div class="intro__text">
       <p class="hello mono">hi, nice to meet you</p>
       <h1>I'm Keith, a computer engineer with one stubborn question.</h1>
-      <p class="intro__lede">I study computer engineering at NJIT, by way of Kampala, Uganda. I came to it through biology and ethics, carrying a question I still haven't answered: <q>to what extent can machines substitute, enhance, or otherwise neutrally influence our experience as humans?</q></p>
+      <p class="intro__lede">I study computer engineering at NJIT, by way of Kampala, Uganda. I came to it through biology and ethics, carrying a question I still haven't answered: <q>to what extent can machines stand in for us, extend us, or quietly shape how we experience being human?</q></p>
       <p class="intro__lede">Chasing it has given me a robot arm you steer with your eyes, a ring with a neural network on a chip the size of a coin, and a couple of research projects in machine learning. The deeper I go, the more I find that the hard limits aren't in the code. They live in the silicon underneath it, which is why computer architecture pulls at me just as much as AI does, and why I've just started doing hardware research too.</p>
       <ul class="currently">
         <li><span class="dot dot--green"></span> just starting out in hardware research at NJIT</li>
@@ -136,8 +136,8 @@
         </div>
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Mar 2026 – now</p>
-          <h4>Webcam gaze estimation</h4>
-          <p>Can an ordinary laptop webcam do the job of a dedicated eye tracker? I build and train deep learning models in PyTorch to find out. The work is ongoing and unpublished, so the details can wait until there's something worth publishing. The lesson it keeps teaching me is simpler: before you trust a model, audit the data it learned from.</p>
+          <h4>Gaze estimation with a depth camera</h4>
+          <p>Can a depth camera tell where on a screen you're looking, and does seeing depth make it more accurate, and more robust for people it has never met? The plan pairs an Intel RealSense D435 (color plus depth) with a research-grade Tobii eye tracker. So far I've built the color-only half: a deep learning pipeline in PyTorch, trained on a public webcam dataset and designed so depth can slot in once the D435 recordings exist. It's ongoing and unpublished, so the details can wait. The lesson it keeps teaching me is simpler: before you trust a model, audit the data it learned from.</p>
         </div>
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Sept – Dec 2025</p>
@@ -241,7 +241,7 @@
         <p class="proj__meta mono"><span class="tag tag--sw">software</span> Aug 2025</p>
         <h3>Einstein, a tutoring chatbot</h3>
         <p>A study buddy with a very particular teaching style: before it explains anything, it asks what you already know, then builds up from there and sets you a practice problem. Built on Gemini 2.5 Flash with LangChain and Gradio.</p>
-        <div class="live-chat" data-space="" hidden>
+        <div class="live-chat" data-space="" data-space-local="http://127.0.0.1:7860" hidden>
           <button class="pill pill--solid" data-open-chat>Chat with Einstein</button>
           <p class="mono live-chat__note">Runs on Hugging Face Spaces; the first message can take a few seconds while it wakes up.</p>
         </div>

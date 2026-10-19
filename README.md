@@ -86,4 +86,12 @@ Everything it needs is ready in `C:/Users/danny/Developer/einstein-space` (your 
 4. When it shows "Running", copy the direct app URL (something like `https://rwezzy-einstein.hf.space`).
 5. In `index.html`, find `class="live-chat" data-space=""` and paste the URL between the quotes.
 
+**To chat with Einstein on your own computer right now** (no Hugging Face needed), run this, then open the site at http://localhost:8137. The Einstein card picks up the local copy automatically:
+
+```bash
+C:/Users/danny/Developer/einstein-space/.venv/Scripts/python.exe C:/Users/danny/Developer/einstein-space/run_local.py
+```
+
+It reads your key from the original Einstein folder's `.env`, so no key is ever copied. When uploading to Hugging Face, upload only `app.py`, `requirements.txt`, `README.md` and `einstein.png` (not `.venv` or `run_local.py`).
+
 The Einstein card then gets a **Chat with Einstein** button that loads the real chatbot. Free Spaces sleep when idle, so the first message after a quiet spell takes a few seconds.

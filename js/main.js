@@ -28,15 +28,18 @@
     // Put your Hugging Face Space URL in data-space, e.g. https://rwezzy-einstein.hf.space
     const space = (box.dataset.space || '').trim();
     const editing = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
-    if (!space) {
-      if (editing) { box.hidden = false; box.innerHTML = '<p class="mono live-chat__note">(only you see this) Once Einstein is on Hugging Face Spaces, put its URL in <b>data-space</b> on this box and a live chat appears here.</p>'; }
-      return;
-    }
+    // On your own computer, fall back to the copy running locally (einstein-space/run_local.py).
+    const url = space || (editing ? (box.dataset.spaceLocal || '') : '');
+    if (!url) return;
     box.hidden = false;
+    if (!space) box.querySelector('.live-chat__note').innerHTML = '(only you see this) Local preview: Einstein is running on your computer. For the live site, put your Hugging Face Space URL in <b>data-space</b>.';
     box.querySelector('[data-open-chat]').addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = space; f.title = 'Chat with Einstein'; f.loading = 'lazy'; f.allow = 'clipboard-write';
-      box.replaceChildren(f);
+      f.src = url; f.title = 'Chat with Einstein'; f.allow = 'clipboard-write';
+      const fail = document.createElement('p'); fail.className = 'mono live-chat__note';
+      fail.textContent = space ? 'Einstein is waking up. If nothing appears in a few seconds, refresh the page.' : 'Nothing showing? Start Einstein first: run einstein-space/run_local.py.';
+      box.replaceChildren(f, fail);
+      const example = box.parentElement.querySelector('.chat'); if (example) example.hidden = true; // the real one replaces the scripted example
     });
   })();
 
