@@ -1,5 +1,5 @@
 /* Project demos: street-footage rules (COCO-SSD), the OmniRing gesture pad,
- * FFT Wiener deconvolution, and a chart drawn from my real training logs. */
+ * and FFT Wiener deconvolution. */
 (function () {
   // light-theme colours (names kept from the canvas code that uses them)
   const C = {
@@ -348,39 +348,5 @@
     });
     let t; const deb = () => { clearTimeout(t); t = setTimeout(() => sharp && run(), 30); };
     dIn.addEventListener('input', deb); nIn.addEventListener('input', deb);
-  })();
-
-  /* ====================================== research chart from training logs */
-  (function chart() {
-    const svg = document.querySelector('#chart-gaze svg'); if (!svg) return;
-    // runs/gazefusion_v3_geo_cm/history.csv (val_deg per epoch) and docs/FIXES_V3.md
-    const epochs = [3.506, 2.797, 2.636, 2.481, 2.588, 2.578, 2.631, 2.631];
-    const stages = [['old model', 3.62, '#cdd9d3'], ['labels fixed', 2.99, '#8fbcff'], ['new model', 2.48, '#27a35f']];
-    const ns = 'http://www.w3.org/2000/svg', el = (t, a, p = svg) => { const n = document.createElementNS(ns, t); for (const k in a) n.setAttribute(k, a[k]); p.append(n); return n; };
-    const T = (s, x, y, a = {}) => { const t = el('text', { x, y, ...a }); t.textContent = s; return t; };
-    // left: validation error per epoch
-    const x0 = 44, x1 = 290, y0 = 40, y1 = 250, lo = 2.3, hi = 3.7;
-    const X = i => x0 + (i / (epochs.length - 1)) * (x1 - x0), Y = v => y1 - (v - lo) / (hi - lo) * (y1 - y0);
-    [2.5, 3.0, 3.5].forEach(v => { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: '#e1eae5' }); T(v.toFixed(1) + '°', x0 - 8, Y(v) + 4, { 'text-anchor': 'end' }); });
-    T('validation error by epoch', x0, 22, { fill: '#4b615a' });
-    el('path', { d: epochs.map((v, i) => (i ? 'L' : 'M') + X(i) + ' ' + Y(v)).join(' '), fill: 'none', stroke: '#14b5aa', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', class: 'chart__line' });
-    epochs.forEach((v, i) => el('circle', { cx: X(i), cy: Y(v), r: i === 3 ? 6 : 3.5, fill: i === 3 ? '#e8578f' : '#14b5aa', stroke: '#fff', 'stroke-width': 2 }));
-    T('best: 2.48° (epoch 4)', X(3) + 8, Y(2.481) + 22, { fill: '#e8578f' });
-    epochs.forEach((_, i) => T(String(i + 1), X(i), y1 + 18, { 'text-anchor': 'middle' }));
-    T('epoch', (x0 + x1) / 2, y1 + 38, { 'text-anchor': 'middle' });
-    // right: where each fix moved it
-    const bx = 340, bw = 44, gap = 16;
-    T('after each fix', bx, 22, { fill: '#4b615a' });
-    stages.forEach(([name, v, col], i) => {
-      const x = bx + i * (bw + gap), h = (v / 4) * (y1 - y0);
-      el('rect', { x, y: y1 - h, width: bw, height: h, rx: 8, fill: col });
-      T(v.toFixed(2) + '°', x + bw / 2, y1 - h - 8, { 'text-anchor': 'middle', fill: '#17302a' });
-      name.split(' ').forEach((w, k) => T(w, x + bw / 2, y1 + 18 + k * 14, { 'text-anchor': 'middle' }));
-    });
-    const line = svg.querySelector('.chart__line');
-    if (line && !reduced && line.getTotalLength) {
-      const L = line.getTotalLength(); line.style.strokeDasharray = L; line.style.strokeDashoffset = L;
-      onVisible(svg, () => { line.style.transition = 'stroke-dashoffset 1.6s ease'; requestAnimationFrame(() => { line.style.strokeDashoffset = 0; }); }, '0px');
-    }
   })();
 })();

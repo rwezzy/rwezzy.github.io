@@ -245,7 +245,8 @@ function init() {
       if (task.i >= task.steps.length) {
         task = null; mode = 'idle';
         const left = OBJ.filter(o => o.state === 'table').length;
-        tell(left ? 'Look at, or point at, another one' : 'All three in the tray!', !left);
+        if (camOn) { stopCam(true); tell(left ? 'Done, and your camera is off. Turn it on again for another' : 'All three in the tray! Camera off', true); }
+        else tell(left ? 'Look at, or point at, another one' : 'All three in the tray!', !left);
         if (!left) setTimeout(resetAll, 3500);
       }
     }
@@ -260,6 +261,9 @@ function init() {
   /* ----------------------------------------------------- webcam gaze */
   const VB = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
   let camOn = false, lm = null, stream = null, feat = null, gx = 0, lastVT = -1, wGaze = null, calib = null;
+  // privacy: the camera never stays on for long
+  const IDLE_OFF_S = 45, REUSE_CAL_MS = 5 * 60 * 1000;
+  let camActiveAt = 0, calibratedAt = 0, hiddenSince = 0, lastLabel = '';
   async function startCam() {
     btnCam.disabled = true; btnCam.textContent = 'Starting camera…';
     try {
@@ -275,9 +279,9 @@ function init() {
           runningMode: 'VIDEO', numFaces: 1, outputFacialTransformationMatrixes: true
         });
       }
-      camOn = true; gazeBar.hidden = false; btnRecal.hidden = false;
-      btnCam.textContent = 'Turn off webcam'; btnCam.disabled = false;
-      startCalibration();
+      camOn = true; gazeBar.hidden = false; btnRecal.hidden = false; btnCam.disabled = false; camActiveAt = performance.now();
+      if (wGaze && performance.now() - calibratedAt < REUSE_CAL_MS) { mode = 'idle'; tell('Using your last calibration. Look at an object', true); }
+      else startCalibration();
     } catch (err) {
       btnCam.disabled = false; btnCam.textContent = 'Use my webcam';
       tell(err && err.name === 'NotAllowedError' ? 'Camera permission was blocked' : 'Could not start the camera');
@@ -287,10 +291,14 @@ function init() {
   function stopCam(quiet) {
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null; camOn = false; calib = null; camBox.hidden = true; gazeBar.hidden = true; btnRecal.hidden = true;
+    camVideo.srcObject = null; feat = null; lastLabel = '';
+    if (mode === 'calib') mode = 'idle';
     btnCam.textContent = 'Use my webcam';
     if (!quiet) tell(coarse ? 'Tap an object, or use your webcam' : 'Rest your mouse on an object, or use your webcam');
   }
   btnCam.addEventListener('click', () => camOn ? stopCam() : startCam());
+  // background tabs pause animation frames, so stop the camera directly when the tab is hidden
+  document.addEventListener('visibilitychange', () => { if (document.hidden && camOn) { stopCam(true); tell('Camera turned off while you were away', true); } });
   btnRecal.addEventListener('click', () => camOn && startCalibration());
 
   // objects ordered left → right as they appear on screen; calibration targets −1, 0, +1
@@ -314,7 +322,7 @@ function init() {
     if (c.t > 1.8) {
       c.k++; c.t = 0;
       if (c.k === 3) {
-        wGaze = fitLinear(c.samples);
+        wGaze = fitLinear(c.samples); calibratedAt = performance.now(); camActiveAt = performance.now();
         calib = null; mode = 'idle'; OBJ.forEach(x => x.ev = 0);
         tell(wGaze ? 'Calibrated. Now look at an object and hold it' : 'I lost your face. Try Recalibrate', !!wGaze);
       }
@@ -380,6 +388,14 @@ function init() {
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (camOn) {
+      // auto-off: 45 s without a pick, or the demo scrolled away / tab hidden for a few seconds
+      if (mode === 'busy' || mode === 'calib') camActiveAt = now;
+      const left = Math.ceil(IDLE_OFF_S - (now - camActiveAt) / 1000);
+      if (!visible || document.hidden) { if (!hiddenSince) hiddenSince = now; } else hiddenSince = 0;
+      if (left <= 0 || (hiddenSince && now - hiddenSince > 4000)) { stopCam(true); tell(left <= 0 ? `Camera turned off after ${IDLE_OFF_S} s without a pick` : 'Camera turned off while you were away', true); }
+      else { const lab = `Turn off webcam · auto-off in ${left} s`; if (lab !== lastLabel) { btnCam.textContent = lab; lastLabel = lab; } }
+    }
     if (!visible || !ready) return;
     if (camOn) readFace();
 

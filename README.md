@@ -66,10 +66,24 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 | `index.html` | All the content |
 | `css/style.css` | The look: white and pale mint with leaf green, turquoise, teal, pink, and blue |
 | `js/pick.js` | "Pick something up with your eyes": a 3D SO-ARM100 arm (three.js) with inverse kinematics and pick-and-place, driven by webcam gaze (MediaPipe face tracking + 3-dot calibration) or by the mouse |
-| `js/demos.js` | ZoneLogic rules on real street footage (COCO-SSD), the OmniRing gesture pad, FFT Wiener deconvolution, and the research chart drawn from real training logs |
-| `js/main.js` | Clocks, nav, reveals, the project map, trees, 10K pace bar |
+| `js/demos.js` | ZoneLogic rules on real street footage (COCO-SSD), the OmniRing gesture pad, and FFT Wiener deconvolution |
+| `js/main.js` | Clocks, nav, reveals, the live Einstein embed, trees, 10K pace bar |
 | `js/slots.js` | Photo/video spots and their placeholders |
 | `models/so100/` | SO-ARM100 meshes from Google DeepMind's MuJoCo Menagerie (Apache 2.0, LICENSE + NOTICE included) |
 | `assets/` | Stock photos (Pexels), the crosswalk clip (Mixkit), the USAF 1951 chart (Wikimedia Commons, CC BY-SA 2.5), and the book cover |
 
-Libraries (loaded from CDNs, all free): three.js, MediaPipe Tasks Vision, TensorFlow.js + COCO-SSD. Fonts: Fraunces, Figtree, and DM Mono from Google Fonts. The webcam only turns on when a visitor clicks the button, and the video never leaves their browser. Webcams need HTTPS (or localhost), which GitHub Pages provides.
+Libraries (loaded from CDNs, all free): three.js, MediaPipe Tasks Vision, TensorFlow.js + COCO-SSD. Fonts: Fraunces, Figtree, and DM Mono from Google Fonts. The webcam only turns on when a visitor clicks the button, the video never leaves their browser, and the camera switches itself off after every pick, after 45 seconds without a pick, or when the visitor scrolls away or switches tabs. Webcams need HTTPS (or localhost), which GitHub Pages provides.
+
+## Make Einstein chattable on the site (free)
+
+The chatbot needs a Gemini API key, and a key can't live in a public web page (anyone could copy it).
+So Einstein runs on Hugging Face Spaces, where the key stays secret, and the site embeds it.
+Everything it needs is ready in `C:/Users/danny/Developer/einstein-space` (your prompt, a 20-message cap per visitor, and a length limit so strangers can't drain your quota).
+
+1. Make a free account at https://huggingface.co and click **New Space**: name it `einstein`, SDK **Gradio**, hardware **CPU basic (free)**, visibility **Public**.
+2. Upload the four files from `einstein-space` (Files → Add file → Upload files).
+3. Settings → **Variables and secrets** → **New secret**: name `GEMINI_API_KEY`, value = your key.
+4. When it shows "Running", copy the direct app URL (something like `https://rwezzy-einstein.hf.space`).
+5. In `index.html`, find `class="live-chat" data-space=""` and paste the URL between the quotes.
+
+The Einstein card then gets a **Chat with Einstein** button that loads the real chatbot. Free Spaces sleep when idle, so the first message after a quiet spell takes a few seconds.
