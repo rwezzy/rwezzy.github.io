@@ -241,9 +241,16 @@
         <p class="proj__meta mono"><span class="tag tag--sw">software</span> Aug 2025</p>
         <h3>Einstein, a tutoring chatbot</h3>
         <p>A study buddy with a very particular teaching style: before it explains anything, it asks what you already know, then builds up from there and sets you a practice problem. Built on Gemini 2.5 Flash with LangChain and Gradio.</p>
-        <div class="live-chat" data-space="" data-space-local="http://127.0.0.1:7860" hidden>
-          <button class="pill pill--solid" data-open-chat>Chat with Einstein</button>
-          <p class="mono live-chat__note">Runs on Hugging Face Spaces; the first message can take a few seconds while it wakes up.</p>
+        <!-- Live chat. data-api = your Hugging Face Space URL (e.g. https://rwezzy-einstein.hf.space).
+             Until it's set, visitors see the example conversation below; on your computer it uses run_local.py. -->
+        <div class="einchat" data-api="" data-api-local="http://127.0.0.1:7860" hidden>
+          <div class="einchat__log" aria-live="polite"></div>
+          <form class="einchat__form">
+            <label class="sr" for="einchat-input">Message Einstein</label>
+            <input id="einchat-input" type="text" maxlength="1200" autocomplete="off" placeholder="Ask Einstein anything">
+            <button class="pill pill--solid" type="submit">Send</button>
+          </form>
+          <p class="mono einchat__note"></p>
         </div>
         <div class="chat" aria-label="Example conversation">
           <p class="chat__u">how do I integrate x·eˣ?</p>

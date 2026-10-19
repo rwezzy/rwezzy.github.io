@@ -22,24 +22,74 @@
     els.forEach(el => { el.classList.add('reveal'); rio.observe(el); });
   }
 
-  /* --------------------------------------------- Einstein, live (optional) */
+  /* ------------------------------------------------- Einstein, live chat */
   (function einstein() {
-    const box = document.querySelector('.live-chat'); if (!box) return;
-    // Put your Hugging Face Space URL in data-space, e.g. https://rwezzy-einstein.hf.space
-    const space = (box.dataset.space || '').trim();
+    const box = document.querySelector('.einchat'); if (!box) return;
+    // data-api: your Hugging Face Space URL. On your own computer it falls back to run_local.py.
+    const api = (box.dataset.api || '').trim();
     const editing = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
-    // On your own computer, fall back to the copy running locally (einstein-space/run_local.py).
-    const url = space || (editing ? (box.dataset.spaceLocal || '') : '');
-    if (!url) return;
+    const url = (api || (editing ? box.dataset.apiLocal || '' : '')).replace(/\/$/, '');
+    if (!url) return; // no backend yet: visitors just see the example conversation
+    const example = box.parentElement.querySelector('.chat');
+    const log = box.querySelector('.einchat__log'), form = box.querySelector('form'), input = form.querySelector('input'), send = form.querySelector('button');
+    const note = box.querySelector('.einchat__note');
+    const history = [];
+
+    // tiny, safe markdown: escape everything, then allow **bold**, *italics*, `code` and lists
+    const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function md(text) {
+      const lines = esc(text).split('\n'), out = []; let list = null;
+      const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, '$1<i>$2</i>').replace(/`([^`]+)`/g, '<code>$1</code>');
+      for (const raw of lines) {
+        const l = raw.trim(), ul = l.match(/^[-*•]\s+(.*)/), ol = l.match(/^\d+[.)]\s+(.*)/);
+        const kind = ul ? 'ul' : ol ? 'ol' : null;
+        if (kind) { if (list !== kind) { if (list) out.push(`</${list}>`); out.push(`<${kind}>`); list = kind; } out.push(`<li>${inline((ul || ol)[1])}</li>`); continue; }
+        if (list) { out.push(`</${list}>`); list = null; }
+        if (l) out.push(`<p>${inline(l)}</p>`);
+      }
+      if (list) out.push(`</${list}>`);
+      return out.join('');
+    }
+    function bubble(role, text) {
+      const d = document.createElement('div');
+      d.className = 'einchat__msg einchat__msg--' + (role === 'user' ? 'me' : 'bot');
+      if (role === 'user') d.textContent = text; else d.innerHTML = md(text);
+      log.append(d); log.scrollTop = log.scrollHeight;
+      return d;
+    }
+
     box.hidden = false;
-    if (!space) box.querySelector('.live-chat__note').innerHTML = '(only you see this) Local preview: Einstein is running on your computer. For the live site, put your Hugging Face Space URL in <b>data-space</b>.';
-    box.querySelector('[data-open-chat]').addEventListener('click', () => {
-      const f = document.createElement('iframe');
-      f.src = url; f.title = 'Chat with Einstein'; f.allow = 'clipboard-write';
-      const fail = document.createElement('p'); fail.className = 'mono live-chat__note';
-      fail.textContent = space ? 'Einstein is waking up. If nothing appears in a few seconds, refresh the page.' : 'Nothing showing? Start Einstein first: run einstein-space/run_local.py.';
-      box.replaceChildren(f, fail);
-      const example = box.parentElement.querySelector('.chat'); if (example) example.hidden = true; // the real one replaces the scripted example
+    if (example) example.hidden = true;
+    bubble('assistant', "Hi, I am Albert. How can I help you today?");
+    note.innerHTML = !api ? '(only you see this) Running on your computer. For the live site, put your Hugging Face Space URL in <b>data-api</b>.'
+      : 'Runs on a free server that naps when nobody is around, so the first reply can take a little while.';
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const text = input.value.trim(); if (!text) return;
+      input.value = ''; input.disabled = send.disabled = true;
+      bubble('user', text);
+      const thinking = bubble('assistant', ''); thinking.classList.add('is-thinking'); thinking.innerHTML = '<span></span><span></span><span></span>';
+      let reply;
+      for (let attempt = 0; attempt < 3 && reply === undefined; attempt++) {
+        try {
+          const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 60000);
+          const res = await fetch(url + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history }), signal: ctl.signal });
+          clearTimeout(timer);
+          const data = await res.json();
+          reply = data.reply || '';
+        } catch (err) {
+          if (attempt < 2) { thinking.dataset.wait = 'waking Einstein up…'; await new Promise(r => setTimeout(r, 4000)); }
+        }
+      }
+      thinking.remove();
+      if (reply === undefined) {
+        bubble('assistant', editing && !api ? "I'm not running. Start me with einstein-space/run_local.py." : "I couldn't get through just now. Please try again in a minute.");
+      } else {
+        history.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+        bubble('assistant', reply);
+      }
+      input.disabled = send.disabled = false; input.focus();
     });
   })();
 

@@ -67,7 +67,7 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 | `css/style.css` | The look: white and pale mint with leaf green, turquoise, teal, pink, and blue |
 | `js/pick.js` | "Pick something up with your eyes": a 3D SO-ARM100 arm (three.js) with inverse kinematics and pick-and-place, driven by webcam gaze (MediaPipe face tracking + 3-dot calibration) or by the mouse |
 | `js/demos.js` | ZoneLogic rules on real street footage (COCO-SSD), the OmniRing gesture pad, and FFT Wiener deconvolution |
-| `js/main.js` | Clocks, nav, reveals, the live Einstein embed, trees, 10K pace bar |
+| `js/main.js` | Clocks, nav, reveals, the Einstein chat box, trees, 10K pace bar |
 | `js/slots.js` | Photo/video spots and their placeholders |
 | `models/so100/` | SO-ARM100 meshes from Google DeepMind's MuJoCo Menagerie (Apache 2.0, LICENSE + NOTICE included) |
 | `assets/` | Stock photos (Pexels), the crosswalk clip (Mixkit), the USAF 1951 chart (Wikimedia Commons, CC BY-SA 2.5), and the book cover |
@@ -84,9 +84,9 @@ Everything it needs is ready in `C:/Users/danny/Developer/einstein-space` (your 
 2. Upload the four files from `einstein-space` (Files → Add file → Upload files).
 3. Settings → **Variables and secrets** → **New secret**: name `GEMINI_API_KEY`, value = your key.
 4. When it shows "Running", copy the direct app URL (something like `https://rwezzy-einstein.hf.space`).
-5. In `index.html`, find `class="live-chat" data-space=""` and paste the URL between the quotes.
+5. In `index.html`, find `class="einchat" data-api=""` and paste the URL between the quotes.
 
-**To chat with Einstein on your own computer right now** (no Hugging Face needed), run this, then open the site at http://localhost:8137. The Einstein card picks up the local copy automatically:
+**To chat with Einstein on your own computer right now** (no Hugging Face needed), run this, then open the site at http://localhost:8137. The Einstein card's chat box talks to the local copy automatically:
 
 ```bash
 C:/Users/danny/Developer/einstein-space/.venv/Scripts/python.exe C:/Users/danny/Developer/einstein-space/run_local.py
@@ -94,4 +94,4 @@ C:/Users/danny/Developer/einstein-space/.venv/Scripts/python.exe C:/Users/danny/
 
 It reads your key from the original Einstein folder's `.env`, so no key is ever copied. When uploading to Hugging Face, upload only `app.py`, `requirements.txt`, `README.md` and `einstein.png` (not `.venv` or `run_local.py`).
 
-The Einstein card then gets a **Chat with Einstein** button that loads the real chatbot. Free Spaces sleep when idle, so the first message after a quiet spell takes a few seconds.
+The Einstein card then becomes a real chat box in the site's own style (visitors never leave your page). The Space keeps your key secret, only answers requests coming from rwezzy.github.io, and limits each visitor to 30 messages per 10 minutes and 20 per conversation. Free Spaces sleep when idle, so the first message after a quiet spell takes a few seconds.
