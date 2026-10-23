@@ -54,11 +54,12 @@
     }
   });
 
-  // The résumé button hides itself on the live site until resume.pdf exists.
-  const r = document.querySelector('.resume-link');
-  if (r && !editing && location.protocol !== 'file:') {
-    fetch(r.getAttribute('href'), { method: 'HEAD' })
-      .then(res => { if (!res.ok) r.parentElement.remove(); })
-      .catch(() => r.parentElement.remove());
+  // Résumé buttons hide themselves on the live site until resume.pdf exists.
+  const links = document.querySelectorAll('.resume-link');
+  if (links.length && !editing && location.protocol !== 'file:') {
+    const hide = () => links.forEach(a => a.remove());
+    fetch(links[0].getAttribute('href'), { method: 'HEAD' })
+      .then(res => { if (!res.ok) hide(); })
+      .catch(hide);
   }
 })();
