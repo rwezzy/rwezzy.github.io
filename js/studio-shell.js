@@ -37,6 +37,20 @@
   anchor('urban-arbor', document.querySelector('#beyond .arbor'));
   anchor('volunteering', document.querySelector('#beyond .service'));
   ['running', 'reading', 'cooking', 'writing'].forEach((id, index) => anchor(`interest-${id}`, document.querySelectorAll('#offclock .hobby')[index]));
+  const running = document.getElementById('interest-running');
+  if (running) {
+    const link = document.createElement('a'); link.className = 's-strava-link';
+    link.href = 'https://strava.app.link/u5eqjqPs47b'; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.textContent = 'My runs on Strava ↗'; running.append(link);
+  }
+  const hobbies = document.querySelector('#offclock .hobbies');
+  if (hobbies) {
+    const language = document.createElement('article'); language.className = 'hobby s-language'; language.id = 'interest-german';
+    const label = document.createElement('span'); label.className = 's-language-symbol'; label.textContent = 'Hallo.'; label.setAttribute('aria-hidden', 'true');
+    const title = document.createElement('h4'); title.textContent = 'Learning German';
+    const description = document.createElement('p'); description.textContent = 'I am also learning German on Duolingo.';
+    language.append(label, title, description); hobbies.append(language);
+  }
   const sectionLinks = {
     projects: [
       ['soundscope', 'SoundScope', 'Sound localization, captions and event search'],
@@ -64,6 +78,7 @@
       ['interest-reading', 'Reading', 'The Alignment Problem'],
       ['interest-cooking', 'Cooking', 'Trying different preparations'],
       ['interest-writing', 'Writing', 'Developing a fictional universe'],
+      ['interest-german', 'Learning German', 'Practising on Duolingo'],
     ],
   };
   function populateSectionLinks(view) {
@@ -112,6 +127,8 @@
 
   let motion = !reduced.matches, scene = null, current = 'home', held = false;
   let desired = null, processing = false, nextView = 'home';
+  let inspector = null, inspectionId = null, inspectionTask = null, closingInspection = null, inspectionToken = 0;
+  let inspectionOpener = null;
   let sceneAttachment = null;
   const motionButton = document.querySelector('#s-motion');
   const updateMotion = () => {
@@ -149,9 +166,10 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=desk6').then(async module => {
+  const sceneReady = import('./studio-scene.js?v=desk7').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
-      onSelect: id => navigate(id),
+      onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
+      onPartSelect: id => inspector?.selectPart(id),
       onStatus: text => { status.textContent = text; },
       onReady: () => { document.body.classList.add('s-scene-ready'); },
       onPresent: presentStage,
@@ -209,6 +227,9 @@
     return container ? { view: container.dataset.readerView, target } : { view: 'home', target: '' };
   }
   function navigate(hash, instant = false, historyMode = 'push') {
+    if (inspectionId || inspectionTask || closingInspection) {
+      closeInspector().then(() => navigate(hash, instant, historyMode)); return;
+    }
     const req = { ...resolve(hash), instant };
     const nextHash = req.view === 'home' ? '#top' : `#${req.target || req.view}`;
     if (historyMode === 'push' && location.hash !== nextHash) history.pushState(null, '', nextHash);
@@ -219,6 +240,58 @@
       if (active) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current');
     });
     pump();
+  }
+  async function openInspector(id) {
+    if (processing || current !== 'home' || inspectionTask || closingInspection) return;
+    const token = ++inspectionToken;
+    inspectionId = id;
+    inspectionOpener = document.activeElement;
+    const task = (async () => {
+      const [ready, module] = await Promise.all([sceneReady, import('./studio-inspector.js?v=desk7')]);
+      if (!ready || token !== inspectionToken) return;
+      if (!inspector) inspector = module.createStudioInspector({
+        onClose: () => closeInspector(),
+        onSelectPart: part => scene?.highlightPart(part),
+        onToggleExploded: value => scene?.setExploded(value).catch(error => { status.textContent = 'Could not change the assembly view.'; console.warn(error); }),
+        onOpenProject: project => closeInspector().then(() => navigate(project)),
+      });
+      document.body.classList.add('s-inspecting');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const assembly = await scene.inspect(id, { immediate: !motion });
+      if (token !== inspectionToken) return;
+      home.inert = false; home.removeAttribute('aria-hidden');
+      inspector.show(assembly);
+    })();
+    inspectionTask = task;
+    try { await task; }
+    catch (error) {
+      console.warn('Assembly view unavailable:', error);
+      inspectionId = null; document.body.classList.remove('s-inspecting');
+      home.inert = false; home.removeAttribute('aria-hidden');
+      await scene?.putBack({ immediate: true }); await fitStage(false, { immediate: true });
+      status.textContent = 'The component view could not open. The project page is still available.';
+    } finally { if (inspectionTask === task) inspectionTask = null; }
+  }
+  function closeInspector() {
+    if (closingInspection) return closingInspection;
+    ++inspectionToken;
+    const pending = inspectionTask, wasOpen = Boolean(inspectionId);
+    const focused = document.activeElement;
+    const restoreFocus = !focused || focused === document.body || focused === inspectionOpener || focused.closest?.('.studio-inspector');
+    const opener = inspectionOpener; inspectionOpener = null;
+    inspectionId = null; inspector?.hide();
+    const task = (async () => {
+      if (pending) await pending.catch(() => {});
+      if (wasOpen) await scene?.putBack({ immediate: !motion });
+      await fitStage(false, { immediate: !motion });
+      document.body.classList.remove('s-inspecting');
+      home.hidden = false; home.inert = false; home.removeAttribute('aria-hidden');
+      window.dispatchEvent(new Event('resize'));
+      if (restoreFocus && opener?.isConnected && !opener.closest('[hidden],[inert]')) opener.focus({ preventScroll: true });
+    })();
+    const completion = task.finally(() => { if (closingInspection === completion) closingInspection = null; });
+    closingInspection = completion;
+    return completion;
   }
   const animate = async (el, frames, duration) => {
     if (!motion) return;
@@ -332,6 +405,7 @@
     el.addEventListener('focus', () => scene?.hover(el.dataset.view));
     el.addEventListener('blur', () => scene?.hover(null));
   });
+  document.querySelectorAll('[data-inspect]').forEach(button => button.addEventListener('click', () => openInspector(button.dataset.inspect)));
   document.querySelector('#s-next').addEventListener('click', () => {
     navigate(pages[(pages.findIndex(p => p[0] === current) + 1) % pages.length][0]);
   });
@@ -343,7 +417,9 @@
   };
   addEventListener('scroll', updateReadingWindow, { passive: true });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !e.target.matches('input,textarea,select')) navigate('top');
+    if (e.key === 'Escape' && !e.target.matches('input,textarea,select')) {
+      if (inspectionId || inspectionTask) closeInspector(); else navigate('top');
+    }
   });
   addEventListener('popstate', () => navigate(location.hash, true, 'none'));
   addEventListener('hashchange', () => navigate(location.hash, true, 'none'));

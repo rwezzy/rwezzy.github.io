@@ -15,11 +15,13 @@ This version is maintained in the separate `portfolio-studio` checkout on `desig
 - `js/studio-shell.js`: section navigation, focus handling and intact demo-node placement.
 - `js/studio-scene.js`: the homepage robot, plaques and pick/return animation.
 - `js/studio-motion.js`: precomputed joint paths and continuous playback interpolation.
-- `js/studio-props.js`: laptop, SoundScope stand, About frame and opening Contact notebook.
+- `js/studio-props.js`: laptop, SoundScope stand, About frame, opening Contact notebook, running shoes and an illustrative OmniRing housing. SoundScope and OmniRing separate into selectable components. The carrier uses the existing CAD; electronics, tripod, shoes and the proposed ring housing are schematic code-built geometry.
+- `js/studio-inspector.js` and `css/studio-inspector.css`: component details, assemble/explode controls and links back to the unchanged project demos. Click a desk object or use its named button; Escape returns to the desk.
 - `css/studio.css`: site layout and page presentation.
 - `css/studio-demos.css`: presentation of the existing demo controls.
 - `tests/studio-preservation.test.mjs`: checks the original project text and demo implementations against a frozen snapshot, including a regression check for the SoundScope texture-loading race fixed in this version.
 - `tests/studio-navigation.test.mjs`: checks deep links, delayed graphics loading, section changes and interrupted pick/return transitions.
+- `tests/studio-inspector.test.mjs`: component selection, reassembly state, focus, Escape and cleanup. The hobbies view includes the supplied Strava link and German-learning note.
 
 The canvas stays within the homepage's scene area, independent of its drawing-buffer resolution. Section text is immediately visible when scrolling; it does not wait for reveal animations. The Gaze Arm module loads when Projects is opened. The held scene renders on demand while reading instead of maintaining an idle animation loop.
 

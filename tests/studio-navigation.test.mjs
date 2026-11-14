@@ -12,8 +12,9 @@ const deferred = () => {
 const flush = async () => { for (let i = 0; i < 50; i += 1) await Promise.resolve(); };
 
 // This fixture runs the complete production shell. Only browser surfaces and the
-// graphics loader are replaced; navigation, interruption, and history stay real.
-function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGate = null } = {}) {
+// graphics/inspector boundaries are replaced; navigation, interruption, and history stay real.
+function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGate = null,
+  inspectGate = null, returnGate = null, inspectorGate = null } = {}) {
   const events = new Map(), pushed = [], scrolls = [], calls = [];
   let focused = null, hooks;
   class Element {
@@ -116,6 +117,10 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   const buttons = new Map();
   for (const id of ['about', 'projects', 'research', 'background', 'beyond', 'contact']) buttons.set(id, add(nav, 'a', { 'data-view': id, href: `#${id}` }));
   const home = add(body, 'main', { class: 's-home', id: 'top' });
+  const inspectButtons = new Map();
+  for (const id of ['soundscope', 'omniring']) {
+    inspectButtons.set(id, add(home, 'button', { 'data-inspect': id }));
+  }
   const stage = add(home, 'div', { class: 's-scene-wrap', id: 's-scene-wrap' });
   add(stage, 'canvas', { id: 's-scene' });
   add(home, 'span', { id: 's-status' }); add(home, 'button', { id: 's-motion' });
@@ -165,7 +170,51 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     addEventListener: (type, fn) => { if (!events.has(type)) events.set(type, []); events.get(type).push(fn); },
   };
   const location = { hash };
-  let presentation = null, scenePage = null;
+  let presentation = null, scenePage = null, sceneAssembly = null, exploded = false, highlighted = null;
+  // Small, deliberately distinct component lists exercise the shell's contract
+  // with the scene and panel without reproducing either module's implementation.
+  const assemblies = {
+    soundscope: { id: 'soundscope', title: 'SoundScope', parts: [
+      { id: 'board', title: 'Four-microphone array', description: 'Audio direction.' },
+      { id: 'camera', title: 'RGB-D camera', description: 'Image and depth.' },
+    ] },
+    omniring: { id: 'omniring', title: 'OmniRing', parts: [
+      { id: 'xiao', title: 'Microcontroller', description: 'Gesture classification.' },
+      { id: 'housing', title: 'Ring housing', description: 'Concept enclosure.' },
+    ] },
+  };
+  const panel = add(body, 'aside', { 'aria-label': 'Component inspector' }); panel.hidden = true;
+  const panelTitle = add(panel, 'h2'), partTitle = add(panel, 'h3');
+  const panelParts = add(panel, 'div');
+  const panelClose = add(panel, 'button'), panelProject = add(panel, 'button'), panelExplode = add(panel, 'button');
+  panelClose.textContent = 'Return to desk'; panelProject.textContent = 'View project'; panelExplode.textContent = 'Assembly view';
+  let inspected = null, selectedPart = null, inspectorHooks = null;
+  const panelAPI = {
+    show(assembly) {
+      inspected = assembly; selectedPart = null; panel.hidden = false; panelTitle.textContent = assembly.title;
+      panelExplode.setAttribute('aria-pressed', String(assembly.exploded));
+      while (panelParts.firstChild) panelParts.removeChild(panelParts.firstChild);
+      for (const part of assembly.parts) {
+        const button = add(panelParts, 'button', { 'data-part': part.id }); button.textContent = part.title;
+        button.addEventListener('click', () => {
+          panelAPI.selectPart(part.id); inspectorHooks.onSelectPart(part.id, inspected.id);
+        });
+      }
+    },
+    hide() { panel.hidden = true; },
+    selectPart(id) {
+      const part = inspected?.parts.find(part => part.id === id);
+      if (!part) return;
+      selectedPart = id; partTitle.textContent = part.title;
+    },
+    setExploded(value) { panelExplode.setAttribute('aria-pressed', String(value)); },
+  };
+  panelClose.addEventListener('click', () => { panelAPI.hide(); inspectorHooks.onClose(inspected.id); });
+  panelProject.addEventListener('click', () => { panelAPI.hide(); inspectorHooks.onOpenProject(inspected.id); });
+  panelExplode.addEventListener('click', () => {
+    const next = panelExplode.getAttribute('aria-pressed') !== 'true';
+    panelAPI.setExploded(next); inspectorHooks.onToggleExploded(next, inspected.id);
+  });
   const emitPresentation = value => { presentation = value; hooks.onPresentationChange?.(value); };
   const scene = {
     async pick(id, options = {}) {
@@ -180,17 +229,29 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
       scenePage = id;
     },
     async putBack(options = {}) {
-      calls.push(['putBack']); await hooks.onRetract?.(options);
+      calls.push(['putBack']);
+      if (returnGate) { const gate = returnGate; returnGate = null; await gate.promise; }
+      sceneAssembly = null; exploded = false; highlighted = null;
+      await hooks.onRetract?.(options);
       scenePage = null;
       calls.push(['retracted', body.classList.contains('s-presenting')]);
     },
+    async inspect(id, options = {}) {
+      calls.push(['inspect', id]);
+      await hooks.onPresent?.({ ...options, pageId: id, kind: 'assembly' });
+      if (inspectGate) { const gate = inspectGate; inspectGate = null; await gate.promise; }
+      scenePage = null; sceneAssembly = id; exploded = true;
+      return { ...assemblies[id], exploded: true };
+    },
+    async setExploded(value) { calls.push(['setExploded', value]); exploded = value; },
+    highlightPart(id) { calls.push(['highlightPart', id]); highlighted = id; },
     setActive: value => calls.push(['active', value]), setReaderMode: value => calls.push(['readerMode', value]),
     getPresentationRect: () => presentation, hover() {},
   };
   // Production scene operations are serialized. Preserve that ordering here so
   // stale shell cleanup cannot silently return an object chosen by a newer request.
   let operationQueue = Promise.resolve();
-  for (const method of ['pick', 'putBack']) {
+  for (const method of ['pick', 'putBack', 'inspect', 'setExploded']) {
     const operation = scene[method].bind(scene);
     scene[method] = (...args) => {
       const next = operationQueue.then(() => operation(...args));
@@ -213,12 +274,25 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
       return { createStudioScene: async (_, options) => { hooks = options; hooks.onReady?.(); return scene; } };
     },
     loadDemo: async () => { calls.push(['loadDemo']); return {}; },
+    loadInspector: async () => {
+      calls.push(['loadInspector']);
+      if (inspectorGate) await inspectorGate.promise;
+      return { createStudioInspector: options => { inspectorHooks = options; return panelAPI; } };
+    },
   };
   context.window = context;
-  const executable = shell.replace(/import\('\.\/studio-scene\.js[^']*'\)/, 'loadScene()').replace(/import\('\.\/pick\.js[^']*'\)/g, 'loadDemo()');
+  const executable = shell.replace(/import\('\.\/studio-scene\.js[^']*'\)/, 'loadScene()')
+    .replace(/import\('\.\/pick\.js[^']*'\)/g, 'loadDemo()')
+    .replace(/import\('\.\/studio-inspector\.js[^']*'\)/g, 'loadInspector()');
   assert.notEqual(executable, shell, 'The graphics import must be stubbed');
   runInNewContext(executable, context, { filename: 'studio-shell.js' });
-  const click = element => { for (const fn of events.get('click') || []) fn({ target: element, preventDefault() {} }); };
+  const click = element => {
+    const event = { target: element, preventDefault() {} };
+    for (let node = element; node; node = node.parentElement) {
+      for (const fn of node.listeners.get('click') || []) fn(event);
+    }
+    for (const fn of events.get('click') || []) fn(event);
+  };
   return {
     document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click, sectionLinks,
     cards: () => sectionLinks.querySelectorAll('a'),
@@ -226,6 +300,15 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     present: emitPresentation, telemetry: value => hooks.onTelemetry?.(value),
     get focused() { return focused; },
     get scenePage() { return scenePage; },
+    get sceneAssembly() { return sceneAssembly; },
+    get exploded() { return exploded; },
+    get highlighted() { return highlighted; },
+    inspectButtons, panel, panelTitle, panelClose, panelProject, panelExplode, partTitle,
+    partButton: id => panelParts.querySelector(`[data-part="${id}"]`),
+    get selectedPart() { return selectedPart; },
+    // The scene emits this callback after applying its own mesh highlight.
+    selectScenePart: id => { scene.highlightPart(id); hooks.onPartSelect(id); },
+    escape: (target = home) => { for (const fn of events.get('keydown') || []) fn({ key: 'Escape', target }); },
     view: id => content.children.find(el => el.dataset.readerView === id),
     link: hash => new Element('a', { href: hash }),
     pop: hash => { location.hash = hash; context.dispatchEvent(new context.Event('popstate')); },
@@ -527,4 +610,164 @@ test('presentation reports update the plaque aperture and select surfaces withou
   assert.equal(app.body.dataset.surface, 'frame');
   app.present({ kind: 'notebook', progress: 1, suction: null });
   assert.equal(app.body.dataset.surface, 'notebook');
+});
+
+for (const [id, title] of [['soundscope', 'SoundScope'], ['omniring', 'OmniRing']]) {
+  test(`the ${title} desk button opens its component inspector without picking a page`, async () => {
+    const app = browser(); await flush();
+    assert.equal(app.calls.some(([action]) => action === 'loadInspector'), false, 'The panel stays lazy until requested');
+    app.click(app.inspectButtons.get(id)); await flush();
+    assert.equal(app.panel.hidden, false);
+    assert.equal(app.panelTitle.textContent, title);
+    assert.equal(app.sceneAssembly, id);
+    assert.equal(app.exploded, true);
+    assert.equal(app.reader.hidden, true);
+    assert.equal(app.home.hidden, false);
+    assert.equal(app.home.inert, false, 'Components on the canvas remain selectable');
+    assert.equal(app.home.hasAttribute('aria-hidden'), false);
+    assert.equal(app.body.classList.contains('s-inspecting'), true);
+    assert.equal(app.body.classList.contains('s-presenting'), true);
+    assert.equal(app.body.classList.contains('s-reading'), false);
+    assert.equal(app.calls.some(([action]) => action === 'pick'), false);
+    assert.deepEqual(app.pushed, [], 'Inspecting an object does not navigate away from the desk');
+  });
+}
+
+test('component selection and assembly controls connect the inspector to the scene in both directions', async () => {
+  const app = browser(); await flush();
+  app.click(app.inspectButtons.get('soundscope')); await flush();
+  app.click(app.partButton('camera')); await flush();
+  assert.equal(app.highlighted, 'camera');
+  assert.equal(app.selectedPart, 'camera');
+  assert.equal(app.partTitle.textContent, 'RGB-D camera');
+
+  app.selectScenePart('board'); await flush();
+  assert.equal(app.selectedPart, 'board', 'Picking a mesh updates the corresponding panel selection');
+  assert.equal(app.partTitle.textContent, 'Four-microphone array');
+  assert.equal(app.highlighted, 'board');
+
+  app.click(app.panelExplode); await flush();
+  assert.equal(app.exploded, false);
+  assert.equal(app.panel.hidden, false, 'Reassembling is an inspector control, not page navigation');
+  app.click(app.panelExplode); await flush();
+  assert.equal(app.exploded, true);
+  assert.equal(app.reader.hidden, true);
+  assert.equal(app.calls.some(([action]) => action === 'pick'), false);
+});
+
+for (const id of ['soundscope', 'omniring']) {
+  test(`View project finishes returning ${id} before opening its original project anchor`, async () => {
+    const returned = deferred(), app = browser({ returnGate: returned }); await flush();
+    app.click(app.inspectButtons.get(id)); await flush();
+    const article = app.document.getElementById(id);
+    app.click(app.panelProject); await flush();
+    assert.equal(app.panel.hidden, true);
+    assert.equal(app.reader.hidden, true, 'The reader cannot overlap an unfinished assembly return');
+    assert.equal(app.sceneAssembly, id);
+    assert.equal(app.calls.some(([action]) => action === 'pick'), false);
+
+    returned.resolve(); await flush(); await flush();
+    assert.equal(app.sceneAssembly, null);
+    assert.equal(app.exploded, false);
+    assert.equal(app.scenePage, 'projects');
+    assert.equal(app.reader.hidden, false);
+    assert.equal(app.view('projects').hidden, false);
+    assert.equal(app.body.classList.contains('s-inspecting'), false);
+    assert.equal(app.location.hash, `#${id}`);
+    assert.equal(app.scrolls.at(-1).id, id);
+    assert.equal(app.focused, article.querySelector('h3'));
+    assert.equal(app.document.getElementById(id), article, 'The inspector must open the original article and demo nodes');
+    assert.deepEqual(app.calls.filter(([action]) => ['inspect', 'putBack', 'pick'].includes(action)).map(([action, target]) => [action, target]), [
+      ['inspect', id], ['putBack', undefined], ['pick', 'projects'],
+    ]);
+  });
+}
+
+for (const interruption of ['Escape', 'Home']) {
+  test(`${interruption} during a pending inspection returns a usable desk without showing the stale panel`, async () => {
+    const opening = deferred(), app = browser({ inspectGate: opening }); await flush();
+    app.click(app.inspectButtons.get('soundscope')); await flush();
+    assert.equal(app.body.classList.contains('s-presenting'), true);
+    assert.equal(app.home.inert, true, 'The fixture suspends the model opening after the stage expands');
+    assert.equal(app.panel.hidden, true);
+    if (interruption === 'Escape') app.escape(); else app.click(app.brand);
+    await flush(); opening.resolve(); await flush(); await flush();
+    assert.equal(app.panel.hidden, true);
+    assert.equal(app.reader.hidden, true);
+    assert.equal(app.sceneAssembly, null);
+    assert.equal(app.scenePage, null);
+    assert.equal(app.exploded, false);
+    assert.equal(app.home.hidden, false);
+    assert.equal(app.home.inert, false);
+    assert.equal(app.home.hasAttribute('aria-hidden'), false);
+    assert.equal(app.body.classList.contains('s-presenting'), false);
+    assert.equal(app.body.classList.contains('s-inspecting'), false);
+    assert.equal(app.body.classList.contains('s-reading'), false);
+    assert.equal(app.body.hasAttribute('aria-busy'), false);
+    assert.equal(app.calls.some(([action]) => action === 'pick'), false);
+
+    app.click(app.inspectButtons.get('omniring')); await flush();
+    assert.equal(app.panel.hidden, false, 'Interruption must leave the next desk interaction usable');
+    assert.equal(app.panelTitle.textContent, 'OmniRing');
+    assert.equal(app.sceneAssembly, 'omniring');
+    assert.equal(app.home.inert, false);
+  });
+}
+
+test('section navigation during a pending inspection returns the assembly before showing the requested page', async () => {
+  const opening = deferred(), app = browser({ inspectGate: opening }); await flush();
+  app.click(app.inspectButtons.get('omniring')); await flush();
+  app.click(app.buttons.get('contact')); await flush();
+  assert.equal(app.reader.hidden, true);
+  opening.resolve(); await flush(); await flush();
+  assert.equal(app.panel.hidden, true);
+  assert.equal(app.sceneAssembly, null);
+  assert.equal(app.exploded, false);
+  assert.equal(app.scenePage, 'contact');
+  assert.equal(app.view('contact').hidden, false);
+  assert.equal(app.reader.hidden, false);
+  assert.equal(app.location.hash, '#contact');
+  assert.equal(app.body.classList.contains('s-inspecting'), false);
+  assert.equal(app.body.hasAttribute('aria-busy'), false);
+  app.click(app.brand); await flush();
+  assert.equal(app.home.inert, false);
+  assert.equal(app.home.hasAttribute('aria-hidden'), false);
+  assert.equal(app.reader.hidden, true);
+});
+
+test('the latest navigation click wins when two requests wait for the same inspector close', async () => {
+  const returned = deferred(), app = browser({ returnGate: returned }); await flush();
+  app.click(app.inspectButtons.get('soundscope')); await flush();
+  app.click(app.buttons.get('about')); await flush();
+  assert.equal(app.panel.hidden, true);
+  assert.equal(app.sceneAssembly, 'soundscope', 'The assembly is still returning when the second click arrives');
+  app.click(app.buttons.get('contact')); await flush();
+  assert.equal(app.reader.hidden, true);
+
+  returned.resolve(); await flush(); await flush();
+  assert.equal(app.location.hash, '#contact');
+  assert.equal(app.scenePage, 'contact');
+  assert.equal(app.view('contact').hidden, false);
+  assert.equal(app.view('about').hidden, true);
+  assert.equal(app.reader.hidden, false);
+  assert.equal(app.panel.hidden, true);
+  assert.equal(app.sceneAssembly, null);
+  assert.equal(app.body.classList.contains('s-inspecting'), false);
+  assert.equal(app.body.hasAttribute('aria-busy'), false);
+  assert.equal(app.pushed.at(-1), '#contact');
+});
+
+test('Escape while the inspector module is loading prevents a delayed model opening', async () => {
+  const loaded = deferred(), app = browser({ inspectorGate: loaded }); await flush();
+  app.click(app.inspectButtons.get('soundscope')); await flush();
+  assert.ok(app.calls.some(([action]) => action === 'loadInspector'));
+  app.escape(); loaded.resolve(); await flush(); await flush();
+  assert.equal(app.calls.some(([action]) => action === 'inspect'), false);
+  assert.equal(app.panel.hidden, true);
+  assert.equal(app.home.hidden, false);
+  assert.equal(app.home.inert, false);
+  assert.equal(app.body.classList.contains('s-inspecting'), false);
+  app.click(app.buttons.get('projects')); await flush();
+  assert.equal(app.view('projects').hidden, false, 'Cancelled lazy loading must not trap subsequent navigation');
+  assert.equal(app.reader.hidden, false);
 });

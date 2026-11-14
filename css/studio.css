@@ -245,12 +245,14 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .s-plaque-button,.s-arrow-circle,.s-project-index a,#s-scene { transition:none; } }
 
-/* One uninterrupted frosted surface keeps the tool behind the reading layer. */
+/* A single viewport-sized blur leaves the held object visible through smoked glass. */
 .s-reading .s-scene-wrap { clip-path:none; filter:none; }
-.s-reader-frost { display:none; position:fixed; inset:0; z-index:5; pointer-events:none; background:rgba(13,18,19,.94); backdrop-filter:blur(16px) saturate(.65); -webkit-backdrop-filter:blur(16px) saturate(.65); }
+.s-reader-frost { display:none; position:fixed; inset:0; z-index:5; pointer-events:none; background:rgba(17,16,29,.77); backdrop-filter:blur(7px) saturate(.8); -webkit-backdrop-filter:blur(7px) saturate(.8); }
+.s-reader-frost::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 8% 35%,rgba(115,76,222,.21),transparent 44%),radial-gradient(ellipse at 87% 72%,rgba(61,102,190,.12),transparent 42%); }
+.s-reader-frost::after { content:''; position:absolute; inset:88px 20px 20px; border:1px solid rgba(224,215,255,.14); border-top-color:rgba(239,231,255,.28); border-left-color:rgba(232,222,255,.24); border-radius:22px; box-shadow:inset 0 1px 0 #ffffff08,0 12px 48px -32px #08061066; }
 .s-reading .s-reader-frost { display:block; }
 .s-reader { width:100%; margin:0; border:0; border-radius:0; background:none; box-shadow:none; color:#e9eeeb; min-height:calc(100svh - 74px); }
-.s-reading .s-header { background:rgba(15,21,23,.92); border-color:#ffffff20; }
+.s-reading .s-header { background:rgba(20,18,33,.84); border-color:#e8deff26; }
 .s-reading .s-brand,.s-reading .s-nav a:hover,.s-reading .s-nav a.is-current,.s-reading .s-contact-link { color:#f0f4ed; }
 .s-reading .s-nav a { color:#bdc9c3; }
 .s-reading .s-contact-link { background:#ffffff08; border-color:#ffffff35; box-shadow:none; }
@@ -264,13 +266,13 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-lead-index { font:10px/1.6 var(--mono); letter-spacing:1.5px; color:#aebcb2; }
 .s-lead-hint { margin:0; font:14px/1.6 var(--sans); color:#b2c0b8; }
 .s-section-links { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:minmax(180px,1fr); gap:14px; width:100%; margin:0 0 2px; }
-.s-section-tile { position:relative; display:grid; grid-template-columns:1fr auto; align-content:start; min-height:155px; gap:12px 18px; padding:22px 24px; border:1px solid #ffffff24; border-radius:15px; background:linear-gradient(130deg,#ffffff0f,#ffffff04); color:#edf3ec; text-decoration:none; box-shadow:inset 0 1px 0 #ffffff10,0 12px 28px -20px #0007; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); transition:border-color .18s,background .18s,transform .18s; }
-.s-section-number { font:10px/1.4 var(--mono); color:#a4b5a7; }
-.s-section-arrow { grid-column:2; grid-row:1; color:#bfceb8; font:20px/1 var(--sans); }
+.s-section-tile { position:relative; display:grid; grid-template-columns:1fr auto; align-content:start; min-height:155px; gap:12px 18px; padding:22px 24px; border:1px solid #dfd6ff38; border-top-color:#f5eeff70; border-left-color:#eee3ff52; border-radius:15px; background:linear-gradient(135deg,rgba(226,216,255,.14),rgba(178,171,209,.055) 58%,rgba(112,133,201,.08)),rgba(16,13,32,.2); color:#edf3ec; text-decoration:none; box-shadow:inset 0 1px 0 #ffffff16,inset 0 -1px 0 #b4a2e50d,0 18px 36px -26px #08041199; backdrop-filter:blur(8px) saturate(1.08); -webkit-backdrop-filter:blur(8px) saturate(1.08); transition:border-color .18s,background .18s,box-shadow .18s,transform .18s; }
+.s-section-number { font:10px/1.4 var(--mono); color:#e0d8ec; }
+.s-section-arrow { grid-column:2; grid-row:1; color:#d8ccec; font:20px/1 var(--sans); }
 .s-section-tile strong { grid-column:1/-1; font:500 clamp(19px,1.6vw,25px)/1.2 var(--sans); letter-spacing:-.025em; color:#f0f5ee; }
-.s-section-description { grid-column:1/-1; max-width:40ch; color:#b4c2b9; font:13px/1.6 var(--sans); }
-.s-section-tile:hover { color:#fff; transform:translateY(-3px); background:linear-gradient(130deg,#ffffff19,#ffffff0a); border-color:#c5d6b65e; }
-.s-section-tile:focus-visible { outline:2px solid #c2d2a5; outline-offset:4px; }
+.s-section-description { grid-column:1/-1; max-width:40ch; color:#e2dcec; font:13px/1.6 var(--sans); }
+.s-section-tile:hover { color:#fff; transform:translateY(-3px); background:linear-gradient(135deg,rgba(231,220,255,.19),rgba(175,167,210,.09) 58%,rgba(112,133,201,.12)),rgba(16,13,32,.2); border-color:#e0d0ff80; box-shadow:inset 0 1px 0 #ffffff24,0 20px 38px -24px #120a2a99; }
+.s-section-tile:focus-visible { outline:2px solid #d4beff; outline-offset:4px; }
 #s-read-section { align-self:flex-start; border:1px solid #ffffff30; border-radius:100px; background:#ffffff08; color:#e9eee5; padding:13px 20px; font:500 13px var(--sans); cursor:pointer; }
 #s-read-section span { margin-left:22px; }
 #s-read-section:hover { background:#ffffff16; border-color:#c6d5b3; }
@@ -284,6 +286,16 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-reader .s-project-index a { color:#e6ede5; background:#ffffff08; border-color:#ffffff25; box-shadow:none; }
 .s-reader .s-project-index a:hover { background:#ffffff14; border-color:#b9c9a8; }
 .s-reader .s-project-index :is(small,.s-index-number) { color:#adbdaf; }
+/* Chat bubbles are light instruments inside the glass page. Scope their text
+   explicitly so the reader's pale prose color cannot bleed into either state. */
+.s-reader #einstein :is(.chat,.einchat) { --ink:#282533; --ink-2:#565063; --ink-3:#655d73; --card:#fdfcff; --bg:#fff; --bg-2:#f2eff7; --line:#ddd6e7; --line-2:#b6a9c9; --studio-demo-paper:#f2eff7; --studio-demo-panel:#fdfcff; --studio-demo-ink:#282533; --studio-demo-muted:#655d73; --studio-demo-plum:#624b80; --studio-demo-soft:#e9e2f2; color:#282533; }
+.s-reader #einstein .chat p,.s-reader #einstein .einchat__msg { font:400 15px/1.65 var(--sans); letter-spacing:0; }
+.s-reader #einstein :is(.chat__b,.einchat__msg--bot) { background:#f2eff7; border-color:#ddd6e7; color:#282533; }
+.s-reader #einstein :is(.chat__u,.einchat__msg--me) { background:#624b80; color:#fff; }
+.s-reader #einstein .einchat__msg :is(p,li,strong,em) { color:inherit; }
+.s-reader #einstein .einchat__note { color:#655d73; }
+.s-reader #einstein .einchat__form input { color:#282533; caret-color:#624b80; }
+.s-reader #einstein .einchat__form input::placeholder { color:#655d73; opacity:1; }
 .s-event { display:grid; grid-template-columns:minmax(240px,.85fr) minmax(0,1.5fr); gap:clamp(28px,5vw,80px); padding:32px 0 10px; border-top:1px solid #ffffff26; }
 .s-event-heading h3 { font:500 clamp(28px,3vw,40px)/1.15 var(--sans); letter-spacing:-.035em; color:#edf3eb; margin:18px 0 12px; }
 .s-event .proj__meta { color:#a9bba9; font-size:11px; line-height:1.7; }
@@ -302,6 +314,7 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-reading:not([data-surface="plaque"]) .s-telemetry { opacity:0; }
 .s-reader-scrolled .s-telemetry { opacity:0; }
 .s-reading[data-surface="notebook"] .s-reader-frost { background:rgba(244,238,220,.94); }
+.s-reading[data-surface="notebook"] .s-reader-frost::before,.s-reading[data-surface="notebook"] .s-reader-frost::after { display:none; }
 .s-reading[data-surface="notebook"] .s-header { background:rgba(244,238,220,.94); border-color:#6f68502b; }
 .s-reading[data-surface="notebook"] :is(.s-brand,.s-nav a,.s-contact-link,.s-back,.s-reader-toolbar p,.s-reader-footer,.s-reader-footer a,.s-reader-footer button) { color:#454a38; }
 .s-reading[data-surface="notebook"] .s-contact-link { border-color:#78725e50; }
@@ -320,7 +333,8 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
  .s-event { grid-template-columns:1fr; gap:20px; padding-top:22px; }
  .s-event-copy p { font-size:16px; }
  .s-telemetry { top:auto; bottom:18px; right:15px; width:124px; padding:8px 10px; font-size:8px; }
- .s-reader-frost { backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); }
+ .s-reader-frost { backdrop-filter:blur(5px) saturate(.8); -webkit-backdrop-filter:blur(5px) saturate(.8); }
+ .s-reader-frost::after { inset:118px 10px 12px; border-radius:16px; }
 }
 @media(max-width:480px) {
  .s-section-links { grid-template-columns:1fr; flex:none; }
