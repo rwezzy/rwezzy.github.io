@@ -4,12 +4,16 @@ A static site built with HTML, CSS, JavaScript and Three.js. No build step is re
 
 ## Studio version
 
-The homepage uses the Lite6 CAD model to pick up one of six translucent section plaques. The arm presents the selected plaque before the camera moves into its reading view. The suction contact remains behind the page. Selecting a different section reverses the camera movement and returns the current plaque before picking the next one. The reading view, navigation and demo controls share a responsive layout. The Motion control and the system's reduced-motion preference allow navigation without the animation.
+The homepage uses the Lite6 CAD model to pick up translucent plaques for Projects, Research, Background and Beyond. The arm presents the selected plaque before the camera moves into its reading view. Selecting a different section zooms out, returns the current plaque and picks the next one from the wide view. About zooms into a standing frame without using the arm; Contact opens a notebook. The Motion control and the system's reduced-motion preference allow navigation without the animation.
+
+The glass reading view has a dark frosted surface and a clear central view of the suction contact. Text is positioned away from this window; scrolling closes it for reading. The corner display reports the angles used to render the simulated arm, not telemetry from physical hardware. Desk props include the original adjustable SoundScope carrier on a tripod, detailed schematic sensors, and an OMEN-inspired laptop displaying the supplied screen image. The frame uses an initials insert until a portrait is supplied.
 
 This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
 
 - `js/studio-shell.js`: section navigation, focus handling and intact demo-node placement.
 - `js/studio-scene.js`: the homepage robot, plaques and pick/return animation.
+- `js/studio-motion.js`: precomputed joint paths and continuous playback interpolation.
+- `js/studio-props.js`: laptop, SoundScope stand, About frame and opening Contact notebook.
 - `css/studio.css`: site layout and page presentation.
 - `css/studio-demos.css`: presentation of the existing demo controls.
 - `tests/studio-preservation.test.mjs`: checks the original project text and demo implementations against a frozen snapshot, including a regression check for the SoundScope texture-loading race fixed in this version.

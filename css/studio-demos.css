@@ -13,6 +13,17 @@ body.studio-site {
   --studio-demo-plum: #704b72;
 }
 
+/* Keep the instruments readable inside the dark glass document. Their scene
+   controls retain a light surface and their existing interaction mechanisms. */
+body.studio-site.s-reading :is(.demo,.pick,.ss-lab,.einchat) {
+  --ink:#282923; --ink-2:#626854; --ink-3:#747c66;
+  --bg:#fafbf7; --bg-2:#f0f2e9; --line:#d8dece;
+  background:rgba(244,247,239,.96);
+}
+body.studio-site.s-reading .ss-lede { color:#dce6dc !important; }
+body.studio-site.s-reading .try__head h2 { color:#eef3eb; }
+body.studio-site.s-reading .try__head .s-demo-instructions { color:#bac9bb; }
+
 /* A common frame for demonstrations, with labels separate from the media. */
 body.studio-site :is(.demo, .pick, .ss-lab, .einchat) {
   min-width: 0;

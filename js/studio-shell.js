@@ -55,7 +55,8 @@
   }
 
   let motion = !reduced.matches, scene = null, current = 'home', held = false;
-  let desired = null, processing = false;
+  let desired = null, processing = false, nextView = 'home';
+  let sceneAttachment = null;
   const motionButton = document.querySelector('#s-motion');
   const updateMotion = () => {
     motionButton.setAttribute('aria-pressed', String(motion));
@@ -75,6 +76,7 @@
     });
   };
   async function fitStage(presenting, { immediate = false } = {}) {
+    if (document.body.classList.contains('s-presenting') === presenting) return;
     const from = stage.getBoundingClientRect();
     document.body.classList.toggle('s-presenting', presenting);
     home.hidden = false;
@@ -84,13 +86,14 @@
     const to = stage.getBoundingClientRect();
     const rect = box => ({ position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, margin: '0px', zIndex: 4 });
     if (motion && !immediate && from.width && to.width) {
-      try { await stage.animate([rect(from), rect(to)], { duration: 280, easing: 'cubic-bezier(.22,1,.36,1)' }).finished; } catch (_) { /* layout can be interrupted */ }
+      try { await stage.animate([rect(from), rect(to)], { duration: 480, easing: 'cubic-bezier(.45,0,.25,1)' }).finished; } catch (_) { /* layout can be interrupted */ }
     }
     window.dispatchEvent(new Event('resize'));
   }
   const presentStage = options => fitStage(true, options);
-  const retractStage = options => fitStage(false, options);
-  const sceneReady = import('./studio-scene.js?v=glass4').then(async module => {
+  const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
+  let telemetryTime = 0;
+  const sceneReady = import('./studio-scene.js?v=desk5').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => navigate(id),
       onStatus: text => { status.textContent = text; },
@@ -98,18 +101,37 @@
       onPresent: presentStage,
       onRetract: retractStage,
       onPresentationChange: rect => {
-        if (!rect || rect.progress < 0.999) return;
-        document.body.style.setProperty('--s-reader-top', `${Math.max(0, rect.top)}px`);
-        document.body.style.setProperty('--s-reader-side', `${Math.max(0, rect.left)}px`);
+        if (!rect) return;
+        document.body.dataset.surface = rect.kind || 'plaque';
+        if (rect.suction) {
+          document.body.style.setProperty('--s-cup-x', `${rect.suction.x}px`);
+          document.body.style.setProperty('--s-cup-y', `${rect.suction.y}px`);
+          document.body.style.setProperty('--s-cup-radius', `${Math.max(30, rect.suction.radius + 5)}px`);
+        }
+      },
+      onTelemetry: ({ jointsDeg, phase }) => {
+        const panel = document.querySelector('.s-telemetry');
+        if (!panel || !jointsDeg) return;
+        panel.hidden = false;
+        const now = performance.now();
+        if (now - telemetryTime < 80 && phase !== 'idle' && phase !== 'reading') return;
+        telemetryTime = now;
+        const angles = document.querySelector('#s-joints');
+        if (angles) angles.innerHTML = jointsDeg.map((value, index) => `<span>J${index + 1}</span><b>${Number(value).toFixed(1)}°</b>`).join('');
+        const phaseText = document.querySelector('#s-phase');
+        if (phaseText) phaseText.textContent = phase.replaceAll('-', ' ').toUpperCase();
       },
     });
     // Deep links show their text immediately; the held background joins when its assets are ready.
     if (current !== 'home' && !processing) {
       const opening = current;
-      await scene.pick(opening, { immediate: true });
-      held = true;
-      if (current === opening) scene.setReaderMode(true);
-      else { await scene.putBack({ immediate: true }); held = false; }
+      const attachment = scene.pick(opening, { immediate: true }).then(() => {
+        held = true;
+        if (current === opening && !processing) { scene.setReaderMode(true); scene.setActive(true); }
+      });
+      sceneAttachment = attachment;
+      try { await attachment; }
+      finally { if (sceneAttachment === attachment) sceneAttachment = null; }
     }
     return scene;
   }).catch(error => {
@@ -152,6 +174,13 @@
     for (const [id, view] of views) view.hidden = id !== req.view;
     document.querySelector('#s-page-label').textContent = `${String(pages.findIndex(p => p[0] === req.view) + 1).padStart(2, '0')} / ${pages.find(p => p[0] === req.view)[1].toUpperCase()}`;
     current = req.view;
+    document.body.dataset.surface = req.view === 'about' ? 'frame' : req.view === 'contact' ? 'notebook' : 'plaque';
+    const leadTitle = document.querySelector('#s-lead-title');
+    if (leadTitle) leadTitle.textContent = pages.find(p => p[0] === req.view)[1];
+    const leadIndex = document.querySelector('#s-lead-index');
+    if (leadIndex) leadIndex.textContent = `${String(pages.findIndex(p => p[0] === req.view) + 1).padStart(2, '0')} / PORTFOLIO`;
+    const lead = document.querySelector('#s-reader-lead');
+    if (lead) lead.hidden = req.view === 'about' || req.view === 'contact';
     reader.hidden = false; home.hidden = !held; home.inert = true;
     home.setAttribute('aria-hidden', 'true');
     document.body.classList.add('s-reading');
@@ -160,7 +189,7 @@
     await nextFrame();
     window.dispatchEvent(new Event('resize'));
     scrollTarget(req);
-    if (!req.instant) await animate(reader, [{ opacity: 0 }, { opacity: 1 }], 170);
+    if (!req.instant) await animate(reader, [{ opacity: 0 }, { opacity: 1 }], 250);
     focusTarget(req);
   }
   function scrollTarget(req) {
@@ -181,6 +210,7 @@
     try {
       while (desired) {
         const req = desired; desired = null;
+        nextView = req.view;
         // A return request can arrive while the first plaque is still being lifted.
         // Finish returning it even though the reading view has not opened yet.
         if (current === req.view && !(req.view === 'home' && held)) { scrollTarget(req); focusTarget(req); continue; }
@@ -195,11 +225,14 @@
           scene?.setReaderMode(false);
           await nextFrame(); window.dispatchEvent(new Event('resize'));
         }
+        // Finish a late startup attachment before returning it or selecting a new
+        // object. Cleanup then belongs to this request, never the stale startup task.
+        if (sceneAttachment) await sceneAttachment;
         if (held) { if (scene) await scene.putBack({ immediate: !motion || req.instant }); held = false; }
         if (desired) continue;
         if (req.view === 'home') {
-          if (document.body.classList.contains('s-presenting')) await retractStage({ immediate: true });
-          status.textContent = scene ? 'Select a plaque or a section' : 'Choose a section below';
+          if (document.body.classList.contains('s-presenting')) await fitStage(false, { immediate: !motion || req.instant });
+          status.textContent = scene ? 'Choose an object or a section' : 'Choose a section below';
           document.querySelector('.s-brand').focus({ preventScroll: true });
           continue;
         }
@@ -245,6 +278,13 @@
   document.querySelector('#s-next').addEventListener('click', () => {
     navigate(pages[(pages.findIndex(p => p[0] === current) + 1) % pages.length][0]);
   });
+  document.querySelector('#s-read-section')?.addEventListener('click', () => {
+    content.scrollIntoView({ behavior: motion ? 'smooth' : 'instant', block: 'start' });
+  });
+  const updateReadingWindow = () => {
+    document.body.classList.toggle('s-reader-scrolled', window.scrollY > 80);
+  };
+  addEventListener('scroll', updateReadingWindow, { passive: true });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !e.target.matches('input,textarea,select')) navigate('top');
   });

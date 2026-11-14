@@ -21,7 +21,7 @@
   } }
   </script>
 
-<link rel="stylesheet" href="css/studio.css">
+<link rel="stylesheet" href="css/studio.css?v=desk5">
   <link rel="stylesheet" href="css/studio-demos.css">
 </head><body class="studio-site">
 <a class="skip" href="#projects" data-view="projects" data-instant>Skip animation and read projects</a>
@@ -40,19 +40,22 @@
    <a class="s-discover" href="#projects" data-view="projects"><span class="s-arrow-circle" aria-hidden="true">↗</span>Explore my work</a>
   </div>
   <div class="s-scene-wrap" id="s-scene-wrap">
-   <canvas id="s-scene" aria-label="Interactive UFACTORY Lite6 arm with six labelled page plaques. Select a section below to see the arm lift its page."></canvas>
+   <canvas id="s-scene" aria-label="Interactive desk with a Lite6 robot, four page plaques, an About photo frame, a Contact notebook, laptop and SoundScope stand."></canvas>
    <div class="s-scene-label"><span class="s-cross" aria-hidden="true">+</span> UFACTORY LITE6 <span>01—06</span></div>
    <p class="s-model-note">Interactive model · suction tool</p>
   </div>
  </div>
  <section class="s-selection" aria-label="Choose a page">
-  <div class="s-selection-label"><span><b>Pick a page.</b> The arm will bring it to you.</span><span class="s-scene-status" id="s-status" role="status" aria-live="polite">Loading the arm…</span></div>
+  <div class="s-selection-label"><span><b>Choose a section.</b> Explore the desk.</span><span class="s-scene-status" id="s-status" role="status" aria-live="polite">Loading the desk…</span></div>
   <nav class="s-dock" aria-label="Page plaques"><button class="s-plaque-button" data-view="about" type="button"><span class="s-plaque-number">01</span><span class="s-plaque-title">About</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="projects" type="button"><span class="s-plaque-number">02</span><span class="s-plaque-title">Projects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="research" type="button"><span class="s-plaque-number">03</span><span class="s-plaque-title">Research</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="background" type="button"><span class="s-plaque-number">04</span><span class="s-plaque-title">Background</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="beyond" type="button"><span class="s-plaque-number">05</span><span class="s-plaque-title">Beyond</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="contact" type="button"><span class="s-plaque-number">06</span><span class="s-plaque-title">Contact</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button></nav>
  </section>
  <footer class="s-home-footer"><span>HARDWARE / SOFTWARE / RESEARCH</span><div class="s-clocks">Newark <b id="clock-nwk">--:--</b><span>·</span>Kampala <b id="clock-kla">--:--</b></div><button id="s-motion" type="button" aria-pressed="true">Motion on <span aria-hidden="true">◉</span></button></footer>
 </main>
+  <div class="s-reader-frost" aria-hidden="true"></div>
+  <aside class="s-telemetry" aria-label="Animated robot joint angles" hidden><p>LITE6 <span id="s-phase">IDLE</span></p><div id="s-joints"></div><small>visual simulation · degrees</small></aside>
   <div class="s-reader" id="s-reader" role="main" hidden>
  <div class="s-reader-toolbar"><p id="s-page-label">02 / PROJECTS</p><button type="button" class="s-back" data-home><span aria-hidden="true">↙</span> Return to desk <kbd>Esc</kbd></button></div>
+ <div class="s-reader-lead" id="s-reader-lead"><div><p class="s-lead-index" id="s-lead-index">02 / PORTFOLIO</p><h1 id="s-lead-title">Projects</h1></div><button id="s-read-section" type="button">Explore section <span aria-hidden="true">↓</span></button></div>
  <div id="s-content-root" class="s-content-root">
 
   <!-- ================================================================ INTRO -->
@@ -481,7 +484,7 @@
 </div>
 <div class="s-transition-label" id="s-transition-label" aria-hidden="true"></div>
 <noscript><div class="s-noscript">The interactive desk needs JavaScript. <a href="classic.html">Read the complete portfolio.</a></div></noscript>
-<script src="js/studio-shell.js?v=glass4"></script>
+<script src="js/studio-shell.js?v=desk5"></script>
 <script src="js/slots.js"></script>
 <script src="js/demos.js"></script>
 <script src="js/main.js"></script>

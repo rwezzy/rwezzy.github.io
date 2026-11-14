@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
+import { prepareJointPath, sampleJointPath } from './studio-motion.js';
+import { createStudioProps } from './studio-props.js';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
 // nothing in this module connects to, or issues commands to, robot hardware.
 const PAGES = [
-  ['about', 'About'], ['projects', 'Projects'], ['research', 'Research'],
-  ['background', 'Background'], ['beyond', 'Beyond'], ['contact', 'Contact'],
+  ['projects', 'Projects', 2], ['research', 'Research', 3],
+  ['background', 'Background', 4], ['beyond', 'Beyond', 5],
 ];
 const COLORS = { studio: '#f7f7f2', paper: '#e6f0ec', ivory: '#deded4', ink: '#312b39', lime: '#dceac6', joint: '#36353b' };
 const PLAQUE = { width: 0.145, height: 0.104, thickness: 0.009, radius: 0.37 };
@@ -67,6 +68,7 @@ function smoothSTLNormals(input) {
 export async function createStudioScene(canvas, {
   onSelect = () => {}, onStatus = () => {}, onReady = () => {},
   onPresent = async () => {}, onRetract = async () => {}, onPresentationChange = () => {},
+  onTelemetry = () => {},
 } = {}) {
   if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError('A canvas is required for the studio scene.');
   let renderer;
@@ -91,9 +93,10 @@ export async function createStudioScene(canvas, {
   const homeTarget = cameraTarget.clone();
   const homePosition = new THREE.Vector3();
   const homeDirection = new THREE.Vector3(0.57, 0.84, 1.04).normalize();
-  let cameraProgress = 0;
+  let cameraProgress = 0, focusAlignment = 0;
   let active = true, readerMode = false, disposed = false, contextLost = false, held = null, hovered = null, pointerDown = null;
-  let joints = INITIAL_JOINTS.slice(), operationQueue = Promise.resolve(), animationFrame = 0, cancelMotion = null;
+  let selection = null, studioProps = null, phase = 'idle';
+  let joints = INITIAL_JOINTS.slice(), restJoints = null, operationQueue = Promise.resolve(), animationFrame = 0, cancelMotion = null;
   let width = 1, height = 1;
   const textures = new Set(), geometries = new Set(), materials = new Set();
   const keepGeometry = geometry => { geometries.add(geometry); return geometry; };
@@ -105,27 +108,31 @@ export async function createStudioScene(canvas, {
     if (!disposed && active && !contextLost && width > 0 && height > 0) {
       renderer.render(scene, camera);
       onPresentationChange(getPresentationRect());
+      onTelemetry({ jointsDeg: joints.map(angle => THREE.MathUtils.radToDeg(angle)), phase });
     }
   };
   const notify = message => { if (!disposed) onStatus(message); };
-  const setCamera = progress => {
-    cameraProgress = progress;
-    // The cup presents the plaque upright before the camera moves. The final
-    // view is exactly frontal and the plate spans 92% of the canvas width.
+  const focusGeometry = () => {
+    if (selection && selection.kind !== 'plaque') return selection;
     const face = new THREE.Matrix4().fromArray(multiply(DISPLAY, ATTACH)).premultiply(robot.matrix);
     const center = new THREE.Vector3(0, 0, -PLAQUE.thickness / 2).applyMatrix4(face);
     const normal = new THREE.Vector3(0, 0, -1).transformDirection(face);
     const up = new THREE.Vector3(0, -1, 0).transformDirection(face);
-    const distance = PLAQUE.width / (0.92 * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
-    const worldHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const reader = document.querySelector('#s-reader');
-    const headerHeight = document.querySelector('.s-header')?.getBoundingClientRect().height || 74;
-    const readerMargin = reader ? parseFloat(getComputedStyle(reader).marginTop) || 0 : 36;
-    const topFraction = Math.min(0.32, (headerHeight + readerMargin) / Math.max(height, 1));
-    const focusTarget = center.clone().addScaledVector(up, PLAQUE.height / 2 - worldHeight * (0.5 - topFraction));
-    const closer = focusTarget.clone().addScaledVector(normal, distance);
-    camera.position.lerpVectors(homePosition, closer, progress);
-    cameraTarget.lerpVectors(homeTarget, focusTarget, progress);
+    return { center, normal, up, width: PLAQUE.width, height: PLAQUE.height };
+  };
+  const setCamera = progress => {
+    cameraProgress = progress;
+    const focus = focusGeometry();
+    const fovScale = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    // Cover the viewport with the physical face. Its center and the real cup
+    // remain at screen center; no DOM measurements alter the camera mid-flight.
+    const distance = Math.min(focus.width / (1.04 * fovScale * camera.aspect), focus.height / (1.04 * fovScale));
+    const wideTarget = homeTarget.clone().lerp(focus.center, focusAlignment);
+    const widePosition = wideTarget.clone().add(homePosition.clone().sub(homeTarget));
+    const closer = focus.center.clone().addScaledVector(focus.normal, Math.max(0.03, distance));
+    camera.position.lerpVectors(widePosition, closer, progress);
+    cameraTarget.lerpVectors(wideTarget, focus.center, progress);
+    camera.up.set(0, 1, 0).lerp(focus.up, progress).normalize();
     camera.lookAt(cameraTarget);
     if (held) held.labelMaterial.opacity = readerMode ? 0 : 1 - THREE.MathUtils.smoothstep(progress, 0.12, 0.72);
   };
@@ -137,7 +144,7 @@ export async function createStudioScene(canvas, {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     // Keep the full fan of plaques visible in narrow/mobile canvas containers.
-    const distance = 1.34 * Math.max(1, 0.92 / camera.aspect);
+    const distance = 1.42 * Math.max(1, 1.36 / camera.aspect);
     homePosition.copy(homeTarget).addScaledVector(homeDirection, distance);
     setCamera(cameraProgress);
     renderer.setSize(Math.round(width), Math.round(height), false);
@@ -177,7 +184,7 @@ export async function createStudioScene(canvas, {
   sealLip.position.z = -0.00015; suctionSeal.add(sealLip);
   const sealInner = new THREE.Mesh(keepGeometry(new THREE.TorusGeometry(0.0065, 0.00022, 8, 64)),
     keepMaterial(new THREE.MeshStandardMaterial({ color: '#344c3c', roughness: 0.5, envMapIntensity: 0.15 })));
-  sealInner.position.z = -0.00025; suctionSeal.add(sealInner);
+  sealInner.position.z = 0.00005; suctionSeal.add(sealInner);
 
   // Wait briefly for the actual label font; slow font servers must not block
   // navigation. The later fonts.ready refresh also covers the timeout case.
@@ -218,8 +225,8 @@ export async function createStudioScene(canvas, {
     return texture;
   }
 
-  PAGES.forEach(([id, title], index) => {
-    const angle = THREE.MathUtils.degToRad(-67.5 + index * 27);
+  PAGES.forEach(([id, title, pageNumber], index) => {
+    const angle = THREE.MathUtils.degToRad(-45 + index * 30);
     const c = Math.cos(angle), s = Math.sin(angle);
     // Parallel page edges face the camera, rather than twisting labels around
     // the fan. The grasp pose is derived from this same physical plaque frame.
@@ -234,14 +241,14 @@ export async function createStudioScene(canvas, {
     const mesh = new THREE.Mesh(paperGeometry, material);
     mesh.matrixAutoUpdate = false; mesh.matrix.fromArray(rest);
     mesh.castShadow = false; mesh.receiveShadow = true; mesh.userData.page = id;
-    const labelMaterial = keepMaterial(new THREE.MeshBasicMaterial({ map: drawLabel(title, index), transparent: true, depthWrite: false, toneMapped: false }));
+    const labelMaterial = keepMaterial(new THREE.MeshBasicMaterial({ map: drawLabel(title, pageNumber - 1), transparent: true, depthWrite: false, toneMapped: false }));
     const front = new THREE.Mesh(labelGeometry, labelMaterial);
     front.position.z = PLAQUE.thickness / 2 + 0.00015;
     const back = new THREE.Mesh(labelGeometry, labelMaterial);
     // The back becomes the readable front when the suction cup lifts the page.
     back.rotation.x = Math.PI; back.position.z = -PLAQUE.thickness / 2 - 0.00015;
     mesh.add(front, back); robot.add(mesh);
-    plaques.push({ id, title, mesh, material, labelMaterial, rest, contact: multiply(rest, ATTACH) });
+    plaques.push({ id, title, pageNumber, kind: 'plaque', mesh, material, labelMaterial, rest, contact: multiply(rest, ATTACH) });
   });
 
   function buildStage() {
@@ -276,36 +283,6 @@ export async function createStudioScene(canvas, {
     scene.environment = environmentTarget.texture;
     scene.environmentIntensity = 0.5;
     environment.dispose(); pmrem.dispose();
-  }
-
-  async function buildPlant() {
-    const loader = new GLTFLoader();
-    const { scene: plant } = await loader.loadAsync(new URL('../den/models/potted_plant_02/potted_plant_02.gltf', import.meta.url).href);
-    const ceramic = keepMaterial(new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.46, clearcoat: 0.2, clearcoatRoughness: 0.4, envMapIntensity: 0.24 }));
-    const soil = keepMaterial(new THREE.MeshStandardMaterial({ color: '#383327', roughness: 1, envMapIntensity: 0.08 }));
-    plant.traverse(object => {
-      if (!object.isMesh) return;
-      keepGeometry(object.geometry);
-      const originals = Array.isArray(object.material) ? object.material : [object.material];
-      originals.forEach(material => {
-        keepMaterial(material);
-        Object.values(material).forEach(value => { if (value?.isTexture) keepTexture(value); });
-      });
-      if (object.name.endsWith('_pot')) object.material = ceramic;
-      else if (object.name.endsWith('_dirt')) object.material = soil;
-      else {
-        object.material.envMapIntensity = 0.22;
-        object.material.roughness = 0.78;
-      }
-      object.castShadow = true; object.receiveShadow = true;
-    });
-    const bounds = new THREE.Box3().setFromObject(plant), size = bounds.getSize(new THREE.Vector3());
-    plant.scale.setScalar(0.33 / Math.max(size.y, 0.001));
-    bounds.setFromObject(plant);
-    const center = bounds.getCenter(new THREE.Vector3());
-    plant.position.set(0.36 - center.x, -bounds.min.y, -0.29 - center.z);
-    plant.rotation.y = -0.22;
-    scene.add(plant);
   }
 
   async function buildArm() {
@@ -346,13 +323,11 @@ export async function createStudioScene(canvas, {
       animationFrame = requestAnimationFrame(frame);
     });
   }
-  function move(target, duration) {
-    const from = joints.slice();
-    const result = inverse(target, from, { iterations: 220 });
-    if (!result.ok) return Promise.reject(new Error('The studio could not reach this page.'));
+  function playPath(path, duration, reverse = false, updateCamera = false) {
     return tween(duration, progress => {
-      joints = from.map((angle, index) => angle + (result.q[index] - angle) * progress);
+      joints = sampleJointPath(path, progress, reverse);
       applyJoints(joints);
+      if (updateCamera) { focusAlignment = 1 - progress; setCamera(0); }
     });
   }
   const dolly = (progress, duration) => {
@@ -362,7 +337,7 @@ export async function createStudioScene(canvas, {
   function hover(pageId) {
     if (disposed) return;
     const id = pageId === 'path' ? 'background' : pageId;
-    hovered = held ? null : plaques.find(plaque => plaque.id === id) || null;
+    hovered = selection ? null : plaques.find(plaque => plaque.id === id) || studioProps?.targets[id] || null;
     plaques.forEach(plaque => {
       plaque.material.color.set(plaque === hovered ? COLORS.lime : COLORS.paper);
       plaque.material.emissive.set(plaque === hovered ? '#aeb77b' : '#000000');
@@ -373,35 +348,39 @@ export async function createStudioScene(canvas, {
   }
   async function returnHeld({ immediate = false } = {}) {
     readerMode = false;
-    if (immediate || reduceMotion.matches) {
-      const result = inverse(REST, joints, { iterations: 220 });
-      if (!result.ok) throw new Error('The studio could not return to its resting pose.');
-      if (held) {
-        setCamera(0); render();
-        await onRetract({ pageId: held.id, immediate: true });
-        if (disposed) throw abortError();
-        held.labelMaterial.opacity = 1;
-        held.mesh.matrix.fromArray(held.rest);
-      }
-      held = null;
-      joints = result.q; applyJoints(joints); setCamera(0); hover(null);
-      notify('Ready when you are');
-      return;
+    const target = selection;
+    if (!target) return;
+    const instant = immediate || reduceMotion.matches;
+    notify(target.kind === 'plaque' ? `Putting ${target.title} back` : 'Returning to the studio');
+    // Keep the page centered throughout the entire zoom-out. The arm stays
+    // completely still until the camera reaches a genuinely wide view.
+    phase = 'zooming-out'; focusAlignment = 1;
+    if (instant) setCamera(0); else await dolly(0, 600);
+    if (target.kind === 'plaque') {
+      phase = 'returning';
+      if (instant) { joints = target.motion.raise.start.slice(); applyJoints(joints); }
+      else await playPath(target.motion.raise, 660, true, true);
+      phase = 'releasing';
+      held = null; target.labelMaterial.opacity = 1; target.mesh.matrix.fromArray(target.rest);
+      robot.updateMatrixWorld(true);
+      phase = 'retracting';
+      if (instant) { joints = restJoints.slice(); applyJoints(joints); }
+      else await playPath(target.motion.approach, 450, true);
+    } else if (target.kind === 'notebook') {
+      phase = 'closing';
+      if (instant) studioProps.setNotebookOpen(0);
+      else await tween(480, progress => {
+        studioProps.setNotebookOpen(1 - progress); focusAlignment = 1 - progress; setCamera(0);
+      });
+    } else if (!instant) {
+      await tween(260, progress => { focusAlignment = 1 - progress; setCamera(0); });
     }
-    if (!held) { await dolly(0, 180); return; }
-    const plaque = held;
-    notify(`Putting ${plaque.title} back`);
-    // Restore the wide camera completely before the robot begins to lower.
-    await dolly(0, 520);
-    await onRetract({ pageId: plaque.id, immediate: false });
+    selection = null; focusAlignment = 0; phase = 'idle'; setCamera(0); hover(null);
+    // The shell can keep the full canvas when another page is queued. Its
+    // inset layout is restored only after all physical return motion ends.
+    await onRetract({ pageId: target.id, kind: target.kind, immediate: instant });
     if (disposed) throw abortError();
     resize();
-    await move(above(plaque.contact, 0.135), 330);
-    await move(plaque.contact, 210);
-    held = null; plaque.labelMaterial.opacity = 1; plaque.mesh.matrix.fromArray(plaque.rest);
-    robot.updateMatrixWorld(true); hover(null);
-    await move(above(plaque.contact, 0.09), 150);
-    await move(REST, 220);
     notify('Ready when you are');
   }
   function enqueue(task) {
@@ -415,60 +394,69 @@ export async function createStudioScene(canvas, {
   }
   const pick = (pageId, { immediate = false } = {}) => enqueue(async () => {
     const id = pageId === 'path' ? 'background' : pageId;
-    const plaque = plaques.find(item => item.id === id);
-    if (!plaque) throw new RangeError(`Unknown studio page: ${pageId}`);
-    if (held === plaque) return;
-    if (held) await returnHeld({ immediate });
-    readerMode = false;
-    if (immediate || reduceMotion.matches) {
-      const result = inverse(DISPLAY, joints, { iterations: 220 });
-      if (!result.ok) throw new Error('The studio could not reach this page.');
-      held = plaque;
-      joints = result.q; applyJoints(joints);
-      await onPresent({ pageId: id, immediate: true });
-      if (disposed) throw abortError();
-      resize(); setCamera(1); hover(null);
-      notify(`${plaque.title} is ready`);
-      return;
-    }
-    hover(id);
-    notify(`Picking up ${plaque.title}`);
-    await move(above(plaque.contact, 0.1), 430);
-    await move(plaque.contact, 230);
-    // Contact precedes attachment; thereafter the plaque follows the real TCP.
-    held = plaque; hover(null); applyJoints(joints);
-    await tween(70, () => {});
-    await move(above(plaque.contact, 0.135), 270);
-    await move(DISPLAY, 430);
-    await onPresent({ pageId: id, immediate: false });
+    const target = plaques.find(item => item.id === id) || studioProps?.targets[id];
+    if (!target) throw new RangeError(`Unknown studio page: ${pageId}`);
+    if (selection === target) return;
+    if (selection) await returnHeld({ immediate });
+    const instant = immediate || reduceMotion.matches;
+    readerMode = false; focusAlignment = 0;
+    // Expand the same canvas before any physical movement. No layout change
+    // occurs between pickup, presentation, camera travel, and the next return.
+    await onPresent({ pageId: id, kind: target.kind, immediate: instant });
     if (disposed) throw abortError();
     resize();
-    await dolly(1, 650);
-    notify(`${plaque.title} is ready`);
+    selection = target;
+    if (target.kind === 'plaque') {
+      notify(`Picking up ${target.title}`);
+      if (instant) { held = target; joints = target.motion.raise.end.slice(); applyJoints(joints); }
+      else {
+        phase = 'approaching'; await playPath(target.motion.approach, 740);
+        phase = 'sealing'; held = target; hover(null); applyJoints(joints);
+        await tween(80, () => {});
+        phase = 'lifting'; await playPath(target.motion.raise, 760);
+      }
+    } else if (target.kind === 'notebook') {
+      notify('Opening the contact notebook'); phase = 'opening';
+      if (instant) studioProps.setNotebookOpen(1);
+      else await tween(620, progress => studioProps.setNotebookOpen(progress));
+    } else notify('Looking closer at About');
+    phase = 'zooming-in';
+    if (instant) setCamera(1); else await dolly(1, target.kind === 'plaque' ? 700 : 800);
+    phase = 'reading'; hover(null);
+    notify(`${target.title || (id === 'about' ? 'About' : 'Contact')} is ready`);
   });
   const putBack = (options = {}) => enqueue(() => returnHeld(options));
 
   function getPresentationRect() {
-    if (disposed || !held || !width || !height) return null;
+    if (disposed || !selection || !width || !height) return null;
     const bounds = canvas.getBoundingClientRect();
     camera.updateMatrixWorld(); robot.updateMatrixWorld(true);
     const project = world => {
       const point = world.clone().project(camera);
       return { x: bounds.left + (point.x + 1) * bounds.width / 2, y: bounds.top + (1 - point.y) * bounds.height / 2, depth: point.z };
     };
-    const w = PLAQUE.width / 2, h = PLAQUE.height / 2, z = -PLAQUE.thickness / 2;
-    // Clockwise, beginning at the reading face's top-left corner.
-    const corners = [[-w, -h, z], [w, -h, z], [w, h, z], [-w, h, z]]
-      .map(point => project(new THREE.Vector3(...point).applyMatrix4(held.mesh.matrixWorld)));
+    let corners, center, suction = null;
+    if (selection.kind === 'plaque') {
+      const w = PLAQUE.width / 2, h = PLAQUE.height / 2, z = -PLAQUE.thickness / 2;
+      corners = [[-w, -h, z], [w, -h, z], [w, h, z], [-w, h, z]]
+        .map(point => project(new THREE.Vector3(...point).applyMatrix4(selection.mesh.matrixWorld)));
+      center = project(new THREE.Vector3(0, 0, z).applyMatrix4(selection.mesh.matrixWorld));
+      if (held) {
+        const toolFrame = new THREE.Matrix4().fromArray(forward(joints).tcp).premultiply(robot.matrix);
+        const cupCenter = project(new THREE.Vector3(0, 0, 0).applyMatrix4(toolFrame));
+        const cupEdge = project(new THREE.Vector3(0.00845, 0, 0).applyMatrix4(toolFrame));
+        suction = { x: cupCenter.x, y: cupCenter.y, radius: Math.hypot(cupEdge.x - cupCenter.x, cupEdge.y - cupCenter.y) };
+      }
+    } else {
+      const focus = focusGeometry(), right = new THREE.Vector3().crossVectors(focus.up, focus.normal).normalize();
+      corners = [[-1, 1], [1, 1], [1, -1], [-1, -1]].map(([x, y]) => project(focus.center.clone()
+        .addScaledVector(right, x * focus.width / 2).addScaledVector(focus.up, y * focus.height / 2)));
+      center = project(focus.center);
+    }
     const left = Math.min(...corners.map(point => point.x)), top = Math.min(...corners.map(point => point.y));
     const right = Math.max(...corners.map(point => point.x)), bottom = Math.max(...corners.map(point => point.y));
-    const center = project(new THREE.Vector3(0, 0, z).applyMatrix4(held.mesh.matrixWorld));
-    const toolFrame = new THREE.Matrix4().fromArray(forward(joints).tcp).premultiply(robot.matrix);
-    const cupCenter = project(new THREE.Vector3(0, 0, 0).applyMatrix4(toolFrame));
-    const cupEdge = project(new THREE.Vector3(0.00845, 0, 0).applyMatrix4(toolFrame));
     return {
-      pageId: held.id, corners, left, top, right, bottom, width: right - left, height: bottom - top, center,
-      suction: { x: cupCenter.x, y: cupCenter.y, radius: Math.hypot(cupEdge.x - cupCenter.x, cupEdge.y - cupCenter.y) },
+      pageId: selection.id, kind: selection.kind, corners, left, top, right, bottom, width: right - left, height: bottom - top, center, suction,
       progress: cameraProgress,
       visible: corners.some(point => point.depth > -1 && point.depth < 1) && right > bounds.left && left < bounds.right && bottom > bounds.top && top < bounds.bottom,
     };
@@ -476,12 +464,15 @@ export async function createStudioScene(canvas, {
 
   const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   const hitPlaque = event => {
-    if (held || disposed || !active || contextLost) return null;
+    if (selection || disposed || !active || contextLost) return null;
     const bounds = canvas.getBoundingClientRect();
     pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(plaques.map(plaque => plaque.mesh), false)[0];
-    return hit ? plaques.find(plaque => plaque.mesh === hit.object) : null;
+    const hit = raycaster.intersectObjects([...plaques.map(plaque => plaque.mesh), ...(studioProps?.hitTargets || [])], true)[0];
+    if (!hit) return null;
+    let object = hit.object, id;
+    while (object && !id) { id = object.userData.pageId || object.userData.page; object = object.parent; }
+    return plaques.find(plaque => plaque.id === id) || studioProps?.targets[id] || null;
   };
   const onPointerMove = event => hover(hitPlaque(event)?.id);
   const onPointerLeave = () => { pointerDown = null; hover(null); };
@@ -496,7 +487,7 @@ export async function createStudioScene(canvas, {
     event.preventDefault(); contextLost = true;
     notify('The 3D studio paused. You can still open every page.');
   };
-  const onContextRestored = () => { contextLost = false; resize(); notify(held ? `${held.title} is ready` : 'Ready when you are'); };
+  const onContextRestored = () => { contextLost = false; resize(); notify(selection ? `${selection.title || selection.id} is ready` : 'Ready when you are'); };
   const observer = new ResizeObserver(resize);
   observer.observe(canvas);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -524,26 +515,38 @@ export async function createStudioScene(canvas, {
     geometries.forEach(geometry => geometry.dispose());
     materials.forEach(material => material.dispose());
     textures.forEach(texture => texture.dispose());
+    studioProps?.dispose();
     environmentTarget?.dispose(); renderer.dispose(); scene.clear();
   }
 
   try {
     notify('Preparing the studio');
-    buildStage(); resize();
-    const assets = await Promise.allSettled([buildArm(), buildPlant()]);
-    if (assets[0].status === 'rejected') throw assets[0].reason;
-    if (assets[1].status === 'rejected') console.warn('The optional plant model could not load:', assets[1].reason);
+    buildStage();
+    studioProps = createStudioProps({ scene, onSelect });
+    resize();
     const rest = inverse(REST, INITIAL_JOINTS, { iterations: 220 });
     if (!rest.ok) throw new Error('The Lite 6 could not reach its resting pose.');
-    joints = rest.q; applyJoints(joints); resize();
+    restJoints = rest.q.slice(); joints = rest.q;
+    // Cache both paths once; reverse playback is exactly the same path, and
+    // runtime frames only sample six joint angles instead of solving IK.
+    const armReady = buildArm();
+    plaques.forEach(plaque => {
+      const approach = prepareJointPath([above(plaque.contact, 0.1), plaque.contact], restJoints);
+      const raise = prepareJointPath([above(plaque.contact, 0.08), above(plaque.contact, 0.15), DISPLAY], approach.end);
+      plaque.motion = { approach, raise };
+    });
+    const assets = await Promise.allSettled([armReady, studioProps.ready]);
+    if (assets[0].status === 'rejected') throw assets[0].reason;
+    if (assets[1].status === 'rejected') console.warn('A studio prop texture could not load:', assets[1].reason);
+    applyJoints(joints); resize();
     notify('Ready when you are');
     onReady();
     // Refresh once custom fonts arrive, including when their loading was deferred.
     document.fonts?.ready.then(() => {
       if (disposed) return;
-      plaques.forEach((plaque, index) => {
+      plaques.forEach(plaque => {
         const old = plaque.labelMaterial.map;
-        plaque.labelMaterial.map = drawLabel(plaque.title, index);
+        plaque.labelMaterial.map = drawLabel(plaque.title, plaque.pageNumber - 1);
         old.dispose(); textures.delete(old);
       });
       render();

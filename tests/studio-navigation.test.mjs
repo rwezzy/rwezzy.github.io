@@ -102,6 +102,11 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   add(home, 'span', { id: 's-status' }); add(home, 'button', { id: 's-motion' });
   const reader = add(body, 'div', { id: 's-reader' }); reader.hidden = true;
   add(reader, 'p', { id: 's-page-label' });
+  const lead = add(reader, 'div', { id: 's-reader-lead' });
+  add(lead, 'h1', { id: 's-lead-title' }); add(lead, 'p', { id: 's-lead-index' });
+  add(lead, 'button', { id: 's-read-section' });
+  const telemetry = add(reader, 'aside', { class: 's-telemetry' }); telemetry.hidden = true;
+  add(telemetry, 'span', { id: 's-phase' }); add(telemetry, 'div', { id: 's-joints' });
   const content = add(reader, 'div', { id: 's-content-root' });
   const intro = add(content, 'section', { class: 'intro' }); add(intro, 'h1');
   const work = add(content, 'section', { id: 'work' });
@@ -119,19 +124,41 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     addEventListener: (type, fn) => { if (!events.has(type)) events.set(type, []); events.get(type).push(fn); },
   };
   const location = { hash };
+  let presentation = null, scenePage = null;
+  const emitPresentation = value => { presentation = value; hooks.onPresentationChange?.(value); };
   const scene = {
     async pick(id, options = {}) {
       calls.push(['pick', id, { ...options }]);
       if (pickGate && !options.immediate) { const gate = pickGate; pickGate = null; await gate.promise; }
       if (immediatePickGate && options.immediate) { const gate = immediatePickGate; immediatePickGate = null; await gate.promise; }
-      await hooks.onPresent?.(options);
+      await hooks.onPresent?.({ ...options, pageId: id });
+      // These are fixture geometry reports, not assertions about physical gripping.
+      const kind = id === 'about' ? 'frame' : id === 'contact' ? 'notebook' : 'plaque';
+      emitPresentation({ ...stage.getBoundingClientRect(), kind, progress: 1,
+        suction: kind === 'plaque' ? { x: 600, y: 410, radius: 55 } : null });
+      scenePage = id;
     },
-    async putBack(options = {}) { calls.push(['putBack']); await hooks.onRetract?.(options); },
+    async putBack(options = {}) {
+      calls.push(['putBack']); await hooks.onRetract?.(options);
+      scenePage = null;
+      calls.push(['retracted', body.classList.contains('s-presenting')]);
+    },
     setActive: value => calls.push(['active', value]), setReaderMode: value => calls.push(['readerMode', value]),
-    getPresentationRect: () => stage.getBoundingClientRect(), hover() {},
+    getPresentationRect: () => presentation, hover() {},
   };
+  // Production scene operations are serialized. Preserve that ordering here so
+  // stale shell cleanup cannot silently return an object chosen by a newer request.
+  let operationQueue = Promise.resolve();
+  for (const method of ['pick', 'putBack']) {
+    const operation = scene[method].bind(scene);
+    scene[method] = (...args) => {
+      const next = operationQueue.then(() => operation(...args));
+      operationQueue = next.catch(() => {});
+      return next;
+    };
+  }
   const context = {
-    document, location, console, Event: class { constructor(type) { this.type = type; } },
+    document, location, console, performance: { now: () => 1000 }, Event: class { constructor(type) { this.type = type; } },
     history: { pushState: (_, __, hash) => { location.hash = hash; pushed.push(hash); } },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
     requestAnimationFrame: fn => { queueMicrotask(() => fn(0)); return 1; }, cancelAnimationFrame() {},
@@ -153,7 +180,9 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   const click = element => { for (const fn of events.get('click') || []) fn({ target: element, preventDefault() {} }); };
   return {
     document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click,
+    present: emitPresentation, telemetry: value => hooks.onTelemetry?.(value),
     get focused() { return focused; },
+    get scenePage() { return scenePage; },
     view: id => content.children.find(el => el.dataset.readerView === id),
     link: hash => new Element('a', { href: hash }),
     pop: hash => { location.hash = hash; context.dispatchEvent(new context.Event('popstate')); },
@@ -212,6 +241,27 @@ test('returning home during late graphics attachment leaves no stale reader back
   assert.equal(app.focused, app.brand);
 });
 
+test('a new section during startup attachment keeps its own object after serialized scene operations settle', async () => {
+  const graphics = deferred(), attachment = deferred();
+  const app = browser({ hash: '#about', sceneGate: graphics, immediatePickGate: attachment });
+  await flush();
+  graphics.resolve(); await flush();
+  assert.ok(app.calls.some(([action, id, options]) => action === 'pick' && id === 'about' && options.immediate));
+  app.click(app.buttons.get('contact')); await flush();
+  attachment.resolve(); await flush(); await flush();
+  assert.deepEqual(app.calls.filter(([action]) => action === 'pick' || action === 'putBack').map(([action, id]) => [action, id]), [
+    ['pick', 'about'], ['putBack', undefined], ['pick', 'contact'],
+  ]);
+  assert.equal(app.scenePage, 'contact', 'Late startup cleanup must not return the new section object');
+  assert.equal(app.location.hash, '#contact');
+  assert.equal(app.view('contact').hidden, false);
+  assert.equal(app.view('about').hidden, true);
+  assert.equal(app.reader.hidden, false);
+  assert.equal(app.body.dataset.surface, 'notebook');
+  assert.equal(app.body.classList.contains('s-presenting'), true);
+  assert.equal(app.body.hasAttribute('aria-busy'), false);
+});
+
 test('returning home during a lift cannot open the stale requested page', async () => {
   const gate = deferred(), app = browser({ pickGate: gate }); await flush();
   app.click(app.buttons.get('projects')); await flush();
@@ -259,4 +309,56 @@ test('browser history restores the correct deep link without pushing another ent
   assert.equal(app.view('contact').hidden, true);
   assert.equal(app.scrolls.at(-1).id, 'optics');
   assert.equal(app.pushed.length, pushes);
+});
+
+for (const [view, kind] of [['about', 'frame'], ['contact', 'notebook']]) {
+  test(`${view} keeps its ${kind} reader treatment before and after graphics arrive`, async () => {
+    const graphics = deferred(), app = browser({ hash: `#${view}`, sceneGate: graphics });
+    await flush();
+    assert.equal(app.reader.hidden, false);
+    assert.equal(app.view(view).hidden, false);
+    assert.equal(app.body.dataset.surface, kind);
+    assert.equal(app.document.getElementById('s-reader-lead').hidden, true,
+      'Object pages must open directly into their own content');
+    const scrollCount = app.scrolls.length;
+    graphics.resolve(); await flush();
+    assert.equal(app.body.dataset.surface, kind, 'Scene geometry reports must preserve the matching reader treatment');
+    assert.equal(app.body.style['--s-cup-x'], undefined, 'A surface with no suction point must not create a cup mask');
+    assert.equal(app.scrolls.length, scrollCount);
+    assert.equal(app.reader.hidden, false);
+  });
+}
+
+test('changing reader pages keeps the stage expanded; Home retracts it', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('about')); await flush();
+  assert.equal(app.body.dataset.surface, 'frame');
+  assert.equal(app.body.classList.contains('s-presenting'), true);
+  app.click(app.buttons.get('contact')); await flush();
+  assert.equal(app.body.dataset.surface, 'notebook');
+  assert.equal(app.calls.filter(([action]) => action === 'retracted').at(-1)[1], true,
+    'Returning the previous object must not flash the home layout between pages');
+  assert.equal(app.body.classList.contains('s-presenting'), true);
+  assert.equal(app.reader.hidden, false);
+  app.click(app.brand); await flush();
+  assert.equal(app.calls.filter(([action]) => action === 'retracted').at(-1)[1], false);
+  assert.equal(app.body.classList.contains('s-presenting'), false);
+  assert.equal(app.reader.hidden, true);
+  assert.equal(app.home.inert, false);
+});
+
+test('presentation reports update the plaque aperture and select surfaces without suction', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('projects')); await flush();
+  assert.equal(app.document.getElementById('s-reader-lead').hidden, false);
+  assert.equal(app.document.getElementById('s-lead-title').textContent, 'Projects');
+  app.present({ kind: 'plaque', progress: 0.5, suction: { x: 412, y: 287, radius: 18 } });
+  assert.equal(app.body.dataset.surface, 'plaque');
+  assert.equal(app.body.style['--s-cup-x'], '412px');
+  assert.equal(app.body.style['--s-cup-y'], '287px');
+  assert.equal(app.body.style['--s-cup-radius'], '30px');
+  app.present({ kind: 'frame', progress: 1, suction: null });
+  assert.equal(app.body.dataset.surface, 'frame');
+  app.present({ kind: 'notebook', progress: 1, suction: null });
+  assert.equal(app.body.dataset.surface, 'notebook');
 });
