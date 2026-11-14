@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Keith Rwezahura</title>
-  <meta name="description" content="Keith Rwezahura, computer engineering student at NJIT from Kampala, Uganda. Hardware, machine learning, and the space where they meet.">
+  <meta name="description" content="Keith Rwezahura, a computer engineering student at NJIT from Kampala, Uganda. Projects and research in robotics, embedded systems and machine learning.">
   <meta name="theme-color" content="#fcfdfb">
   <meta property="og:title" content="Keith Rwezahura">
-  <meta property="og:description" content="Computer engineering at NJIT: hardware, machine learning, and the space where they meet.">
+  <meta property="og:description" content="Computer engineering at NJIT, with projects and research in robotics, embedded systems and machine learning.">
   <meta property="og:image" content="images/me.jpg">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23dff6e9'/%3E%3Ccircle cx='12' cy='16' r='5' fill='%2327a35f'/%3E%3Ccircle cx='21' cy='12' r='3' fill='%23ec5f99'/%3E%3Ccircle cx='22' cy='21' r='3' fill='%233d7be0'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,11 +29,11 @@
 <header class="nav" id="nav">
   <a class="nav__name" href="#top">Keith Rwezahura</a>
   <nav class="nav__links" aria-label="Sections">
-    <a href="#try">Try it</a>
+    <a href="#try">Demo</a>
     <a href="#work">Projects</a>
-    <a href="#path">Path</a>
+    <a href="#path">Background</a>
     <a href="#beyond">Service</a>
-    <a href="#offclock">Off the clock</a>
+    <a href="#offclock">Interests</a>
     <a href="#contact">Contact</a>
   </nav>
   <span class="nav__clocks mono">Newark <b id="clock-nwk">--:--</b> · Kampala <b id="clock-kla">--:--</b></span>
@@ -44,17 +44,17 @@
   <!-- ================================================================ INTRO -->
   <section class="intro wrap">
     <div class="intro__text">
-      <p class="hello mono">hi, nice to meet you</p>
-      <h1>I'm Keith, a computer engineer with one stubborn question.</h1>
-      <p class="intro__lede">I study computer engineering at NJIT, by way of Kampala, Uganda. I came to it through biology and ethics, carrying a question I still haven't answered: <q>to what extent can machines stand in for us, extend us, or quietly shape how we experience being human?</q></p>
-      <p class="intro__lede">Chasing it has given me a robot arm you steer with your eyes, a ring with a neural network on a chip the size of a coin, and a couple of research projects in machine learning. The deeper I go, the more I find that the hard limits aren't in the code. They live in the silicon underneath it, which is why computer architecture pulls at me just as much as AI does, and why I've just started doing hardware research too.</p>
+      <p class="hello mono">about me</p>
+      <h1>I'm Keith, a computer engineering student at NJIT.</h1>
+      <p class="intro__lede">I am from Kampala, Uganda, and my interest in computer engineering developed alongside my interests in biology and ethics. I am particularly interested in how machines can extend human capabilities, and in the conditions that determine whether they are useful to the people expected to rely on them.</p>
+      <p class="intro__lede">These interests have informed my work on gaze-controlled robotics, gesture recognition on microcontrollers, and machine learning research. Working within the memory and processing constraints of these systems has also made me more interested in computer architecture, as the capabilities of a model are dependent on the hardware available to implement it. I am consequently exploring hardware research alongside my work in AI.</p>
       <ul class="currently">
-        <li><span class="dot dot--green"></span> just starting out in hardware research at NJIT</li>
-        <li><span class="dot dot--pink"></span> building OmniRing, a gesture ring with a 4 KB brain</li>
+        <li><span class="dot dot--green"></span> exploring hardware research at NJIT</li>
+        <li><span class="dot dot--pink"></span> developing OmniRing, a gesture ring with a 4 KB neural network</li>
         <li><span class="dot dot--blue"></span> open to internships in computer architecture, digital design, embedded systems, and ML systems</li>
       </ul>
       <p class="intro__links">
-        <a class="pill pill--solid" href="#work">See what I've built</a>
+        <a class="pill pill--solid" href="#work">View my projects</a>
         <a class="pill" href="https://github.com/rwezzy" target="_blank" rel="noopener">GitHub</a>
         <a class="pill" href="https://www.linkedin.com/in/keith-rwezahura" target="_blank" rel="noopener">LinkedIn</a>
         <a class="pill resume-link" href="resume.pdf" target="_blank" rel="noopener">Résumé</a>
@@ -65,7 +65,7 @@
       <ul class="facts">
         <li><b>1st</b> place, Viam robotics hackathon</li>
         <li><b>Dean's List</b>, Albert Dorman Honors College</li>
-        <li><b>180+</b> students reached by my tree project</li>
+        <li><b>180+</b> students at the school supported by Urban Arbor</li>
       </ul>
     </div>
   </section>
@@ -73,9 +73,9 @@
   <!-- ========================================================== LOOK TO PICK -->
   <section class="try wrap" id="try">
     <div class="try__head">
-      <p class="label mono">try it</p>
-      <h2>Pick something up with your eyes.</h2>
-      <p>This is a pocket-sized <a href="#gaze-arm">Gaze Arm</a>, the robot my team built (and won with) at the Viam hackathon. Look at the pink cube, the blue can or the green ball and hold it for about a second; the arm will pick it up and drop it in the tray. Three dots of calibration are enough, because it only has to tell left, middle and right apart. No webcam? Rest your mouse on an object instead.</p>
+      <p class="label mono">interactive demo</p>
+      <h2>Gaze-controlled object selection</h2>
+      <p>This simulation demonstrates the selection process used in <a href="#gaze-arm">Gaze Arm</a>, the project with which my team won the Viam robotics hackathon. After calibrating with the three dots, look at the pink cube, blue can or green ball for about a second to select it; the simulated arm will then place it in the tray. Calibration is limited to three positions because this demonstration only distinguishes left, centre and right. You can also select an object by keeping your pointer over it.</p>
     </div>
     <div class="pick" id="pick">
       <div class="pick__stage">
@@ -87,8 +87,8 @@
       <div class="pick__bar">
         <button class="pill pill--solid" data-cam>Use my webcam</button>
         <button class="pill" data-recal hidden>Recalibrate</button>
-        <button class="pill" data-reset>Put everything back</button>
-        <p class="pick__note mono">Your video never leaves your browser, and the camera switches itself off after every pick or after 45 seconds of nothing. Arm: the open-source SO-ARM100, modelled by The Robot Studio and Google DeepMind (Apache 2.0).</p>
+        <button class="pill" data-reset>Reset objects</button>
+        <p class="pick__note mono">Video is processed in your browser. The webcam switches off after each pick or after 45 seconds of inactivity. This simulation uses the open-source SO-ARM100 model by The Robot Studio and Google DeepMind (Apache 2.0).</p>
       </div>
     </div>
   </section>
@@ -97,7 +97,7 @@
   <section class="section wrap" id="work">
     <header class="section__head">
       <p class="label mono">projects</p>
-      <h2>Things I've built</h2>
+      <h2>Projects and research</h2>
       <p class="key mono"><span class="tag tag--hw">hardware</span> <span class="tag tag--sw">software</span> <span class="tag tag--re">research</span></p>
     </header>
 
@@ -107,9 +107,9 @@
         <p class="proj__meta mono"><span class="tag tag--hw">hardware</span><span class="tag tag--sw">software</span> Nov 2026</p>
         <h3>SoundScope</h3>
         <p class="ss-lede">Sound localization, captions and searchable event history.</p>
-        <p>I built SoundScope to estimate where a sound is coming from and display that direction over a camera feed. I wanted someone to be able to locate a ringing phone visually, including if they have difficulty hearing where it is. The system combines a Seeed reSpeaker XVF3800 microphone array with an Orbbec Gemini 2 depth camera. Because sound reaches each of the four microphones at a slightly different time, comparing those arrival times gives an estimate of its direction. The camera supplies the image and depth measurements for visible surfaces.</p>
-        <p>I added an event history that stores audio, images and location estimates, so a question like <q>did my phone ring?</q> can lead back to the recorded event. Muse Voice Transcribe provides speech captions, while Muse Spark 1.3 helps interpret spectrograms and camera crops and search the saved events. An optional SAM 3.1 pass outlines a visible candidate. These model outputs provide context for the direction estimated from the microphone signals.</p>
-        <p>Reflections can produce an incorrect direction estimate, while quiet sounds and multiple sources make localization more difficult. The system is still a prototype. I also designed and printed an adjustable stand to keep the camera and microphone array in fixed positions relative to each other, with a carrier that accommodates different device dimensions.</p>
+        <p>A ringing phone provides a useful indication of its location, but this assumes that the person looking for it can distinguish the direction of the sound. I built SoundScope to represent that direction visually, using a Seeed reSpeaker XVF3800 microphone array and an Orbbec Gemini 2 depth camera. The direction estimate is derived from differences in the time at which sound reaches each of the four microphones, while the camera provides the corresponding image and depth measurements of visible surfaces.</p>
+        <p>I added an event history that retains audio, images and location estimates, allowing a query such as <q>did my phone ring?</q> to be associated with a recorded event. Muse Voice Transcribe provides speech captions, while Muse Spark 1.3 assists with the interpretation of spectrograms and camera crops, and with searching the saved events. An optional SAM 3.1 pass outlines a visible candidate. The contribution of these models is contextual; the direction itself is estimated from the microphone signals.</p>
+        <p>This distinction is necessary because the presence of an object along an estimated direction does not establish that it produced the sound. Reflections, quiet sources and simultaneous sounds can also compromise localization, and the system remains a prototype. To keep the microphone array and camera in fixed positions relative to each other, I designed and printed an adjustable carrier that accommodates variations in their dimensions.</p>
         <p class="proj__foot mono">Python · signal processing · RGB-D · Meta Model API · 3D-printed hardware · <a href="https://github.com/rwezzy/soundscope" target="_blank" rel="noopener">code ↗</a></p>
         <a class="pill pill--solid" href="#soundscope-lab">Open the interactive demo ↓</a>
       </div>
@@ -134,7 +134,7 @@
           <div><p class="label mono">interactive demo</p><h4>Sound direction simulation</h4></div>
           <span class="ss-badge mono">browser simulation</span>
         </div>
-        <p class="ss-lab-intro">Drag the pink source or use the position sliders. The colored region shows the directions that agree with the four simulated microphone timings. Increase the timing error to see how it affects the direction estimate.</p>
+        <p class="ss-lab-intro">Move the pink source by dragging it or using the position sliders. The coloured region represents directions consistent with the simulated microphone timings; increasing the timing error demonstrates how uncertainty in those measurements affects the estimate.</p>
         <div class="ss-lab-grid">
           <div class="ss-experiment">
             <div class="ss-stage">
@@ -155,7 +155,7 @@
             <label class="ss-slider">Down ↔ up <output id="ss-y-out">10% up</output><input id="ss-y" type="range" min="-0.7" max="0.7" step="0.02" value="0.1"></label>
             <label class="ss-slider">Scene distance <output id="ss-z-out">1.5 m</output><input id="ss-z" type="range" min="0.7" max="2.5" step="0.1" value="1.5"></label>
             <label class="ss-slider">Timing error <output id="ss-noise-out">0 μs</output><input id="ss-noise" type="range" min="0" max="1" step="0.05" value="0"></label>
-            <p class="ss-small">Distance is supplied by the scene, as depth would be in the real setup. It isn't measured from sound here.</p>
+            <p class="ss-small">The scene supplies the distance used in this simulation. In the physical setup, the depth camera measures visible surfaces; neither implementation obtains distance from sound alone.</p>
             <button type="button" class="pill pill--solid ss-play" id="ss-emit"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m8 5 11 7-11 7Z" fill="currentColor"/></svg>Play &amp; save a sound</button>
             <div class="ss-timing"><p class="mono">Arrival after the first microphone</p><div id="ss-delays"></div></div>
           </div>
@@ -166,7 +166,7 @@
           <p id="ss-search-answer" class="ss-search-answer" aria-live="polite">Play a sound above to start a history. Nothing is recorded from your microphone.</p>
           <ol id="ss-events" aria-label="Sounds played in this browser session"></ol>
         </div>
-        <div class="ss-explainer"><div><span class="mono">IN THIS BROWSER</span><p>The geometry and timing comparison run here. Sounds are synthesized, event labels come from your selection, and search uses a small local vocabulary. No microphone access, uploads or model calls.</p></div><div><span class="mono">ON THE PHYSICAL DEVICE</span><p>Actual audio drives the direction estimate. The Gemini 2 supplies images and depth; Meta's models add captions, candidate descriptions and search over saved evidence. A visible object along a direction is a candidate, not proof that it made the sound.</p></div></div>
+        <div class="ss-explainer"><div><span class="mono">IN THIS BROWSER</span><p>This demonstration computes geometry and timing differences locally, using synthesized sounds and labels determined by your selection. Search uses a limited local vocabulary, and the demonstration does not access your microphone, upload data or call Meta's models.</p></div><div><span class="mono">ON THE PHYSICAL DEVICE</span><p>The physical application estimates direction from captured audio and combines it with Gemini 2 images and depth. Meta's models provide captions, candidate descriptions and search over saved events, although identifying a visible candidate does not confirm that it produced the sound.</p></div></div>
         <noscript><p>This experiment needs JavaScript. You can still read the project and download the carrier model above.</p></noscript>
       </div>
     </article>
@@ -177,8 +177,8 @@
         <p class="proj__meta mono"><span class="tag tag--hw">hardware</span><span class="tag tag--sw">software</span> Sept 2026</p>
         <h3>Gaze Arm</h3>
         <p class="ribbon">Winner, Viam "Fine Motor Skills" robotics hackathon</p>
-        <p>Years ago, at a children's home in Kampala, a little boy with cerebral palsy tried to give me a fist bump with a closed hand. His nurse had to translate. I think about that moment a lot: his hands couldn't do much, but his eyes did everything. So at the Viam hackathon I pitched a robot arm that takes its orders from your eyes. Look at an object and the arm picks it up; look at an empty spot and it sets it down. The only extra hardware is the laptop's webcam.</p>
-        <p>I wrote the gaze calibration, the selection logic and the grasp safety checks; my teammate built the object detector and the depth pipeline. The arm is not allowed to be brave. It won't close its jaws until it has settled within 5 mm and 2&deg;, won't lift until the jaws report contact, and refuses anything beyond its 700 mm reach before it moves at all. When it can't do something, it stops and waits for a person, because the people it's for can't reach the robot any more than they can reach the object.</p>
+        <p>My interest in gaze control was partly informed by a visit to a children's home in Kampala, where a boy with cerebral palsy tried to give me a fist bump and his nurse helped me understand what he was communicating. At the Viam hackathon, I proposed a robot arm that could receive instructions through gaze, potentially allowing someone with limited hand mobility to select and retrieve an object. Looking at an object selects it for pickup, while looking at an empty position specifies where to place it. Gaze input is obtained through the laptop's webcam.</p>
+        <p>I implemented gaze calibration, selection logic and grasp checks, while my teammate developed the object detector and depth pipeline. The checks account for the possibility that an intended user may be unable to physically intervene: the gripper can only close once the arm has settled within 5 mm and 2&deg; of its target, and lifting requires reported contact. Targets beyond the arm's 700 mm reach are rejected before motion begins. If a condition is not satisfied, the system stops and waits for assistance.</p>
         <ul class="nums">
           <li><b>163</b> passing unit tests</li>
           <li><b>0.9 s</b> of looking to select</li>
@@ -197,23 +197,23 @@
       <div class="proj__intro">
         <p class="proj__meta mono"><span class="tag tag--re">research</span> NJIT · 2025 – now</p>
         <h3>Research</h3>
-        <p>I've been lucky to work with several research groups at NJIT, and I like that they don't agree on which side of the computer matters most.</p>
+        <p>My research at NJIT has involved machine learning for optical image restoration and gaze estimation, with more recent exploration of hardware research. These projects have required me to consider both the information available to a model and the computational constraints under which it is implemented.</p>
       </div>
       <div class="research">
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--hw">hardware</span> Oct 2026 – now</p>
           <h4>Hardware research</h4>
-          <p>I started last week, literally. I'm trying out two hardware labs at NJIT before committing to one, so ask me again in a month.</p>
+          <p>I began exploring two hardware labs at NJIT in October 2026, with the intention of understanding their respective research areas before committing to one. This work is still at an introductory stage.</p>
         </div>
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Mar 2026 – now</p>
           <h4>Gaze estimation with a depth camera</h4>
-          <p>Can a depth camera tell where on a screen you're looking, and does seeing depth make it more accurate, and more robust for people it has never met? The plan pairs an Intel RealSense D435 (color plus depth) with a research-grade Tobii eye tracker. So far I've built the color-only half: a deep learning pipeline in PyTorch, trained on a public webcam dataset and designed so depth can slot in once the D435 recordings exist. It's ongoing and unpublished, so the details can wait. The lesson it keeps teaching me is simpler: before you trust a model, audit the data it learned from.</p>
+          <p>This project investigates whether the inclusion of depth information can improve screen-based gaze estimation, particularly when the model is applied to people not represented in its training data. The proposed setup pairs an Intel RealSense D435 with a research-grade Tobii eye tracker. I have developed the colour-only PyTorch pipeline using a public webcam dataset, with provision for depth once the D435 recordings are available. Since depth has not yet been incorporated, any improvement from its inclusion remains to be established. The work is ongoing and unpublished, and auditing the training data is necessary to assess what the model's performance actually demonstrates.</p>
         </div>
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Sept – Dec 2025</p>
           <h4>Optical deconvolution</h4>
-          <p>My first research project at NJIT, and the one that taught me to teach myself. It's written up further down, with a demo.</p>
+          <p>My first research project at NJIT concerned optical deconvolution, for which I studied Fourier optics and developed a complex-valued neural network. The implementation and an interactive demonstration are described below.</p>
         </div>
       </div>
     </article>
@@ -223,8 +223,8 @@
       <div class="proj__intro">
         <p class="proj__meta mono"><span class="tag tag--sw">software</span> VAST Builders Challenge, NYC · Oct 2026</p>
         <h3>ZoneLogic &amp; Occlusive Logic</h3>
-        <p>I built this solo in one day at the VAST Builders Challenge in New York. You draw a zone on a fixed camera, decide what counts (a car stopped on a crosswalk for three seconds, say) and it turns a video archive's detections into timestamped incident tickets with evidence.</p>
-        <p>Occlusive Logic is the part I'm proudest of. It adds Boolean rules across objects: <i>person AND car in the crosswalk</i> could be a near miss. <i>NOT person</i> only means nobody was detected, which is not the same as nobody being there, so every incident goes to a human to judge.</p>
+        <p>I built ZoneLogic independently in one day at the VAST Builders Challenge in New York. The system allows a user to define a region within a fixed camera view and specify the conditions under which detections in a video archive should constitute an incident. A car remaining on a crosswalk for three seconds, for example, can produce a timestamped ticket with evidence for review.</p>
+        <p>Occlusive Logic extends these conditions through Boolean relationships between detected objects. A rule such as <i>person AND car in the crosswalk</i> can identify a situation that warrants review as a possible near miss, although the detections alone do not establish that one occurred. Similarly, <i>NOT person</i> describes an absence of detections, which cannot be assumed to indicate an absence of people. These limitations informed the inclusion of human review for every incident.</p>
         <ul class="nums">
           <li><b>117</b> passing pytest tests</li>
           <li><b>20+</b> FastAPI endpoints</li>
@@ -246,7 +246,7 @@
             <div class="zone__state"><span>person <b data-a>0</b></span><span>car <b data-b>0</b></span><span>rule <b data-r>0</b></span><span class="demo__state" data-state>starts when you scroll here</span></div>
             <ol class="zone__log" aria-live="polite"></ol>
           </div>
-          <p class="demo__cap">An object detector (COCO-SSD) runs on each frame in your browser. Drag the zone's corners. An incident fires on a false → true change, with a 5 s cooldown, and keeps a snapshot, like the real engine. Footage: Mixkit.</p>
+          <p class="demo__cap">COCO-SSD detects objects in the video within your browser. Drag the zone's corners to change the region being evaluated. A false → true rule transition records an incident and snapshot, subject to a five-second cooldown. Footage: Mixkit.</p>
         </div>
       </div>
     </article>
@@ -256,8 +256,8 @@
       <div class="proj__intro">
         <p class="proj__meta mono"><span class="tag tag--hw">hardware</span> TinyML · Aug 2026 – now · in progress</p>
         <h3>OmniRing</h3>
-        <p>A ring that lets you control a computer without a camera watching you. A six-axis motion sensor samples the hand 100 times a second, and a tiny neural network on the chip decides which gesture you made.</p>
-        <p>The interesting part is how little room it gets. The whole model is quantized to 8-bit integers and weighs about 4 KB; it thinks inside 1.4 KB of memory on a Seeed XIAO nRF52840 Sense, an Arm Cortex-M4F reading its IMU over I2C. Squeezing intelligence into a space that small is exactly the kind of problem that keeps pulling me toward hardware. It's still in progress: I'm testing how reliable it is before I let it control anything.</p>
+        <p>I am developing OmniRing as a gesture-based computer interface in which hand movements are measured by a six-axis motion sensor, rather than inferred from camera images. The sensor is sampled at 100 Hz, and a neural network running on the microcontroller classifies the resulting motion.</p>
+        <p>The implementation is constrained by the memory available on a Seeed XIAO nRF52840 Sense, whose Arm Cortex-M4F reads the IMU over I2C. Quantization to 8-bit integers reduces the model to approximately 4 KB, with a 1.4 KB memory arena for inference. These constraints have contributed to my interest in embedded machine learning, since the model has to operate within the device's available memory. The project remains in development while I assess gesture reliability before using it to control other functions.</p>
         <ul class="nums">
           <li><b>~4 KB</b> int8 model</li>
           <li><b>1.4 KB</b> memory arena</li>
@@ -276,7 +276,7 @@
               <p class="gesture__axes">x and y velocity of your stroke</p>
             </div>
           </div>
-          <p class="demo__cap">A browser stand-in: your pointer plays the motion sensor and simple stroke features play the trained network.</p>
+          <p class="demo__cap">This browser demonstration classifies pointer movements using features of the drawn stroke. It illustrates gesture input, but does not use the physical motion sensor or the trained OmniRing network.</p>
         </div>
         <figure class="slot" data-src="images/omniring-1.jpg" data-caption="The XIAO nRF52840 Sense prototype"></figure>
       </div>
@@ -287,8 +287,8 @@
       <div class="proj__intro">
         <p class="proj__meta mono"><span class="tag tag--re">research</span><span class="tag tag--sw">software</span> NJIT · Sept – Dec 2025</p>
         <h3>Optical deconvolution</h3>
-        <p>Optical images blur more the deeper you look into a sample. I trained a 54.6k-parameter neural network that works directly on complex numbers to undo that blur, using experimental data of 1024&times;1024&times;128 samples per depth across nine depths.</p>
-        <p>I had never touched Fourier optics before, so a good part of the semester went into learning it. Along the way I modelled how the 455 nm beam spreads with depth (and caught a bracket error in the beam-width formula), built Wiener-filtered training targets, and downsampled to 512&sup2; so training fit on a laptop GPU with 75% less memory. The demo runs that target-making step for real: a 2D FFT, in your browser.</p>
+        <p>This project investigated the restoration of optical images affected by depth-dependent blur. I trained a 54.6k-parameter complex-valued neural network using experimental data comprising 1024&times;1024&times;128 samples per depth across nine depths, with the intention of recovering image detail degraded during acquisition.</p>
+        <p>Since I had not previously studied Fourier optics, the implementation required learning how the optical model related to the experimental data. I modelled the propagation of a 455 nm beam, corrected a bracket error in the beam-width formula, and generated Wiener-filtered training targets. The spatial dimensions were reduced to 512&sup2; to accommodate training on a laptop GPU, reducing the corresponding data memory requirement by 75%. The demonstration below implements the Wiener filtering step through a two-dimensional FFT in the browser.</p>
         <p class="proj__foot mono">Python · PyTorch · NumPy FFT · MATLAB data</p>
       </div>
       <div class="proj__media">
@@ -311,7 +311,7 @@
       <article class="mini" id="einstein">
         <p class="proj__meta mono"><span class="tag tag--sw">software</span> Aug 2025</p>
         <h3>Einstein, a tutoring chatbot</h3>
-        <p>A study buddy with a very particular teaching style: before it explains anything, it asks what you already know, then builds up from there and sets you a practice problem. Built on Gemini 2.5 Flash with LangChain and Gradio.</p>
+        <p>I built Einstein using Gemini 2.5 Flash, LangChain and Gradio to structure explanations around a student's existing understanding. It first asks what the student knows, uses that response to guide the explanation, and then provides a practice problem through which the student can apply the concept.</p>
         <!-- Live chat. data-api = your Hugging Face Space URL (e.g. https://rwezzy-einstein.hf.space).
              Until it's set, visitors see the example conversation below; on your computer it uses run_local.py. -->
         <div class="einchat" data-api="" data-api-local="http://127.0.0.1:7860" hidden>
@@ -334,7 +334,7 @@
       <article class="mini" id="robot">
         <p class="proj__meta mono"><span class="tag tag--hw">hardware</span> Mar 2025</p>
         <h3>Obstacle-avoiding robot</h3>
-        <p>My first robot, for a first-year engineering project. My teammates couldn't meet, so I taught myself enough circuitry to build it alone in a week. An Arduino Uno reads an ultrasonic sensor in C++ and steers away from whatever is in front of it. Small as it is, I still have it.</p>
+        <p>I built this robot for a first-year engineering project, learning the necessary circuitry and completing the assembly independently within a week when my teammates were unable to meet. The robot uses an Arduino Uno and an ultrasonic sensor, with C++ control logic that redirects it when it detects an obstacle ahead.</p>
         <figure class="slot" data-src="images/obstacle-robot.jpg" data-caption="The Arduino robot"></figure>
       </article>
     </div>
@@ -343,40 +343,40 @@
   <!-- ================================================================ PATH -->
   <section class="section wrap" id="path">
     <header class="section__head">
-      <p class="label mono">the path so far</p>
-      <h2>Kampala to Newark</h2>
+      <p class="label mono">background</p>
+      <h2>Education and experience</h2>
     </header>
     <ol class="path">
-      <li class="path__school"><time class="mono">2022–24</time><div><h4>Aga Khan High School, Kampala</h4><p>Where most of the next five things happened.</p></div></li>
-      <li><time class="mono">Oct 2022</time><div><h4>Ngamba Island</h4><p>Wildlife volunteer at the chimpanzee sanctuary: feeding, habitat cleaning, enrichment.</p></div></li>
-      <li><time class="mono">2022–23</time><div><h4>Minister of Sports</h4><p>Student council. Organized 26 school-wide events, then mentored my successor.</p></div></li>
-      <li><time class="mono">2023</time><div><h4>Led Urban Arbor</h4><p>A Pro Bono Environment project to plant 100 trees in Kampala.</p></div></li>
-      <li><time class="mono">Jun 2023</time><div><h4>Hospital labs</h4><p>High school summer internships at Lancet Laboratories and the Joint Clinical Research Center, running blood tests for malaria and HIV.</p></div></li>
-      <li><time class="mono">Nov 2023</time><div><h4>First research</h4><p>A high school independent study of the microbial properties of five common herbs.</p></div></li>
-      <li><time class="mono">Aug 2024</time><div><h4>Centurion Media</h4><p>Sales and marketing intern: cost estimates for design and fabrication jobs.</p></div></li>
-      <li><time class="mono">2025</time><div><h4>NJIT</h4><p>Computer Engineering, Albert Dorman Honors College. First robot that March.</p></div></li>
-      <li><time class="mono">Sept 2025</time><div><h4>Optics research</h4><p>Complex-valued CNNs for deconvolution.</p></div></li>
-      <li><time class="mono">Oct 2025</time><div><h4>Senator</h4><p>Elected to represent Computer Engineering in the Student Senate.</p></div></li>
-      <li><time class="mono">Mar 2026</time><div><h4>Gaze research</h4><p>Started teaching webcams where people look.</p></div></li>
-      <li><time class="mono">Jul 2026</time><div><h4>Tutor</h4><p>Taught 50 incoming students in the Educational Opportunity Program.</p></div></li>
-      <li><time class="mono">Sept 2026</time><div><h4>Viam win · Edge AI</h4><p>Gaze Arm won; finished Edge Impulse's Edge AI for Microcontrollers specialization; became IEEE Outreach Officer.</p></div></li>
-      <li><time class="mono">Oct 2026</time><div><h4>VAST, NYC · hardware research</h4><p>Built ZoneLogic solo in a day, and started trying out hardware labs at NJIT.</p></div></li>
-      <li class="path__next"><time class="mono">next</time><div><h4>An internship</h4><p>Ideally somewhere hardware and intelligence meet: computer architecture, digital design, embedded systems or ML systems. <a href="#contact">Say hi.</a></p></div></li>
+      <li class="path__school"><time class="mono">2022–24</time><div><h4>Aga Khan High School, Kampala</h4><p>My high school studies included independent research, student leadership and community projects.</p></div></li>
+      <li><time class="mono">Oct 2022</time><div><h4>Ngamba Island</h4><p>I volunteered at the chimpanzee sanctuary, assisting with feeding, habitat cleaning and enrichment activities.</p></div></li>
+      <li><time class="mono">2022–23</time><div><h4>Minister of Sports</h4><p>As a student council member, I organized 26 school-wide events and subsequently mentored my successor.</p></div></li>
+      <li><time class="mono">2023</time><div><h4>Urban Arbor</h4><p>I led this Pro Bono Environment project, with a target of planting 100 trees in Kampala.</p></div></li>
+      <li><time class="mono">Jun 2023</time><div><h4>Hospital laboratory internships</h4><p>During high school, I interned at Lancet Laboratories and the Joint Clinical Research Center, working on blood tests for malaria and HIV.</p></div></li>
+      <li><time class="mono">Nov 2023</time><div><h4>Independent research</h4><p>I conducted a high school study of the microbial properties of five common herbs.</p></div></li>
+      <li><time class="mono">Aug 2024</time><div><h4>Centurion Media</h4><p>As a sales and marketing intern, I prepared cost estimates for design and fabrication jobs.</p></div></li>
+      <li><time class="mono">2025</time><div><h4>NJIT</h4><p>Computer Engineering, Albert Dorman Honors College. I built my first robot that March.</p></div></li>
+      <li><time class="mono">Sept 2025</time><div><h4>Optics research</h4><p>I began investigating complex-valued convolutional neural networks for optical deconvolution.</p></div></li>
+      <li><time class="mono">Oct 2025</time><div><h4>Student Senator</h4><p>I was elected to represent Computer Engineering in the Student Senate.</p></div></li>
+      <li><time class="mono">Mar 2026</time><div><h4>Gaze estimation research</h4><p>I began developing a gaze estimation pipeline, with planned integration of depth information.</p></div></li>
+      <li><time class="mono">Jul 2026</time><div><h4>Educational Opportunity Program tutor</h4><p>I taught 50 incoming students through NJIT's Educational Opportunity Program.</p></div></li>
+      <li><time class="mono">Sept 2026</time><div><h4>Viam hackathon · Edge AI · IEEE</h4><p>My team won the Viam robotics hackathon with Gaze Arm. I also completed Edge Impulse's Edge AI for Microcontrollers specialization and became an IEEE Outreach Officer.</p></div></li>
+      <li><time class="mono">Oct 2026</time><div><h4>VAST Builders Challenge · hardware research</h4><p>I built ZoneLogic independently in one day at the VAST event in New York and began exploring hardware labs at NJIT.</p></div></li>
+      <li class="path__next"><time class="mono">next</time><div><h4>Internship opportunities</h4><p>I am seeking an internship in computer architecture, digital design, embedded systems or machine learning systems. <a href="#contact">Contact me.</a></p></div></li>
     </ol>
   </section>
 
   <!-- ============================================================== SERVICE -->
   <section class="section wrap" id="beyond">
     <header class="section__head">
-      <p class="label mono">beyond the lab</p>
-      <h2>Service, mostly with trees</h2>
+      <p class="label mono">service</p>
+      <h2>Community involvement</h2>
     </header>
     <article class="arbor">
       <div>
         <p class="proj__meta mono">Pro Bono Environment · project leader · 2023 – now · started in high school</p>
         <h3>Urban Arbor</h3>
-        <p>I led Urban Arbor for Pro Bono Environment, and it was not glamorous. We didn't have a big budget or a huge team; we had a school full of students and a city full of unmet needs. So we picked a target, 100 trees in Kampala, and got to work. The first 20 went in at the Kampala School for the Physically Handicapped, home to 180+ students, along with gardening tools, ergonomic equipment and sanitary supplies worth 860,000 UGX, with help from Stanbic Bank, Finca Verde, Roofings Ltd and Kampala Capital City Authority.</p>
-        <p>Then we stayed for a picnic under the mango trees, which, to my mind, was the real point.</p>
+        <p>Through Pro Bono Environment, I led Urban Arbor, a project with a target of planting 100 trees in Kampala. The first planting took place at the Kampala School for the Physically Handicapped, which serves more than 180 students. We planted 20 trees and provided gardening tools, ergonomic equipment and sanitary supplies worth 860,000 UGX, with support from Stanbic Bank, Finca Verde, Roofings Ltd and Kampala Capital City Authority.</p>
+        <p>After the planting, we stayed for a picnic with the students under the mango trees.</p>
         <div class="trees" aria-label="20 of 100 trees planted"><div class="trees__row" id="trees"></div><p class="mono">20 of 100 trees planted</p></div>
       </div>
       <div class="arbor__photos">
@@ -385,24 +385,24 @@
       </div>
     </article>
     <ul class="service">
-      <li><h4>Newark, 2025</h4><p>Teaching seniors at a care home to use FaceTime so they could call their grandchildren, clearing debris out of a community garden, looking after therapy animals at Spring Reins of Hope, and pulling invasive plants at Somerset County Park. None of it made the news.</p><figure class="slot" data-src="images/newark.jpg" data-caption="Newark volunteering"></figure></li>
-      <li><h4>Ngamba Island, 2022 (high school)</h4><p>Feeding, cleaning up after, and building enrichment for rescued chimpanzees on Lake Victoria.</p><figure class="slot" data-src="images/ngamba.jpg" data-caption="Ngamba Island"></figure></li>
-      <li><h4>IEEE · Senate · EOP</h4><p>I find industry speakers for NJIT's IEEE branch, represent 200+ computer engineers in the Student Senate, and taught 50 incoming students math, physics, English and Python.</p></li>
+      <li><h4>New Jersey, 2025</h4><p>My volunteering included teaching residents at a care home to use FaceTime to call their grandchildren, clearing debris from a community garden, caring for therapy animals at Spring Reins of Hope, and removing invasive plants at Somerset County Park.</p><figure class="slot" data-src="images/newark.jpg" data-caption="Newark volunteering"></figure></li>
+      <li><h4>Ngamba Island, 2022</h4><p>During high school, I volunteered at the Ngamba Island chimpanzee sanctuary on Lake Victoria, where I helped feed the rescued chimpanzees, clean their habitats and prepare enrichment activities.</p><figure class="slot" data-src="images/ngamba.jpg" data-caption="Ngamba Island"></figure></li>
+      <li><h4>IEEE · Senate · EOP</h4><p>As an Outreach Officer for NJIT's IEEE branch, I find industry speakers for our students. I also represent more than 200 computer engineering students in the Student Senate, and through the Educational Opportunity Program I taught 50 incoming students mathematics, physics, English and Python.</p></li>
     </ul>
   </section>
 
   <!-- ============================================================ HOBBIES -->
   <section class="section wrap" id="offclock">
     <header class="section__head">
-      <p class="label mono">off the clock</p>
-      <h2>When I'm not debugging</h2>
+      <p class="label mono">interests</p>
+      <h2>Outside engineering</h2>
     </header>
     <div class="hobbies">
       <article class="hobby">
         <img src="assets/running.jpg" alt="A runner on a forest trail" loading="lazy">
         <div class="hobby__body">
           <h4>Running</h4>
-          <p>Chasing a sub&#8209;40 10K. That's 4:00 per kilometer, ten times in a row, which my legs have opinions about.</p>
+          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>
           <div class="pace mono" id="pace" data-pb=""><div class="pace__track"><i class="pace__fill"></i></div><p class="pace__line"></p></div>
         </div>
       </article>
@@ -410,21 +410,21 @@
         <img class="hobby__cover" src="assets/alignment-problem.jpg" alt="Cover of The Alignment Problem by Brian Christian" loading="lazy">
         <div class="hobby__body">
           <h4>Reading</h4>
-          <p><i>The Alignment Problem</i> by Brian Christian, about machine learning systems learning the wrong lessons. Uncomfortably relatable.</p>
+          <p>I am reading Brian Christian's <i>The Alignment Problem</i>, which examines how the behaviour learned by a machine learning system can differ from the behaviour its designers intended, and the consequences of those differences.</p>
         </div>
       </article>
       <article class="hobby">
         <img src="assets/cooking.jpg" alt="A pot steaming on a stove" loading="lazy">
         <div class="hobby__body">
           <h4>Cooking</h4>
-          <p>Where I experiment when the lab is closed. The feedback is immediate and, occasionally, burnt.</p>
+          <p>I enjoy cooking and experimenting with different preparations.</p>
         </div>
       </article>
       <article class="hobby">
         <img src="assets/writing.jpg" alt="Handwriting in a notebook with a fountain pen" loading="lazy">
         <div class="hobby__body">
           <h4>Writing</h4>
-          <p>I've written stories since I was six, when I told my brother I could have written a Psalm if I wanted to. These days I'm slowly building a fictional universe of my own.</p>
+          <p>I have written stories since I was six, and I am now developing a fictional universe of my own.</p>
         </div>
       </article>
     </div>
@@ -432,8 +432,8 @@
 
   <!-- ============================================================ CONTACT -->
   <section class="contact wrap" id="contact">
-    <h2>Say hi</h2>
-    <p>I'm looking for internships where hardware and intelligence meet: computer architecture, digital design, embedded systems and ML systems. If you're building chips, robots or anything in between, I'd love to hear about it, and I'm always happy to talk about any of these projects.</p>
+    <h2>Contact</h2>
+    <p>I am seeking internships in computer architecture, digital design, embedded systems and machine learning systems, where I can develop my technical understanding through practical work. I would also be happy to discuss the implementation, limitations or further development of any of the projects described here.</p>
     <p class="contact__links">
       <a class="pill pill--solid" href="mailto:kama.rwezahura@gmail.com">kama.rwezahura@gmail.com</a>
       <a class="pill" href="https://github.com/rwezzy" target="_blank" rel="noopener">GitHub</a>

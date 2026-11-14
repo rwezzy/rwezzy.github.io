@@ -245,8 +245,8 @@ function init() {
       if (task.i >= task.steps.length) {
         task = null; mode = 'idle';
         const left = OBJ.filter(o => o.state === 'table').length;
-        if (camOn) { stopCam(true); tell(left ? 'Done, and your camera is off. Turn it on again for another' : 'All three in the tray! Camera off', true); }
-        else tell(left ? 'Look at, or point at, another one' : 'All three in the tray!', !left);
+        if (camOn) { stopCam(true); tell(left ? 'Object placed. Webcam off; enable it to select another.' : 'All three objects placed. Webcam off.', true); }
+        else tell(left ? 'Select another object with your gaze or pointer' : 'All three objects placed in the tray.', !left);
         if (!left) setTimeout(resetAll, 3500);
       }
     }
@@ -324,7 +324,7 @@ function init() {
       if (c.k === 3) {
         wGaze = fitLinear(c.samples); calibratedAt = performance.now(); camActiveAt = performance.now();
         calib = null; mode = 'idle'; OBJ.forEach(x => x.ev = 0);
-        tell(wGaze ? 'Calibrated. Now look at an object and hold it' : 'I lost your face. Try Recalibrate', !!wGaze);
+        tell(wGaze ? 'Calibrated. Keep looking at an object to select it.' : 'Face tracking was lost. Select Recalibrate to try again.', !!wGaze);
       }
     }
   }

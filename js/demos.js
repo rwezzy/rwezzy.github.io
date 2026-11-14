@@ -218,7 +218,7 @@
       const top = idle ? -1 : prob.indexOf(Math.max(...prob));
       [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (prob[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = prob[i].toFixed(2); });
       const odd = !idle && Math.max(...prob) < 0.5;
-      anomaly.textContent = idle ? 'waiting for a gesture' : odd ? 'anomaly: motion unlike anything trained' : 'anomaly: none';
+      anomaly.textContent = idle ? 'waiting for a gesture' : odd ? 'anomaly: motion outside the reference patterns' : 'anomaly: none';
       anomaly.style.color = odd ? C.hw : C.ink3;
     }
     function drawTrace() {

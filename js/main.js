@@ -62,7 +62,7 @@
     if (example) example.hidden = true;
     bubble('assistant', "Hi, I am Albert. How can I help you today?");
     note.innerHTML = !api ? '(only you see this) Running on your computer. For the live site, put your Hugging Face Space URL in <b>data-api</b>.'
-      : 'Runs on a free server that naps when nobody is around, so the first reply can take a little while.';
+      : 'The server pauses during inactivity, so the first response may take longer while it restarts.';
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -79,12 +79,12 @@
           const data = await res.json();
           reply = data.reply || '';
         } catch (err) {
-          if (attempt < 2) { thinking.dataset.wait = 'waking Einstein up…'; await new Promise(r => setTimeout(r, 4000)); }
+          if (attempt < 2) { thinking.dataset.wait = 'Connecting to the tutoring service…'; await new Promise(r => setTimeout(r, 4000)); }
         }
       }
       thinking.remove();
       if (reply === undefined) {
-        bubble('assistant', editing && !api ? "I'm not running. Start me with einstein-space/run_local.py." : "I couldn't get through just now. Please try again in a minute.");
+        bubble('assistant', editing && !api ? 'The local service is not running. Start it with einstein-space/run_local.py.' : 'The tutoring service could not be reached. Please try again in a minute.');
       } else {
         history.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
         bubble('assistant', reply);
