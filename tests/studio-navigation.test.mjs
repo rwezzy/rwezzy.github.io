@@ -160,8 +160,10 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   for (const title of ['Running', 'Reading', 'Cooking', 'Writing']) {
     add(add(hobbies, 'article', { class: 'hobby' }), 'h4').textContent = title;
   }
-  const campus = add(content, 'section', { id: 'campus' }); add(campus, 'h2').textContent = 'Campus involvement';
+  const campus = add(content, 'section', { id: 'campus' });
+  add(add(campus, 'header', { id: 'responsibilities' }), 'h2').textContent = 'Responsibilities';
   add(add(campus, 'article', { id: 'ieee-viam' }), 'h3').textContent = 'IEEE × Viam';
+  add(add(hobbies, 'article', { class: 'hobby', id: 'interest-dogs' }), 'h4').textContent = 'Dogs';
   add(reader, 'button', { id: 's-next' });
   const document = {
     body, documentElement: new Element('html'), createElement: tag => new Element(tag),
@@ -484,9 +486,11 @@ test('Beyond cards reach IEEE and every interest while preserving the open Beyon
   app.click(app.buttons.get('beyond')); await flush();
   const choreography = app.calls.filter(([action]) => action === 'pick' || action === 'putBack');
   for (const [title, destination] of [
+    ['Responsibilities', 'responsibilities'],
     ['IEEE × Viam', 'ieee-viam'], ['Urban Arbor', 'urban-arbor'],
-    ['Volunteering & teaching', 'volunteering'], ['Running', 'interest-running'],
+    ['Volunteering', 'volunteering'], ['Running', 'interest-running'],
     ['Reading', 'interest-reading'], ['Cooking', 'interest-cooking'], ['Writing', 'interest-writing'],
+    ['Dogs', 'interest-dogs'], ['Learning German', 'interest-german'],
   ]) {
     const card = app.card(title);
     assert.ok(card, `Beyond must expose ${title}`);
@@ -495,7 +499,7 @@ test('Beyond cards reach IEEE and every interest while preserving the open Beyon
     app.click(card.querySelector('strong')); await flush();
     assert.equal(app.location.hash, `#${destination}`);
     assert.equal(app.scrolls.at(-1).id, destination);
-    assert.equal(app.focused, target.querySelector('h3,h4'));
+    assert.equal(app.focused, target.querySelector('h1,h2,h3,h4'));
   }
   assert.equal(app.scenePage, 'beyond');
   assert.equal(app.view('beyond').hidden, false);

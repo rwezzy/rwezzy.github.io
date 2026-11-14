@@ -71,13 +71,15 @@
       ['background-opportunities', 'Next steps', 'Internship interests and contact details'],
     ],
     beyond: [
+      ['responsibilities', 'Responsibilities', 'IEEE outreach, Student Senate and teaching'],
       ['ieee-viam', 'IEEE × Viam', 'A robotics hackathon for NJIT students at Viam'],
       ['urban-arbor', 'Urban Arbor', 'Tree planting and community support'],
-      ['volunteering', 'Volunteering & teaching', 'Community work and student involvement'],
+      ['volunteering', 'Volunteering', 'Community work in New Jersey and Uganda'],
       ['interest-running', 'Running', 'Working toward a sub-40-minute 10 km'],
       ['interest-reading', 'Reading', 'The Alignment Problem'],
-      ['interest-cooking', 'Cooking', 'Trying different preparations'],
+      ['interest-cooking', 'Cooking', 'Chapatis and Ugandan cuisine'],
       ['interest-writing', 'Writing', 'Developing a fictional universe'],
+      ['interest-dogs', 'Dogs', 'A lot of company back home'],
       ['interest-german', 'Learning German', 'Practising on Duolingo'],
     ],
   };
@@ -166,10 +168,11 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=desk7').then(async module => {
+  const sceneReady = import('./studio-scene.js?v=desk8').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
       onPartSelect: id => inspector?.selectPart(id),
+      onInspectionChange: anchors => inspector?.updateAnchors(anchors),
       onStatus: text => { status.textContent = text; },
       onReady: () => { document.body.classList.add('s-scene-ready'); },
       onPresent: presentStage,
@@ -247,7 +250,7 @@
     inspectionId = id;
     inspectionOpener = document.activeElement;
     const task = (async () => {
-      const [ready, module] = await Promise.all([sceneReady, import('./studio-inspector.js?v=desk7')]);
+      const [ready, module] = await Promise.all([sceneReady, import('./studio-inspector.js?v=desk8')]);
       if (!ready || token !== inspectionToken) return;
       if (!inspector) inspector = module.createStudioInspector({
         onClose: () => closeInspector(),

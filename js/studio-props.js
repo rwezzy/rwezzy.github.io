@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { loadCarrier } from './soundscope-hardware.js?v=3d1';
+import { createOmniRing } from './studio-omniring.js';
 
 const asset = name => new URL(`../assets/studio/${name}`, import.meta.url).href;
 const clamp01 = value => Math.min(1, Math.max(0, Number(value) || 0));
@@ -99,8 +100,8 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   // ---------------------------------------------------------- running shoes
   // Original, unbranded running-shoe silhouettes: layered soles, mesh panels,
   // collars, tongues, eyelets, and individual laces, rather than a shoe asset.
-  const shoes = new THREE.Group(); shoes.name = 'Running — stacked training shoes';
-  shoes.position.set(-.90, .003, .10); shoes.rotation.y = -.27; group.add(shoes);
+  const shoes = new THREE.Group(); shoes.name = 'Running — naturally leaning training shoes';
+  shoes.position.set(-.90, .001, .10); shoes.rotation.y = -.27; group.add(shoes);
   const knit = material('#394249', { roughness: .96, metalness: 0 });
   const soleFoam = material('#e4e6db', { roughness: .86, metalness: 0 });
   const shoeAccent = material('#a7b36f', { roughness: .72, metalness: 0 });
@@ -119,7 +120,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     const object = mesh(geometry, appearance, parent); object.position.y = y; object.scale.set(scale, 1, scale);
     return object;
   }
-  function makeShoe(parent, upper) {
+  function makeShoe(parent) {
     const shoe = new THREE.Group(); parent.add(shoe);
     soleLayer(.004, rubber, shoe, 0);
     soleLayer(.012, soleFoam, shoe, .004, .985);
@@ -149,10 +150,30 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
         vent.rotation.y = side * Math.PI / 2; vent.position.set(side * .040, .037, -.065 + i * .009);
       }
     }
-    if (upper) { shoe.position.set(.010, .087, -.014); shoe.rotation.set(.10, .18, -.12); }
     return shoe;
   }
-  makeShoe(shoes, false); makeShoe(shoes, true);
+  const leftShoe = makeShoe(shoes), rightShoe = makeShoe(shoes);
+  leftShoe.position.set(-.049, 0, .016); leftShoe.rotation.set(1.18, -.10, -.07);
+  rightShoe.position.set(.049, 0, .004); rightShoe.rotation.set(1.28, .12, .06);
+  for (const shoe of [leftShoe, rightShoe]) {
+    shoes.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(shoe);
+    shoe.position.y += shoes.position.y + .002 - bounds.min.y;
+  }
+  const backstopMaterial = material('#e3e1d8', { roughness: .96, metalness: 0, envMapIntensity: .12 });
+  const backstop = mesh(box(.205, .175, .010, .003), backstopMaterial, shoes);
+  backstop.name = 'Low shoe backstop'; backstop.position.set(0, .088, -.048);
+  const backstopFoot = mesh(box(.205, .004, .035, .0015), backstopMaterial, shoes);
+  backstopFoot.position.set(0, .002, -.038);
+  const heelShadowMap = canvasMap(128, 128, ctx => {
+    const gradient = ctx.createRadialGradient(64, 64, 5, 64, 64, 64);
+    gradient.addColorStop(0, 'rgba(38,41,35,.23)'); gradient.addColorStop(.5, 'rgba(38,41,35,.10)'); gradient.addColorStop(1, 'rgba(38,41,35,0)');
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, 128, 128);
+  });
+  for (const x of [-.049, .049]) {
+    const shadow = plane(.13, .105, basic({ map: heelShadowMap, transparent: true, depthWrite: false }), shoes);
+    shadow.rotation.x = -Math.PI / 2; shadow.position.set(x, .0006, .041); shadow.raycast = () => {};
+  }
   shoes.traverse(object => { if (object.isMesh) pageHit(object, 'hobbies'); });
 
   // ---------------------------------------------------------------- laptop
@@ -265,7 +286,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   // ------------------------------------------------------------ Contact book
   // A top-bound notebook opens toward the rear, clear of the robot's plaque fan.
   const notebook = new THREE.Group(); notebook.name = 'Contact — opening notebook'; notebook.position.set(.56, .003, .035); notebook.rotation.y = -.12; group.add(notebook);
-  const coverMaterial = material('#5c3e53', { roughness: .78, metalness: 0 });
+  const coverMaterial = material('#a5222c', { roughness: .72, metalness: 0 });
   const bottom = pageHit(mesh(box(.22, .004, .165, .003), coverMaterial, notebook), 'contact'); bottom.position.y = .003;
   const pages = pageHit(mesh(box(.207, .010, .153, .0012), paper, notebook), 'contact'); pages.position.set(0, .009, .001);
   const contactMap = canvasMap(1100, 820, (ctx, w, h) => {
@@ -310,7 +331,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   const targets = {
     about: { id: 'about', kind: 'frame', object: frame, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .184, height: .244 },
     contact: { id: 'contact', kind: 'notebook', object: notebook, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .22, height: .165, openProgress: 0 },
-    hobbies: { id: 'hobbies', title: 'Running', description: 'Running shoes — open the interests and off-clock section.', kind: 'object', object: shoes, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .16, height: .19 },
+    hobbies: { id: 'hobbies', title: 'Running', description: 'Running shoes — open the interests and off-clock section.', kind: 'object', object: shoes, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .22, height: .25 },
   };
   function updateTargets(t = targets.contact.openProgress) {
     group.updateWorldMatrix(true, true);
@@ -321,7 +342,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     targets.contact.normal.set(0, 1, 0).transformDirection(notebook.matrixWorld);
     targets.contact.up.set(0, 0, -1).transformDirection(notebook.matrixWorld);
     targets.contact.height = .165 + .135 * t;
-    targets.hobbies.center.set(0, .088, 0).applyMatrix4(shoes.matrixWorld);
+    targets.hobbies.center.set(0, .12, 0).applyMatrix4(shoes.matrixWorld);
     targets.hobbies.normal.set(0, .3, 1).normalize().transformDirection(shoes.matrixWorld);
     targets.hobbies.up.set(0, 1, -.3).normalize().transformDirection(shoes.matrixWorld);
     for (const record of assemblyRecords.values()) {
@@ -435,11 +456,14 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   // Forward and left of the arm: the board and tripod stay visible without
   // occupying the front-left plaque's pickup area.
   rig.position.set(-.28, 0, -.035); rig.rotation.y = .58; group.add(rig);
-  const tripodPart = new THREE.Group(), carrierPart = new THREE.Group(), boardPart = new THREE.Group(), cameraPart = new THREE.Group();
-  tripodPart.name = 'SoundScope / tripod'; carrierPart.name = 'SoundScope / printed carrier';
+  const tripodPart = new THREE.Group(), framePart = new THREE.Group(), pressurePart = new THREE.Group();
+  const clampsPart = new THREE.Group(), fastenersPart = new THREE.Group(), boardPart = new THREE.Group(), cameraPart = new THREE.Group();
+  tripodPart.name = 'SoundScope / stationary tripod'; framePart.name = 'SoundScope / integrated ring and camera cradle';
+  pressurePart.name = 'SoundScope / camera pressure bar'; clampsPart.name = 'SoundScope / microphone clamp pieces';
+  fastenersPart.name = 'SoundScope / printed screws and nuts';
   boardPart.name = 'SoundScope / microphone board'; cameraPart.name = 'SoundScope / depth camera';
-  for (const part of [carrierPart, boardPart, cameraPart]) part.position.y = .116;
-  rig.add(tripodPart, carrierPart, boardPart, cameraPart);
+  for (const part of [framePart, pressurePart, clampsPart, fastenersPart, boardPart, cameraPart]) part.position.y = .116;
+  rig.add(tripodPart, framePart, pressurePart, clampsPart, fastenersPart, boardPart, cameraPart);
   const column = cylinder(.0055, .072, darkMetal, tripodPart); column.position.y = .051;
   const collar = cylinder(.010, .014, rubber, tripodPart); collar.position.y = .031;
   const head = mesh(box(.036, .008, .026, .003), darkMetal, tripodPart); head.position.y = .090;
@@ -450,21 +474,59 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     const tip = mesh(keep(new THREE.SphereGeometry(.006, 12, 8)), rubber, tripodPart); tip.position.fromArray(foot); tip.scale.y = .55;
   }
   const soundRecord = registerAssembly('soundscope', 'SoundScope', 'Audio direction and RGB-D sensing in an adjustable printed carrier. The original carrier CAD is preserved; electronics and tripod details are schematic.', rig, [
-    { id: 'board', title: 'Four-microphone array', description: 'Four synchronized microphone recordings from the reSpeaker XVF3800 feed SoundScope’s direction-estimation algorithm.', object: boardPart, offset: [.055, .060, .105], turn: [0, -.10, 0] },
-    { id: 'camera', title: 'RGB-D camera', description: 'The Gemini 2 provides image and depth measurements.', object: cameraPart, offset: [.045, .055, .130], turn: [0, .10, 0] },
-    { id: 'carrier', title: 'Adjustable printed carrier', description: 'The original 18-part carrier keeps the microphone array and camera aligned while allowing their positions to be adjusted.', object: carrierPart, offset: [-.125, .020, -.035] },
-    { id: 'tripod', title: 'Tripod support', description: 'Supports the microphone array, camera and adjustable carrier.', object: tripodPart, offset: [.200, 0, -.030] },
+    { id: 'board', title: 'Four-microphone array', description: 'Four synchronized microphone recordings from the reSpeaker XVF3800 feed SoundScope’s direction-estimation algorithm.', object: boardPart, offset: [.015, .150, .055], turn: [0, -.10, 0] },
+    { id: 'camera', title: 'RGB-D camera', description: 'The Gemini 2 provides image and depth measurements.', object: cameraPart, offset: [.025, .065, .100], turn: [0, .10, 0] },
+    { id: 'carrier', title: 'Ring & camera cradle', description: 'One original printed frame combines the microphone ring and camera cradle, keeping the sensors aligned.', object: framePart, offset: [-.170, .040, -.040] },
+    { id: 'pressure-bar', title: 'Camera pressure bar', description: 'The printed bar secures the camera in its cradle.', object: pressurePart, offset: [-.120, -.035, .115] },
+    { id: 'mic-clamps', title: 'Microphone clamps', description: 'Three printed shoes and three contact toes locate and secure the microphone board in the ring.', object: clampsPart, offset: [0, 0, 0] },
+    { id: 'fasteners', title: 'Printed fasteners', description: 'The original camera nuts and screws, plus the clamp lock and toe screws, let the carrier be adjusted and secured.', object: fastenersPart, offset: [0, 0, 0] },
+    { id: 'tripod', title: 'Tripod support', description: 'Supports the assembled sensor carrier and stays in place during the exploded view.', object: tripodPart, offset: [0, 0, 0] },
   ]);
   registerPartHits(soundRecord);
   const carrierReady = loadCarrier(resources).then(({ assembly, parts }) => {
     if (disposed) { release(); return; }
     assembly.traverse(object => { if (object.isMesh) { object.castShadow = true; object.receiveShadow = true; } });
-    const originalParts = new Set(parts.map(part => part.node || part));
+    const originalParts = parts.map(part => part.node || part);
+    const sourceRoots = new Set();
+    assembly.updateWorldMatrix(true, true);
+    // Retain every source mesh and its exact assembled transform. Only the
+    // desk instance is recolored; the standalone hardware demo is untouched.
+    const sourcePoses = originalParts.map(object => {
+      let root = object;
+      while (root.parent && root.parent !== assembly) root = root.parent;
+      sourceRoots.add(root);
+      return { object, matrix: object.matrixWorld.clone() };
+    });
+    const printGreen = material('#32d66b', { roughness: .42, flatShading: true });
+    const printDark = material('#0c7848', { roughness: .38, flatShading: true });
+    const printContact = material('#25b964', { roughness: .36, flatShading: true });
+    let fastenerIndex = 0;
+    for (const { object, matrix } of sourcePoses) {
+      const name = object.name;
+      const isClamp = /^mic_(shoe|toe)_\d+$/.test(name);
+      const isFastener = name.includes('screw') || name.includes('nut');
+      const destination = name === 'shared_frame' ? framePart : name === 'camera_pressure_bar' ? pressurePart : isClamp ? clampsPart : fastenersPart;
+      destination.add(object);
+      matrix.decompose(object.position, object.quaternion, object.scale);
+      object.matrixAutoUpdate = true;
+      object.material = isFastener ? printDark : name.includes('toe') || name.includes('pressure_bar') ? printContact : printGreen;
+      object.userData.sourceCadName = name;
+      if (isClamp || isFastener) {
+        const homePosition = object.position.clone(), homeQuaternion = object.quaternion.clone();
+        let explodedPosition;
+        if (isClamp) {
+          const column = Number(name.match(/\d+$/)[0]) - 1;
+          explodedPosition = new THREE.Vector3(.140 + column * .065, name.includes('shoe') ? .235 : .185, name.includes('shoe') ? .060 : .085);
+        } else {
+          const index = fastenerIndex++;
+          explodedPosition = new THREE.Vector3(.125 + (index % 5) * .035, .080 - Math.floor(index / 5) * .050, .110);
+        }
+        soundRecord.transforms.push({ object, homePosition, homeQuaternion, explodedPosition, explodedQuaternion: homeQuaternion.clone() });
+      }
+    }
     for (const child of [...assembly.children]) {
-      let containsCarrier = false;
-      child.traverse(object => { if (originalParts.has(object)) containsCarrier = true; });
-      if (containsCarrier) carrierPart.add(child);
-      else if (child.name.includes('PCB') || child.name.includes('microphone')) boardPart.add(child);
+      if (sourceRoots.has(child)) continue;
+      if (child.name.includes('PCB') || child.name.includes('microphone')) boardPart.add(child);
       else cameraPart.add(child);
     }
     // Original explanatory geometry: a populated circular board, not copied
@@ -509,90 +571,26 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   });
 
   // ------------------------------------------------------- OmniRing concept
-  // An enlarged desk miniature, explicitly a concept rather than finished CAD.
-  const omni = new THREE.Group(); omni.name = 'OmniRing — wearable concept miniature';
+  // The board's supplied CAD, connector and onboard parts stay together;
+  // only the illustrative cradle, perforated band and closure separate.
+  const omniModel = createOmniRing();
+  const omni = omniModel.object;
   omni.position.set(.34, .004, .025); omni.rotation.y = -.22; omni.scale.setScalar(2.3); group.add(omni);
-  const ringPart = new THREE.Group(), xiaoPart = new THREE.Group(), imuPart = new THREE.Group(), usbPart = new THREE.Group();
-  ringPart.name = 'OmniRing / ring and enclosure'; xiaoPart.name = 'OmniRing / XIAO';
-  imuPart.name = 'OmniRing / motion sensor'; usbPart.name = 'OmniRing / USB-C';
-  xiaoPart.position.set(0, .034, 0);
-  imuPart.position.set(.005, .036, -.0035);
-  usbPart.position.set(0, .035, .0105);
-  omni.add(ringPart, xiaoPart, imuPart, usbPart);
-  const ringPolymer = material('#5e5067', { roughness: .46, metalness: .02 });
-  const pcbGreen = material('#274f43', { roughness: .64, metalness: .08 });
-  const solder = material('#bcc7c3', { roughness: .30, metalness: .76 });
-  const goldPads = material('#c5ae69', { roughness: .42, metalness: .62 });
-  const chipBlack = material('#20262a', { roughness: .62, metalness: .08 });
-  const band = mesh(keep(new THREE.TorusGeometry(.0117, .0032, 16, 72)), ringPolymer, ringPart); band.position.y = .015;
-  const innerBand = mesh(keep(new THREE.TorusGeometry(.0096, .0007, 10, 64)), material('#9e91a4', { roughness: .56 }), ringPart); innerBand.position.set(0, .015, .0005);
-  const tray = mesh(box(.029, .0023, .025, .0017), ringPolymer, ringPart); tray.position.y = .030;
-  for (const side of [-1, 1]) {
-    const wall = mesh(box(.0022, .0055, .024, .0008), ringPolymer, ringPart); wall.position.set(side * .0136, .033, 0);
-    const support = mesh(box(.0038, .007, .013, .001), ringPolymer, ringPart); support.position.set(side * .010, .027, 0);
-    for (const z of [-.0085, .0085]) {
-      const fastener = cylinder(.0011, .001, solder, ringPart, 14); fastener.position.set(side * .0115, .0353, z);
+  const omniRecord = registerAssembly('omniring', omniModel.title, omniModel.description, omni, omniModel.parts, omniModel.localNormal);
+  const omniReady = Promise.resolve(omniModel.ready).then(result => {
+    if (disposed) { omniModel.dispose(); return; }
+    warnings.push(...(result?.warnings || []));
+    // A load fallback may refine a descriptor; keep the inspector accurate.
+    for (const part of omniRecord.target.parts) {
+      const current = omniModel.parts.find(spec => spec.id === part.id);
+      if (current) { part.title = current.title; part.description = current.description; }
     }
-  }
-  const rearWall = mesh(box(.026, .0055, .0022, .0008), ringPolymer, ringPart); rearWall.position.set(0, .033, -.0115);
-  const board = mesh(box(.021, .0016, .0175, .0006), pcbGreen, xiaoPart);
-  for (const side of [-1, 1]) for (let i = 0; i < 7; i++) {
-    const pad = mesh(box(.0016, .00045, .0013, .00016), goldPads, xiaoPart);
-    pad.position.set(side * .0104, .0007, -.0072 + i * .0024);
-    const via = cylinder(.00025, .0018, solder, xiaoPart, 8); via.position.set(side * .0103, 0, -.0072 + i * .0024);
-  }
-  const radioShield = mesh(box(.0085, .0015, .009, .00035), solder, xiaoPart); radioShield.position.set(-.0042, .0015, -.001);
-  const mcu = mesh(box(.006, .0012, .006, .00025), chipBlack, xiaoPart); mcu.position.set(.0032, .0014, .0034);
-  for (const [x, z, tint] of [[.0068, -.006, '#bbac85'], [-.006, .006, '#c6b994'], [.0078, .0057, '#a8b0a6'], [.003, -.007, '#b3a37c']]) {
-    const component = mesh(box(.0016, .0008, .001, .0001), material(tint, { roughness: .65 }), xiaoPart); component.position.set(x, .0013, z);
-  }
-  const boardType = canvasMap(512, 160, (ctx, w, h) => {
-    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#eef3e9'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '600 95px Arial, sans-serif'; ctx.fillText('XIAO', w / 2, h / 2);
+    registerPartHits(omniRecord); measureAssembly(omniRecord); updateTargets();
   });
-  const xiaoLabel = plane(.008, .0025, basic({ map: boardType, transparent: true, depthWrite: false }), xiaoPart);
-  xiaoLabel.rotation.x = -Math.PI / 2; xiaoLabel.position.set(-.0042, .00235, -.001);
-  const imu = mesh(box(.004, .0014, .004, .00025), chipBlack, imuPart);
-  for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
-    const pin = mesh(box(.0005, .0004, .00055, .00008), solder, imuPart); pin.position.set(side * .0021, -.0003, -.0011 + i * .0011);
-  }
-  const dot = cylinder(.00035, .0001, goldPads, imuPart, 10); dot.position.set(-.0011, .00075, -.0011);
-  // A real opening through the metal connector shell, with an internal tongue.
-  const connectorOutline = new THREE.Shape();
-  const capsule = (path, halfWidth, halfHeight, clockwise = false) => {
-    const straight = halfWidth - halfHeight;
-    if (!clockwise) {
-      path.moveTo(-straight, -halfHeight); path.lineTo(straight, -halfHeight);
-      path.absarc(straight, 0, halfHeight, -Math.PI / 2, Math.PI / 2, false);
-      path.lineTo(-straight, halfHeight); path.absarc(-straight, 0, halfHeight, Math.PI / 2, Math.PI * 1.5, false);
-    } else {
-      path.moveTo(-straight, halfHeight); path.lineTo(straight, halfHeight);
-      path.absarc(straight, 0, halfHeight, Math.PI / 2, -Math.PI / 2, true);
-      path.lineTo(-straight, -halfHeight); path.absarc(-straight, 0, halfHeight, -Math.PI / 2, -Math.PI * 1.5, true);
-    }
-    path.closePath();
-  };
-  capsule(connectorOutline, .0044, .00165);
-  const connectorHole = new THREE.Path(); capsule(connectorHole, .0037, .0010, true); connectorOutline.holes.push(connectorHole);
-  const shellGeometry = keep(new THREE.ExtrudeGeometry(connectorOutline, { depth: .0047, bevelEnabled: false, curveSegments: 20 }));
-  shellGeometry.translate(0, 0, -.00235);
-  mesh(shellGeometry, solder, usbPart);
-  const tongue = mesh(box(.0058, .00045, .0021, .00012), chipBlack, usbPart); tongue.position.z = .0005;
-  for (let i = 0; i < 8; i++) {
-    const contact = mesh(keep(new THREE.BoxGeometry(.00028, .00008, .00125)), goldPads, usbPart);
-    contact.position.set(-.0021 + i * .0006, .00027, .0007);
-  }
-  const omniRecord = registerAssembly('omniring', 'OmniRing', 'A schematic wearable concept: a XIAO-based gesture classifier, motion sensor, ring enclosure and USB-C connector. Dimensions and housing details here are illustrative.', omni, [
-    { id: 'housing', title: 'Ring enclosure', description: 'A band and electronics tray for the wearable prototype.', object: ringPart, offset: [-.018, 0, -.008] },
-    { id: 'xiao', title: 'XIAO nRF52840 Sense', description: 'Runs the gesture classifier on the wearable.', object: xiaoPart, offset: [0, .033, -.004], turn: [.10, -.10, 0] },
-    { id: 'imu', title: 'Onboard motion sensor', description: 'The onboard six-axis sensor measures hand movement at 100 Hz. Its chip is separated here to explain its role.', object: imuPart, offset: [.031, .041, .001] },
-    { id: 'usb-c', title: 'USB-C connector', description: 'Provides programming and power access through the open front of the enclosure.', object: usbPart, offset: [.010, .007, .036], turn: [0, -.10, 0] },
-  ], [0, .48, 1]);
-  registerPartHits(omniRecord); measureAssembly(omniRecord);
 
-  const ready = Promise.allSettled([laptopReady, portraitReady, carrierReady]).then(results => {
+  const ready = Promise.allSettled([laptopReady, portraitReady, carrierReady, omniReady]).then(results => {
     results.forEach((result, index) => {
-      if (result.status === 'rejected') warnings.push({ asset: ['laptop screen', 'portrait', 'SoundScope carrier'][index], message: String(result.reason?.message || result.reason) });
+      if (result.status === 'rejected') warnings.push({ asset: ['laptop screen', 'portrait', 'SoundScope carrier', 'OmniRing'][index], message: String(result.reason?.message || result.reason) });
     });
     if (!disposed) {
       measureAssembly(soundRecord); measureAssembly(omniRecord); updateTargets();
@@ -607,7 +605,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     },
     dispose() {
       if (disposed) return;
-      disposed = true; partOutline.removeFromParent(); group.removeFromParent(); group.clear(); hitTargets.length = 0; release();
+      disposed = true; partOutline.removeFromParent(); omniModel.dispose(); group.removeFromParent(); group.clear(); hitTargets.length = 0; release();
     },
   };
 }

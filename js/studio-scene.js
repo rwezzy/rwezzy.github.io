@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
 import { prepareJointPath, sampleJointPath } from './studio-motion.js';
-import { createStudioProps } from './studio-props.js?v=desk7';
+import { createStudioProps } from './studio-props.js?v=desk8';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
 // nothing in this module connects to, or issues commands to, robot hardware.
@@ -68,7 +68,7 @@ function smoothSTLNormals(input) {
 export async function createStudioScene(canvas, {
   onSelect = () => {}, onStatus = () => {}, onReady = () => {},
   onPresent = async () => {}, onRetract = async () => {}, onPresentationChange = () => {},
-  onTelemetry = () => {}, onPartSelect = () => {},
+  onTelemetry = () => {}, onPartSelect = () => {}, onInspectionChange = () => {},
 } = {}) {
   if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError('A canvas is required for the studio scene.');
   let renderer;
@@ -111,6 +111,7 @@ export async function createStudioScene(canvas, {
       partOutline?.update();
       renderer.render(scene, camera);
       onPresentationChange(getPresentationRect());
+      onInspectionChange(getInspectionAnchors());
       onTelemetry({ jointsDeg: joints.map(angle => THREE.MathUtils.radToDeg(angle)), phase });
     }
   };
@@ -516,6 +517,37 @@ export async function createStudioScene(canvas, {
     await tween(480, t => studioProps.setExploded(target.id, from + (to - from) * t));
     phase = 'inspecting'; render();
   });
+
+  // Project the real mesh positions into viewport CSS pixels so labels follow
+  // the parts during reassembly, zooming and responsive layout changes.
+  function getInspectionAnchors() {
+    if (selection?.kind !== 'assembly' || disposed || !width || !height) return null;
+    const viewport = canvas.getBoundingClientRect();
+    camera.updateMatrixWorld(); selection.object.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3(), center = new THREE.Vector3(), corner = new THREE.Vector3();
+    return {
+      viewport: { left: viewport.left, top: viewport.top, width: viewport.width, height: viewport.height },
+      parts: selection.parts.map(part => {
+        bounds.setFromObject(part.object);
+        if (bounds.isEmpty()) return { id: part.id, x: 0, y: 0, visible: false };
+        bounds.getCenter(center).project(camera);
+        const rect = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
+        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+          corner.set(x, y, z).project(camera);
+          const px = viewport.left + (corner.x + 1) * viewport.width / 2;
+          const py = viewport.top + (1 - corner.y) * viewport.height / 2;
+          rect.left = Math.min(rect.left, px); rect.right = Math.max(rect.right, px);
+          rect.top = Math.min(rect.top, py); rect.bottom = Math.max(rect.bottom, py);
+        }
+        return { id: part.id,
+          x: viewport.left + (center.x + 1) * viewport.width / 2,
+          y: viewport.top + (1 - center.y) * viewport.height / 2,
+          rect,
+          visible: part.object.visible && Math.abs(center.x) <= 1 && Math.abs(center.y) <= 1 && center.z > -1 && center.z < 1,
+        };
+      }),
+    };
+  }
 
   function getPresentationRect() {
     if (disposed || !selection || !width || !height) return null;
