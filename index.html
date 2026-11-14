@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,50&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/soundscope.css">
   <script type="importmap">
   { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -99,6 +100,76 @@
       <h2>Things I've built</h2>
       <p class="key mono"><span class="tag tag--hw">hardware</span> <span class="tag tag--sw">software</span> <span class="tag tag--re">research</span></p>
     </header>
+
+    <!-- SOUNDSCOPE -->
+    <article class="proj proj--soundscope" id="soundscope">
+      <div class="proj__intro">
+        <p class="proj__meta mono"><span class="tag tag--hw">hardware</span><span class="tag tag--sw">software</span> Nov 2026</p>
+        <h3>SoundScope</h3>
+        <p class="ss-lede">What if you could look for a sound?</p>
+        <p>A ringing phone is useful until you can't tell where it is. I wanted to put the sound into the picture, so I built SoundScope: four microphones, a depth camera, and a view of where the sound might be coming from. The microphones hear it at slightly different times. Comparing those differences gives me a direction; the camera adds the scene and the depth of the surfaces it can see.</p>
+        <p>I also wanted to be able to ask what happened after it had happened. SoundScope keeps an event history with audio, images and location estimates, so a question like <q>did my phone ring?</q> can lead back to a recording. Muse Voice Transcribe handles speech, while Muse Spark 1.3 helps interpret spectrograms and camera crops and search the saved events. An optional SAM 3.1 pass outlines a visible candidate. The microphones still decide the direction.</p>
+        <p>The difficult part is the room. Reflections can put a convincing marker in the wrong place, and quiet sounds are harder to separate from everything else. This is still a prototype, but I like the possibility of making a sound easier to find for someone who can't hear it clearly. I designed the adjustable stand too, because the camera and microphones need to stay in the same positions relative to each other.</p>
+        <p class="proj__foot mono">Python · signal processing · RGB-D · Meta Model API · 3D-printed hardware · <a href="https://github.com/rwezzy/soundscope" target="_blank" rel="noopener">code ↗</a></p>
+        <a class="pill pill--solid" href="#soundscope-lab">Try the sound experiment ↓</a>
+      </div>
+      <div class="proj__media">
+        <div class="demo ss-hardware">
+          <div class="demo__top mono"><span>The stand I actually printed</span><span class="ss-badge">interactive CAD</span></div>
+          <div class="ss-hardware-stage">
+            <canvas data-hardware-canvas aria-label="Interactive 3D model of the adjustable SoundScope carrier. Drag to orbit; scroll to zoom."></canvas>
+            <span class="ss-hardware-hint mono">drag to turn · scroll to zoom</span>
+          </div>
+          <div class="ss-hardware-controls">
+            <label for="ss-explode">Take it apart <input id="ss-explode" data-explode type="range" min="0" max="1" step="0.01" value="0"></label>
+            <button class="pill" data-hardware-reset type="button">Reset view</button>
+          </div>
+          <p class="ss-hardware-status mono" data-hardware-status aria-live="polite">Loading the carrier's CAD…</p>
+          <p class="demo__cap">The adjustable v3 carrier, assembled from my print files. Camera and microphone shapes are dimensional stand-ins for the Gemini 2 and reSpeaker XVF3800; the tripod is omitted. <a href="models/soundscope/carrier-v3.glb" download>Download the carrier model</a> · <a href="models/soundscope/README.md">Model notes</a></p>
+        </div>
+      </div>
+
+      <div class="ss-lab" id="soundscope-lab">
+        <div class="ss-lab-head">
+          <div><p class="label mono">a small experiment</p><h4>Move the sound. Watch the timings change.</h4></div>
+          <span class="ss-badge mono">browser simulation</span>
+        </div>
+        <p class="ss-lab-intro">Drag the pink source, or use the position sliders. The colored region shows which directions agree with the four simulated microphone timings. Add some timing error to see why a sharp-looking marker isn't always a correct one.</p>
+        <div class="ss-lab-grid">
+          <div class="ss-experiment">
+            <div class="ss-stage">
+              <canvas id="ss-map" aria-label="Simulated sound-location map. Use the position sliders below to move the source with the keyboard."></canvas>
+              <div class="ss-stage-top mono"><span>SCENE VIEW</span><span id="ss-bearing">—</span></div>
+              <div class="ss-stage-key"><span><i class="ss-key-source"></i>placed source</span><span><i class="ss-key-estimate"></i>timing estimate</span></div>
+            </div>
+            <div class="ss-map-controls">
+              <label>Map <select id="ss-map-style"><option value="contour">Outline + gradient</option><option value="bands">Stepped bands</option><option value="soft">Soft field</option></select></label>
+              <label>Color <select id="ss-palette"><option value="mint">Mint</option><option value="pink">Pink</option><option value="heat">Heat</option></select></label>
+              <label>Intensity <input id="ss-intensity" type="range" min="0.15" max="0.85" step="0.05" value="0.5"></label>
+            </div>
+          </div>
+          <div class="ss-controls">
+            <p class="mono ss-step">01 / PLACE A SOUND</p>
+            <label class="ss-field">Sound <select id="ss-sound"><option value="ring">Phone ring</option><option value="clap">Hand clap</option><option value="chime">Chime</option></select></label>
+            <label class="ss-slider">Left ↔ right <output id="ss-x-out">25% right</output><input id="ss-x" type="range" min="-1" max="1" step="0.01" value="0.25"></label>
+            <label class="ss-slider">Down ↔ up <output id="ss-y-out">10% up</output><input id="ss-y" type="range" min="-0.7" max="0.7" step="0.02" value="0.1"></label>
+            <label class="ss-slider">Scene distance <output id="ss-z-out">1.5 m</output><input id="ss-z" type="range" min="0.7" max="2.5" step="0.1" value="1.5"></label>
+            <label class="ss-slider">Timing error <output id="ss-noise-out">0 μs</output><input id="ss-noise" type="range" min="0" max="1" step="0.05" value="0"></label>
+            <p class="ss-small">Distance is supplied by the scene, as depth would be in the real setup. It isn't measured from sound here.</p>
+            <button type="button" class="pill pill--solid ss-play" id="ss-emit"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m8 5 11 7-11 7Z" fill="currentColor"/></svg>Play &amp; save a sound</button>
+            <div class="ss-timing"><p class="mono">Arrival after the first microphone</p><div id="ss-delays"></div></div>
+          </div>
+        </div>
+        <div class="ss-memory">
+          <div class="ss-memory-head"><div><p class="mono ss-step">02 / FIND IT AGAIN</p><h4>A little sound memory</h4></div><button type="button" id="ss-clear" class="ss-text-button">Clear session</button></div>
+          <form id="ss-search-form"><label class="ss-sr" for="ss-query">Search the sounds you played</label><input id="ss-query" type="search" placeholder="Did my phone ring?" maxlength="160"><button type="submit" class="pill">Search sounds</button></form>
+          <p id="ss-search-answer" class="ss-search-answer" aria-live="polite">Play a sound above to start a history. Nothing is recorded from your microphone.</p>
+          <ol id="ss-events" aria-label="Sounds played in this browser session"></ol>
+        </div>
+        <div class="ss-explainer"><div><span class="mono">IN THIS BROWSER</span><p>The geometry and timing comparison run here. Sounds are synthesized, event labels come from your selection, and search uses a small local vocabulary. No microphone access, uploads or model calls.</p></div><div><span class="mono">ON THE PHYSICAL DEVICE</span><p>Actual audio drives the direction estimate. The Gemini 2 supplies images and depth; Meta's models add captions, candidate descriptions and search over saved evidence. A visible object along a direction is a candidate, not proof that it made the sound.</p></div></div>
+        <noscript><p>This experiment needs JavaScript. You can still read the project and download the carrier model above.</p></noscript>
+      </div>
+    </article>
 
     <!-- GAZE ARM -->
     <article class="proj" id="gaze-arm">
@@ -381,5 +452,6 @@
 <script type="module" src="js/pick.js"></script>
 <script src="js/demos.js"></script>
 <script src="js/main.js"></script>
+<script type="module" src="js/soundscope.js"></script>
 </body>
 </html>

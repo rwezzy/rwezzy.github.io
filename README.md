@@ -61,6 +61,23 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 
 ## What's inside
 
+### SoundScope
+
+The project is at `#soundscope`, with an interactive experiment at `#soundscope-lab`.
+
+- `js/soundscope.js` and `css/soundscope.css`: the scene, palette/outline/intensity controls, synthesized sounds and session-only event history/replay.
+- `js/soundscope-physics.js`: a single-source timing simulation with the application's 66 mm square four-microphone geometry. It compares all six microphone pairs. Depth is a scene input, not inferred acoustic range. Synthetic timing perturbation illustrates error; the normalized map is not a confidence probability or measured device accuracy.
+- `js/soundscope-hardware.js`: a lazy-loaded, keyboard-accessible Three.js view of the original adjustable carrier. Sensors are dimensional placeholders. See `models/soundscope/README.md` for provenance and dimensions.
+- Search matches a small local vocabulary against sounds chosen by the visitor. It does not run Meta models or classify browser audio. No camera/microphone permission, upload, API key or persistent storage is used by the SoundScope demo. The project copy separately describes what runs in the physical application.
+
+Run the geometry and search checks with Node 22.7 or newer:
+
+```bash
+node --test tests/soundscope-physics.test.mjs
+```
+
+Serve the site over HTTP for the module/CAD loaders; a `file://` preview cannot reliably load them. External Three.js imports use the same pinned CDN as the existing robot demo.
+
 | File | What it does |
 |---|---|
 | `index.html` | All the content |
