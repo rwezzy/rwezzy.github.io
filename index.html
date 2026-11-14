@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Keith Rwezahura</title>
+  <title>Keith Rwezahura — Studio</title>
   <meta name="description" content="Keith Rwezahura, a computer engineering student at NJIT from Kampala, Uganda. Projects and research in robotics, embedded systems and machine learning.">
-  <meta name="theme-color" content="#fcfdfb">
+  <meta name="theme-color" content="#f7f7f2">
   <meta property="og:title" content="Keith Rwezahura">
   <meta property="og:description" content="Computer engineering at NJIT, with projects and research in robotics, embedded systems and machine learning.">
   <meta property="og:image" content="images/me.jpg">
@@ -14,32 +13,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,50&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/soundscope.css">
+  <link rel="stylesheet" href="css/soundscope.css?v=3d1">
   <script type="importmap">
   { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-</head>
-<body>
 
-<a class="skip" href="#work">Skip to projects</a>
-
-<header class="nav" id="nav">
-  <a class="nav__name" href="#top">Keith Rwezahura</a>
-  <nav class="nav__links" aria-label="Sections">
-    <a href="#try">Demo</a>
-    <a href="#work">Projects</a>
-    <a href="#path">Background</a>
-    <a href="#beyond">Service</a>
-    <a href="#offclock">Interests</a>
-    <a href="#contact">Contact</a>
-  </nav>
-  <span class="nav__clocks mono">Newark <b id="clock-nwk">--:--</b> · Kampala <b id="clock-kla">--:--</b></span>
+<link rel="stylesheet" href="css/studio.css">
+  <link rel="stylesheet" href="css/studio-demos.css">
+</head><body class="studio-site">
+<a class="skip" href="#projects" data-view="projects" data-instant>Skip animation and read projects</a>
+<header class="s-header" id="nav">
+ <a class="s-brand" href="#top" data-home aria-label="Keith Rwezahura, return to desk"><span class="s-monogram">kr.</span><span>Keith Rwezahura</span></a>
+ <nav class="s-nav nav__links" aria-label="Sections"><a href="#about" data-view="about">About</a><a href="#projects" data-view="projects">Projects</a><a href="#research" data-view="research">Research</a><a href="#background" data-view="background">Background</a><a href="#beyond" data-view="beyond">Beyond</a><a href="#contact" data-view="contact">Contact</a></nav>
+ <a class="s-contact-link" href="mailto:kama.rwezahura@gmail.com">Let's talk <span aria-hidden="true">↗</span></a>
 </header>
-
-<main id="top">
+<main class="s-home" id="top">
+ <div class="s-hero">
+  <div class="s-introduction">
+   <p class="s-eyebrow"><span class="s-live-dot"></span> COMPUTER ENGINEERING / NJIT</p>
+   <h1>Keith<br><span>Rwezahura</span><span class="s-name-dot">.</span></h1>
+    <p class="s-home-description">Robotics, embedded systems <br>and machine learning.</p>
+   <div class="s-location"><span>Kampala → Newark</span><span>PORTFOLIO / 2026</span></div>
+   <a class="s-discover" href="#projects" data-view="projects"><span class="s-arrow-circle" aria-hidden="true">↗</span>Explore my work</a>
+  </div>
+  <div class="s-scene-wrap" id="s-scene-wrap">
+   <canvas id="s-scene" aria-label="Interactive UFACTORY Lite6 arm with six labelled page plaques. Select a section below to see the arm lift its page."></canvas>
+   <div class="s-scene-label"><span class="s-cross" aria-hidden="true">+</span> UFACTORY LITE6 <span>01—06</span></div>
+   <p class="s-model-note">Interactive model · suction tool</p>
+  </div>
+ </div>
+ <section class="s-selection" aria-label="Choose a page">
+  <div class="s-selection-label"><span><b>Pick a page.</b> The arm will bring it to you.</span><span class="s-scene-status" id="s-status" role="status" aria-live="polite">Loading the arm…</span></div>
+  <nav class="s-dock" aria-label="Page plaques"><button class="s-plaque-button" data-view="about" type="button"><span class="s-plaque-number">01</span><span class="s-plaque-title">About</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="projects" type="button"><span class="s-plaque-number">02</span><span class="s-plaque-title">Projects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="research" type="button"><span class="s-plaque-number">03</span><span class="s-plaque-title">Research</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="background" type="button"><span class="s-plaque-number">04</span><span class="s-plaque-title">Background</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="beyond" type="button"><span class="s-plaque-number">05</span><span class="s-plaque-title">Beyond</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="contact" type="button"><span class="s-plaque-number">06</span><span class="s-plaque-title">Contact</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button></nav>
+ </section>
+ <footer class="s-home-footer"><span>HARDWARE / SOFTWARE / RESEARCH</span><div class="s-clocks">Newark <b id="clock-nwk">--:--</b><span>·</span>Kampala <b id="clock-kla">--:--</b></div><button id="s-motion" type="button" aria-pressed="true">Motion on <span aria-hidden="true">◉</span></button></footer>
+</main>
+  <div class="s-reader" id="s-reader" role="main" hidden>
+ <div class="s-reader-toolbar"><p id="s-page-label">02 / PROJECTS</p><button type="button" class="s-back" data-home><span aria-hidden="true">↙</span> Return to desk <kbd>Esc</kbd></button></div>
+ <div id="s-content-root" class="s-content-root">
 
   <!-- ================================================================ INTRO -->
   <section class="intro wrap">
@@ -134,35 +148,56 @@
           <div><p class="label mono">interactive demo</p><h4>Sound direction simulation</h4></div>
           <span class="ss-badge mono">browser simulation</span>
         </div>
-        <p class="ss-lab-intro">Move the pink source by dragging it or using the position sliders. The coloured region represents directions consistent with the simulated microphone timings; increasing the timing error demonstrates how uncertainty in those measurements affects the estimate.</p>
+        <p class="ss-lab-intro">The SoundScope carrier stands on a tripod on the desk, beside a laptop, facing a furnished room. Selecting the alarm clock, kettle, boombox or television plays its sound: each of the four simulated microphones receives a slightly delayed copy, and the direction is estimated from those delays, as on the device. The panel on the right shows what the carrier's camera sees, with the direction drawn over it. Objects can be dragged to new places, including behind the sofa. In the guessing game, a sound plays from a hidden position and you mark where you think it is before SoundScope's estimate is shown.</p>
         <div class="ss-lab-grid">
-          <div class="ss-experiment">
-            <div class="ss-stage">
-              <canvas id="ss-map" aria-label="Simulated sound-location map. Use the position sliders below to move the source with the keyboard."></canvas>
-              <div class="ss-stage-top mono"><span>SCENE VIEW</span><span id="ss-bearing">—</span></div>
-              <div class="ss-stage-key"><span><i class="ss-key-source"></i>placed source</span><span><i class="ss-key-estimate"></i>timing estimate</span></div>
+          <div class="ss-stage">
+            <canvas id="ss-room" aria-label="3D room with a desk holding the SoundScope carrier on a tripod and a laptop, facing a sofa, coffee table, television, shelf, side table and armchair. Drag the room to look around; drag the alarm clock, kettle, boombox or television to move them; select one to play its sound. The buttons below play the same sounds."></canvas>
+            <p class="ss-say" id="ss-say" aria-live="polite">loading the room…</p>
+          </div>
+          <aside class="ss-app" aria-label="SoundScope view">
+            <div class="ss-app-bar mono"><span><i></i>SoundScope</span><span>Gemini 2 view · simulated</span></div>
+            <canvas id="ss-feed" aria-hidden="true"></canvas>
+            <p class="ss-caption" id="ss-caption" aria-live="polite">Select a sound to see what SoundScope reports.</p>
+            <dl class="ss-readout" id="ss-readout" hidden>
+              <div><dt>Estimated direction</dt><dd id="ss-out-estimate"></dd></div>
+              <div><dt>True direction</dt><dd id="ss-out-actual"></dd></div>
+              <div><dt>Error</dt><dd id="ss-out-error"></dd></div>
+              <div><dt>Depth along it</dt><dd id="ss-out-depth"></dd></div>
+            </dl>
+            <p class="ss-app-note">These captions are written by fixed rules in your browser from the estimated direction, the depth to the first visible surface and the objects in view. The device uses Meta's models.</p>
+          </aside>
+        </div>
+        <div class="ss-toolbar">
+          <div>
+            <div class="ss-modes" role="group" aria-label="Demo mode"><button type="button" data-mode="explore" aria-pressed="true">Explore</button><button type="button" data-mode="game" aria-pressed="false">Guessing game</button></div>
+            <div data-panel="explore">
+              <p class="mono ss-step">01 / PLAY A SOUND</p>
+              <div class="ss-sounds">
+                <button type="button" class="pill" data-source="alarm">Ring the alarm clock</button>
+                <button type="button" class="pill" data-source="kettle">Boil the kettle</button>
+                <button type="button" class="pill" data-source="boombox">Play the boombox</button>
+                <button type="button" class="pill" data-source="tv">Turn on the TV</button>
+              </div>
             </div>
-            <div class="ss-map-controls">
-              <label>Map <select id="ss-map-style"><option value="contour">Outline + gradient</option><option value="bands">Stepped bands</option><option value="soft">Soft field</option></select></label>
-              <label>Color <select id="ss-palette"><option value="mint">Mint</option><option value="pink">Pink</option><option value="heat">Heat</option></select></label>
-              <label>Intensity <input id="ss-intensity" type="range" min="0.15" max="0.85" step="0.05" value="0.5"></label>
+            <div data-panel="game" hidden>
+              <p class="mono ss-step">01 / FIND THE HIDDEN SOUND</p>
+              <button type="button" class="pill pill--solid ss-play" id="ss-mystery">Play a hidden sound</button>
+              <p class="ss-round mono" id="ss-round"></p>
+              <dl class="ss-score"><div><dt>You</dt><dd id="ss-you">—</dd></div><div><dt>SoundScope</dt><dd id="ss-machine">—</dd></div></dl>
+              <p class="ss-small" id="ss-game-note"></p>
+              <button type="button" id="ss-new-game" class="ss-text-button">Start a new game</button>
             </div>
           </div>
-          <div class="ss-controls">
-            <p class="mono ss-step">01 / SOURCE SETTINGS</p>
-            <label class="ss-field">Sound <select id="ss-sound"><option value="ring">Phone ring</option><option value="clap">Hand clap</option><option value="chime">Chime</option></select></label>
-            <label class="ss-slider">Left ↔ right <output id="ss-x-out">25% right</output><input id="ss-x" type="range" min="-1" max="1" step="0.01" value="0.25"></label>
-            <label class="ss-slider">Down ↔ up <output id="ss-y-out">10% up</output><input id="ss-y" type="range" min="-0.7" max="0.7" step="0.02" value="0.1"></label>
-            <label class="ss-slider">Scene distance <output id="ss-z-out">1.5 m</output><input id="ss-z" type="range" min="0.7" max="2.5" step="0.1" value="1.5"></label>
-            <label class="ss-slider">Timing error <output id="ss-noise-out">0 μs</output><input id="ss-noise" type="range" min="0" max="1" step="0.05" value="0"></label>
-            <p class="ss-small">The scene supplies the distance used in this simulation. In the physical setup, the depth camera measures visible surfaces; neither implementation obtains distance from sound alone.</p>
-            <button type="button" class="pill pill--solid ss-play" id="ss-emit"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m8 5 11 7-11 7Z" fill="currentColor"/></svg>Play &amp; save a sound</button>
-            <div class="ss-timing"><p class="mono">Arrival after the first microphone</p><div id="ss-delays"></div></div>
+          <div>
+            <p class="mono ss-step">02 / CHANGE THE CONDITIONS</p>
+            <label class="ss-slider">Microphone spacing <output id="ss-spacing-out">66 mm</output><input id="ss-spacing" type="range" min="20" max="200" step="2" value="66"></label>
+            <label class="ss-slider">Room echo <output id="ss-echo-out">low</output><input id="ss-echo" type="range" min="0" max="0.9" step="0.05" value="0.25"></label>
+            <p class="ss-small" id="ss-lesson"></p>
           </div>
         </div>
         <div class="ss-memory">
-          <div class="ss-memory-head"><div><p class="mono ss-step">02 / SEARCH EVENTS</p><h4>Session event history</h4></div><button type="button" id="ss-clear" class="ss-text-button">Clear session</button></div>
-          <form id="ss-search-form"><label class="ss-sr" for="ss-query">Search the sounds you played</label><input id="ss-query" type="search" placeholder="Did my phone ring?" maxlength="160"><button type="submit" class="pill">Search sounds</button></form>
+          <div class="ss-memory-head"><div><p class="mono ss-step">03 / SEARCH EVENTS</p><h4>Session event history</h4></div><button type="button" id="ss-clear" class="ss-text-button">Clear session</button></div>
+          <form id="ss-search-form"><label class="ss-sr" for="ss-query">Search the sounds you played</label><input id="ss-query" type="search" placeholder="Did my alarm ring?" maxlength="160"><button type="submit" class="pill">Search sounds</button></form>
           <p id="ss-search-answer" class="ss-search-answer" aria-live="polite">Play a sound above to start a history. Nothing is recorded from your microphone.</p>
           <ol id="ss-events" aria-label="Sounds played in this browser session"></ol>
         </div>
@@ -441,17 +476,15 @@
       <a class="pill resume-link" href="resume.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
     </p>
   </section>
-</main>
-
-<footer class="foot wrap mono">
-  <span>© 2026 Keith Rwezahura · Newark, NJ &amp; Kampala, UG</span>
-  <span>Robot: SO-ARM100 (The Robot Studio / Google DeepMind, Apache 2.0) · photos: Pexels · footage: Mixkit · chart: Wikimedia Commons</span>
-</footer>
-
+</div>
+ <footer class="s-reader-footer"><span>© 2026 Keith Rwezahura</span><a href="https://github.com/rwezzy" target="_blank" rel="noopener">GitHub ↗</a><button id="s-next" type="button">Next section <span aria-hidden="true">↗</span></button></footer>
+</div>
+<div class="s-transition-label" id="s-transition-label" aria-hidden="true"></div>
+<noscript><div class="s-noscript">The interactive desk needs JavaScript. <a href="classic.html">Read the complete portfolio.</a></div></noscript>
+<script src="js/studio-shell.js?v=studio3"></script>
 <script src="js/slots.js"></script>
 <script type="module" src="js/pick.js"></script>
 <script src="js/demos.js"></script>
 <script src="js/main.js"></script>
-<script type="module" src="js/soundscope.js"></script>
-</body>
-</html>
+<script type="module" src="js/soundscope.js?v=studio2"></script>
+</body></html>

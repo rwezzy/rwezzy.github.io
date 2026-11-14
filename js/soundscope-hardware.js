@@ -3,6 +3,91 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
+ * Loads the 18-part v3 carrier CAD with its schematic camera and microphone-board placeholders.
+ * Origin is the camera centre; +Z faces the scene. Every geometry and material is added to `resources`.
+ * Returns { assembly, parts } where parts are the 18 printed-part meshes.
+ */
+export async function loadCarrier(resources = new Set()) {
+  const material = (color, options = {}) => {
+    const value = new THREE.MeshStandardMaterial({ color, roughness: 0.43, metalness: 0.08, ...options });
+    resources.add(value);
+    return value;
+  };
+  const assembly = new THREE.Group();
+  const mesh = (geometry, appearance, parent = assembly) => {
+    resources.add(geometry);
+    const result = new THREE.Mesh(geometry, appearance);
+    parent.add(result);
+    return result;
+  };
+  const gltf = await new GLTFLoader().loadAsync(new URL('models/soundscope/carrier-v3.glb', document.baseURI).href);
+  // The compact GLB stores positions and triangle indices, without vertex normals.
+  // Preserve GLTFLoader's flat-shading behavior when replacing its materials:
+  // face normals are derived in the fragment shader, so CAD edges stay crisp.
+  const print = material('#418565', { flatShading: true });
+  const shoes = material('#76a98a', { flatShading: true });
+  const contacts = material('#ed7195', { roughness: 0.34, flatShading: true });
+  const fasteners = material('#3a5b45', { roughness: 0.33, flatShading: true });
+  const parts = [];
+  gltf.scene.traverse((object) => {
+    if (!object.isMesh) return;
+    resources.add(object.geometry);
+    const previous = Array.isArray(object.material) ? object.material : [object.material];
+    previous.forEach((item) => item?.dispose());
+    const name = object.name;
+    object.material = name.includes('toe') && !name.includes('screw') || name.includes('pressure_bar') ? contacts
+      : name.includes('shoe') ? shoes : name.includes('screw') || name.includes('nut') ? fasteners : print;
+    parts.push(object);
+  });
+  if (parts.length !== 18) throw new Error(`Expected 18 original CAD parts, received ${parts.length}.`);
+  assembly.add(gltf.scene);
+
+  // A 100 x 1.2 mm dimensional PCB disc at the source design's actual nominal pose.
+  // Four gold dots are schematic microphone symbols, not exact component CAD positions.
+  const pcbMaterial = material('#253b32', { roughness: 0.55 });
+  const gold = material('#d9b764', { metalness: 0.58, roughness: 0.28 });
+  const pcb = mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.0012, 96), pcbMaterial);
+  pcb.name = 'Dimensional PCB placeholder — component layout schematic';
+  pcb.rotation.x = Math.PI / 2;
+  pcb.position.set(0, 0.128, 0.0146);
+  const electronics = new THREE.Group();
+  electronics.name = 'Schematic microphone markers — not manufacturer component geometry';
+  assembly.add(electronics);
+  for (const x of [-0.024, 0.024]) {
+    for (const y of [-0.024, 0.024]) {
+      const dot = mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.00065, 24), gold, electronics);
+      dot.rotation.x = Math.PI / 2;
+      dot.position.set(x, 0.128 + y, 0.0157);
+    }
+  }
+
+  // Rounded dimensional envelope: 89.45977 x 25.0247 x 30 mm.
+  // The casing/lens marks below are schematic; no manufacturer shape was copied.
+  const radius = 0.01251235;
+  const halfStraight = 0.044729885 - radius;
+  const outline = new THREE.Shape();
+  outline.moveTo(-halfStraight, -radius);
+  outline.lineTo(halfStraight, -radius);
+  outline.absarc(halfStraight, 0, radius, -Math.PI / 2, Math.PI / 2, false);
+  outline.lineTo(-halfStraight, radius);
+  outline.absarc(-halfStraight, 0, radius, Math.PI / 2, Math.PI * 1.5, false);
+  const casing = new THREE.ExtrudeGeometry(outline, { depth: 0.030, bevelEnabled: false, curveSegments: 24 });
+  casing.translate(0, 0, -0.015);
+  const cameraProxy = mesh(casing, material('#27312f', { roughness: 0.4 }));
+  cameraProxy.name = 'Dimensional camera placeholder — not manufacturer housing';
+  cameraProxy.position.set(0, -0.00016025, -0.00365);
+  const glass = material('#0f1e21', { metalness: 0.3, roughness: 0.2 });
+  const bezel = material('#61746c', { metalness: 0.45, roughness: 0.35 });
+  for (const x of [-0.025, 0.025]) {
+    const ring = mesh(new THREE.TorusGeometry(0.0053, 0.00055, 12, 40), bezel);
+    ring.position.set(x, -0.00016025, 0.0115);
+    const lens = mesh(new THREE.CircleGeometry(0.0048, 40), glass);
+    lens.position.set(x, -0.00016025, 0.01155);
+  }
+  return { assembly, parts };
+}
+
+/**
  * Actual 18-part v3 carrier CAD, with explicitly schematic device placeholders.
  * GLB: metres, X right / Y up / +Z forward; actual source assembly coordinates.
  * No manufacturer meshes, textures, logos or tripod geometry are included.
@@ -47,19 +132,6 @@ export async function initHardware(root) {
       frame = 0;
       if (!disposed && visible && !document.hidden) renderer.render(scene, camera);
     });
-  }
-
-  function material(color, options = {}) {
-    const value = new THREE.MeshStandardMaterial({ color, roughness: 0.43, metalness: 0.08, ...options });
-    resources.add(value);
-    return value;
-  }
-
-  function mesh(geometry, appearance, parent = assembly) {
-    resources.add(geometry);
-    const result = new THREE.Mesh(geometry, appearance);
-    parent.add(result);
-    return result;
   }
 
   function fitView(resetDirection = false) {
@@ -222,78 +294,13 @@ export async function initHardware(root) {
     }
     resize();
 
-    const gltf = await new GLTFLoader().loadAsync(new URL('models/soundscope/carrier-v3.glb', document.baseURI).href);
-    if (disposed) {
-      gltf.scene.traverse((object) => {
-        object.geometry?.dispose();
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((item) => item?.dispose());
-      });
-      return null;
+    const carrier = await loadCarrier(resources);
+    if (disposed) return null;
+    for (const node of carrier.parts) {
+      const base = node.position.clone();
+      parts.push({ node, base, explode: explodeDirection(node.name, base) });
     }
-    // The compact GLB stores positions and triangle indices, without vertex normals.
-    // Preserve GLTFLoader's flat-shading behavior when replacing its materials:
-    // face normals are derived in the fragment shader, so CAD edges stay crisp.
-    const print = material('#418565', { flatShading: true });
-    const shoes = material('#76a98a', { flatShading: true });
-    const contacts = material('#ed7195', { roughness: 0.34, flatShading: true });
-    const fasteners = material('#3a5b45', { roughness: 0.33, flatShading: true });
-    gltf.scene.traverse((object) => {
-      if (!object.isMesh) return;
-      resources.add(object.geometry);
-      const previous = Array.isArray(object.material) ? object.material : [object.material];
-      previous.forEach((item) => item?.dispose());
-      const name = object.name;
-      object.material = name.includes('toe') && !name.includes('screw') || name.includes('pressure_bar') ? contacts
-        : name.includes('shoe') ? shoes : name.includes('screw') || name.includes('nut') ? fasteners : print;
-      const base = object.position.clone();
-      parts.push({ node: object, base, explode: explodeDirection(name, base) });
-    });
-    if (parts.length !== 18) throw new Error(`Expected 18 original CAD parts, received ${parts.length}.`);
-    assembly.add(gltf.scene);
-
-    // A 100 x 1.2 mm dimensional PCB disc at the source design's actual nominal pose.
-    // Four gold dots are schematic microphone symbols, not exact component CAD positions.
-    const pcbMaterial = material('#253b32', { roughness: 0.55 });
-    const gold = material('#d9b764', { metalness: 0.58, roughness: 0.28 });
-    const pcb = mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.0012, 96), pcbMaterial);
-    pcb.name = 'Dimensional PCB placeholder — component layout schematic';
-    pcb.rotation.x = Math.PI / 2;
-    pcb.position.set(0, 0.128, 0.0146);
-    const electronics = new THREE.Group();
-    electronics.name = 'Schematic microphone markers — not manufacturer component geometry';
-    assembly.add(electronics);
-    for (const x of [-0.024, 0.024]) {
-      for (const y of [-0.024, 0.024]) {
-        const dot = mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.00065, 24), gold, electronics);
-        dot.rotation.x = Math.PI / 2;
-        dot.position.set(x, 0.128 + y, 0.0157);
-      }
-    }
-
-    // Rounded dimensional envelope: 89.45977 x 25.0247 x 30 mm.
-    // The casing/lens marks below are schematic; no manufacturer shape was copied.
-    const radius = 0.01251235;
-    const halfStraight = 0.044729885 - radius;
-    const outline = new THREE.Shape();
-    outline.moveTo(-halfStraight, -radius);
-    outline.lineTo(halfStraight, -radius);
-    outline.absarc(halfStraight, 0, radius, -Math.PI / 2, Math.PI / 2, false);
-    outline.lineTo(-halfStraight, radius);
-    outline.absarc(-halfStraight, 0, radius, Math.PI / 2, Math.PI * 1.5, false);
-    const casing = new THREE.ExtrudeGeometry(outline, { depth: 0.030, bevelEnabled: false, curveSegments: 24 });
-    casing.translate(0, 0, -0.015);
-    const cameraProxy = mesh(casing, material('#27312f', { roughness: 0.4 }));
-    cameraProxy.name = 'Dimensional camera placeholder — not manufacturer housing';
-    cameraProxy.position.set(0, -0.00016025, -0.00365);
-    const glass = material('#0f1e21', { metalness: 0.3, roughness: 0.2 });
-    const bezel = material('#61746c', { metalness: 0.45, roughness: 0.35 });
-    for (const x of [-0.025, 0.025]) {
-      const ring = mesh(new THREE.TorusGeometry(0.0053, 0.00055, 12, 40), bezel);
-      ring.position.set(x, -0.00016025, 0.0115);
-      const lens = mesh(new THREE.CircleGeometry(0.0048, 40), glass);
-      lens.position.set(x, -0.00016025, 0.01155);
-    }
+    assembly.add(carrier.assembly);
     root.dataset.hardwareReady = 'ready';
     setExplode(slider?.value || 0, false);
     fitView(true);

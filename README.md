@@ -1,14 +1,28 @@
 # keith rwezahura — personal site
 
-A static site: plain HTML, CSS, and JavaScript, no build step. Open it, edit it, push it.
+A static site built with HTML, CSS, JavaScript and Three.js. No build step is required.
+
+## Studio version
+
+The homepage uses the Lite6 CAD model to pick up one of six section plaques. Selecting a different section returns the current plaque before picking the next one. The reading view, navigation and demo controls share a responsive layout. The Motion control and the system's reduced-motion preference allow navigation without the animation.
+
+This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
+
+- `js/studio-shell.js`: section navigation, focus handling and intact demo-node placement.
+- `js/studio-scene.js`: the homepage robot, plaques and pick/return animation.
+- `css/studio.css`: site layout and page presentation.
+- `css/studio-demos.css`: presentation of the existing demo controls.
+- `tests/studio-preservation.test.mjs`: checks the original project text and demo implementations against a frozen snapshot, including a regression check for the SoundScope texture-loading race fixed in this version.
+
+Run the checks with `node --test tests/*.test.mjs`. The demo previews run locally in the browser; the Einstein chat still requires its configured backend. Loading Three.js and the existing detector dependencies requires internet access.
 
 ## Preview it on your computer
 
 ```bash
-python -m http.server 8137 --directory C:/Users/danny/Developer/portfolio
+python -m http.server 8145 --bind 127.0.0.1 --directory C:/Users/danny/Developer/Meta_Hack/portfolio-studio
 ```
 
-Then open http://localhost:8137. (Opening `index.html` directly also works, but a local server behaves like the real site.)
+Then open http://127.0.0.1:8145. Use a local server rather than opening `index.html` directly, because the demos load JavaScript modules and model assets.
 
 ## Add your photos and videos
 
@@ -65,15 +79,17 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 
 The project is at `#soundscope`, with an interactive experiment at `#soundscope-lab`.
 
-- `js/soundscope.js` and `css/soundscope.css`: the scene, palette/outline/intensity controls, synthesized sounds and session-only event history/replay.
-- `js/soundscope-physics.js`: a single-source timing simulation with the application's 66 mm square four-microphone geometry. It compares all six microphone pairs. Depth is a scene input, not inferred acoustic range. Synthetic timing perturbation illustrates error; the normalized map is not a confidence probability or measured device accuracy.
+- `js/soundscope.js` and `css/soundscope.css`: a furnished 3D room (Three.js) with the carrier on a tripod on a desk beside a laptop. Visitors orbit the room, drag the alarm clock, kettle, boombox and television onto floors and furniture, and play them. A second view renders what the carrier's camera sees, with the direction heatmap, the estimate and the candidate object drawn over it; the laptop screen shows the same view. Includes the guessing game (5 rounds; your miss against SoundScope's, in metres), the microphone-spacing and room-echo sliders, spatial audio from the visitor's viewpoint, and session-only event history/replay.
+- `js/soundscope-room.js`: the simulation. Each sound is a sum of sinusoids, so every microphone receives an exactly delayed copy: the direct path, one reflection off each of the six room surfaces, and a decaying diffuse tail whose strength follows the echo slider. Signals are sampled at 16 kHz like the XVF3800's 6-channel firmware; four microphones sit upright on a square facing the room, as on the carrier, and direction comes from GCC-PHAT over all six pairs, steered over ±70° azimuth and ±45° elevation. The default 66 mm square matches the app's four-microphone geometry. The normalized map is relative support, not a probability or measured device accuracy. Distance is never estimated from sound.
+- `js/soundscope-describe.js`: rule-based captions with no model or API. It uses only what the device could know: the sound's label, the estimated direction, the depth to the first visible surface along it, whether a visible object there could make that sound, and visible neighbours. That is how it reaches statements such as "nothing visible there makes that sound, so the source is probably behind or under the sofa."
+- `models/room/`: CC0 models, floor texture and lighting from Poly Haven (about 21 MB, loaded only when the section is near). The desk and tripod are simple geometry drawn in code.
 - `js/soundscope-hardware.js`: a lazy-loaded, keyboard-accessible Three.js view of the original adjustable carrier. Sensors are dimensional placeholders. See `models/soundscope/README.md` for provenance and dimensions.
-- Search matches a small local vocabulary against sounds chosen by the visitor. It does not run Meta models or classify browser audio. No camera/microphone permission, upload, API key or persistent storage is used by the SoundScope demo. The project copy separately describes what runs in the physical application.
+- Search matches a small local vocabulary (sound names and left/right/front/behind) against sounds chosen by the visitor. It does not run Meta models or classify browser audio. No camera/microphone permission, upload, API key or persistent storage is used by the SoundScope demo. The project copy separately describes what runs in the physical application.
 
-Run the geometry and search checks with Node 22.7 or newer:
+Run the simulation and search checks with Node 22.7 or newer:
 
 ```bash
-node --test tests/soundscope-physics.test.mjs
+node --test tests/soundscope-room.test.mjs tests/soundscope-describe.test.mjs
 ```
 
 Serve the site over HTTP for the module/CAD loaders; a `file://` preview cannot reliably load them. External Three.js imports use the same pinned CDN as the existing robot demo.

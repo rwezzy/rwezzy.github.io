@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keith Rwezahura</title>
+  <meta name="description" content="Keith Rwezahura, a computer engineering student at NJIT from Kampala, Uganda. A Lite 6 robot arm on a desk hands you each page.">
+  <meta name="theme-color" content="#120d16">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/den.css?v=1">
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  } }
+  </script>
+</head>
+<body>
+<a class="den-skip" href="index.html">Skip the room: plain version of this site</a>
+
+<main class="den" id="den">
+  <canvas class="den-canvas" id="den-canvas" aria-label="A desk at night with a Lite 6 robot arm and six glass plaques, one for each page. Use the page buttons at the bottom to choose a page."></canvas>
+
+  <header class="den-mast">
+    <p class="den-name">Keith Rwezahura</p>
+    <p class="den-role">Computer engineering · NJIT · from Kampala</p>
+  </header>
+
+  <aside class="den-pendant" aria-hidden="true">
+    <p class="den-pendant__title">LITE 6 · TEACH PENDANT</p>
+    <dl id="den-joints"></dl>
+    <p class="den-pendant__state"><i></i><span id="den-state">loading</span></p>
+  </aside>
+
+  <p class="den-hint" id="den-hint">Pick a plaque</p>
+  <p class="den-tip" id="den-tip" hidden></p>
+
+  <nav class="den-dock" aria-label="Pages">
+    <button type="button" data-page="about"><span>01</span>About</button>
+    <button type="button" data-page="projects"><span>02</span>Projects</button>
+    <button type="button" data-page="research"><span>03</span>Research</button>
+    <button type="button" data-page="path"><span>04</span>Path</button>
+    <button type="button" data-page="beyond"><span>05</span>Beyond</button>
+    <button type="button" data-page="contact"><span>06</span>Contact</button>
+    <button type="button" class="den-dock__back" data-page="desk" hidden>Put it down</button>
+  </nav>
+
+  <section class="den-sheet" id="den-sheet" hidden aria-live="polite">
+    <div class="den-sheet__inner" id="den-sheet-inner" tabindex="-1"></div>
+  </section>
+
+  <div class="den-loader" id="den-loader">
+    <p>Switching on the lamp<span id="den-progress"></span></p>
+  </div>
+</main>
+
+<!-- Page content. Each template is shown on the glass the arm is holding. -->
+<template id="page-about">
+  <p class="den-kicker">01 · About</p>
+  <h1>I'm Keith, a computer engineering student at NJIT.</h1>
+  <div class="den-cols">
+    <div>
+      <p>I am from Kampala, Uganda, and my interest in computer engineering developed alongside my interests in biology and ethics. I am particularly interested in how machines can extend human capabilities, and in the conditions that determine whether they are useful to the people expected to rely on them.</p>
+      <p>These interests have informed my work on gaze-controlled robotics, gesture recognition on microcontrollers, and machine learning research. Working within the memory and processing constraints of these systems has also made me more interested in computer architecture, as the capabilities of a model are dependent on the hardware available to implement it. I am consequently exploring hardware research alongside my work in AI.</p>
+    </div>
+    <div>
+      <ul class="den-now">
+        <li>exploring hardware research at NJIT</li>
+        <li>developing OmniRing, a gesture ring with a 4 KB neural network</li>
+        <li>open to internships in computer architecture, digital design, embedded systems, and ML systems</li>
+      </ul>
+      <ul class="den-facts">
+        <li><b>1st</b> place, Viam robotics hackathon</li>
+        <li><b>Dean's List</b>, Albert Dorman Honors College</li>
+        <li><b>180+</b> students at the school supported by Urban Arbor</li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<template id="page-projects">
+  <p class="den-kicker">02 · Projects</p>
+  <h1>Things I've built</h1>
+  <div class="den-projects">
+    <article>
+      <p class="den-meta">Hardware · software · Nov 2026</p>
+      <h2>SoundScope</h2>
+      <p>A ringing phone provides a useful indication of its location, but this assumes that the person looking for it can distinguish the direction of the sound. I built SoundScope to represent that direction visually, using a Seeed reSpeaker XVF3800 microphone array and an Orbbec Gemini 2 depth camera.</p>
+      <p class="den-links"><a href="index.html#soundscope-lab">Try the room demo</a><a href="https://github.com/rwezzy/soundscope" target="_blank" rel="noopener">Code ↗</a></p>
+    </article>
+    <article>
+      <p class="den-meta">Winner, Viam "Fine Motor Skills" robotics hackathon · Sept 2026</p>
+      <h2>Gaze Arm</h2>
+      <p>At the Viam hackathon, I proposed a robot arm that could receive instructions through gaze, potentially allowing someone with limited hand mobility to select and retrieve an object. Looking at an object selects it for pickup, while looking at an empty position specifies where to place it.</p>
+      <p class="den-links"><a href="index.html#try">Try it with your eyes</a><a href="https://github.com/rwezzy/gaze-arm" target="_blank" rel="noopener">Code ↗</a></p>
+    </article>
+    <article>
+      <p class="den-meta">VAST Builders Challenge, NYC · Oct 2026</p>
+      <h2>ZoneLogic &amp; Occlusive Logic</h2>
+      <p>I built ZoneLogic independently in one day at the VAST Builders Challenge in New York. The system allows a user to define a region within a fixed camera view and specify the conditions under which detections in a video archive should constitute an incident.</p>
+      <p class="den-links"><a href="index.html#zonelogic">Run a rule on street footage</a><a href="https://github.com/rwezzy/ZoneLogic-Tripwire" target="_blank" rel="noopener">Code ↗</a></p>
+    </article>
+    <article>
+      <p class="den-meta">TinyML · Aug 2026 – now · in progress</p>
+      <h2>OmniRing</h2>
+      <p>I am developing OmniRing as a gesture-based computer interface in which hand movements are measured by a six-axis motion sensor, rather than inferred from camera images. Quantization to 8-bit integers reduces the model to approximately 4 KB, with a 1.4 KB memory arena for inference.</p>
+      <p class="den-links"><a href="index.html#omniring">Draw a gesture</a></p>
+    </article>
+    <article>
+      <p class="den-meta">Research · NJIT · Sept – Dec 2025</p>
+      <h2>Optical deconvolution</h2>
+      <p>This project investigated the restoration of optical images affected by depth-dependent blur. I trained a 54.6k-parameter complex-valued neural network using experimental data comprising 1024&times;1024&times;128 samples per depth across nine depths.</p>
+      <p class="den-links"><a href="index.html#optics">Deblur a chart in your browser</a></p>
+    </article>
+    <article>
+      <p class="den-meta">Software · Aug 2025</p>
+      <h2>Einstein, a tutoring chatbot</h2>
+      <p>I built Einstein using Gemini 2.5 Flash, LangChain and Gradio to structure explanations around a student's existing understanding.</p>
+      <p class="den-links"><a href="https://github.com/rwezzy/Einstein" target="_blank" rel="noopener">Code ↗</a></p>
+    </article>
+  </div>
+</template>
+
+<template id="page-research">
+  <p class="den-kicker">03 · Research</p>
+  <h1>Research at NJIT</h1>
+  <p class="den-lede">My research at NJIT has involved machine learning for optical image restoration and gaze estimation, with more recent exploration of hardware research. These projects have required me to consider both the information available to a model and the computational constraints under which it is implemented.</p>
+  <div class="den-cols den-cols--3">
+    <div><p class="den-meta">Hardware · Oct 2026 – now</p><h2>Hardware research</h2><p>I began exploring two hardware labs at NJIT in October 2026, with the intention of understanding their respective research areas before committing to one. This work is still at an introductory stage.</p></div>
+    <div><p class="den-meta">Software · Mar 2026 – now</p><h2>Gaze estimation with a depth camera</h2><p>This project investigates whether the inclusion of depth information can improve screen-based gaze estimation, particularly when the model is applied to people not represented in its training data. Since depth has not yet been incorporated, any improvement from its inclusion remains to be established.</p></div>
+    <div><p class="den-meta">Software · Sept – Dec 2025</p><h2>Optical deconvolution</h2><p>My first research project at NJIT concerned optical deconvolution, for which I studied Fourier optics and developed a complex-valued neural network.</p></div>
+  </div>
+</template>
+
+<template id="page-path">
+  <p class="den-kicker">04 · Path</p>
+  <h1>Education and experience</h1>
+  <ol class="den-path">
+    <li><time>2022–24</time><b>Aga Khan High School, Kampala</b> My high school studies included independent research, student leadership and community projects.</li>
+    <li><time>Jun 2023</time><b>Hospital laboratory internships</b> I interned at Lancet Laboratories and the Joint Clinical Research Center, working on blood tests for malaria and HIV.</li>
+    <li><time>2025</time><b>NJIT</b> Computer Engineering, Albert Dorman Honors College. I built my first robot that March.</li>
+    <li><time>Sept 2025</time><b>Optics research</b> I began investigating complex-valued convolutional neural networks for optical deconvolution.</li>
+    <li><time>Oct 2025</time><b>Student Senator</b> I was elected to represent Computer Engineering in the Student Senate.</li>
+    <li><time>Mar 2026</time><b>Gaze estimation research</b> I began developing a gaze estimation pipeline, with planned integration of depth information.</li>
+    <li><time>Jul 2026</time><b>Educational Opportunity Program tutor</b> I taught 50 incoming students through NJIT's Educational Opportunity Program.</li>
+    <li><time>Sept 2026</time><b>Viam hackathon · Edge AI · IEEE</b> My team won the Viam robotics hackathon with Gaze Arm. I also completed Edge Impulse's Edge AI for Microcontrollers specialization and became an IEEE Outreach Officer.</li>
+    <li><time>Oct 2026</time><b>VAST Builders Challenge · hardware research</b> I built ZoneLogic independently in one day at the VAST event in New York and began exploring hardware labs at NJIT.</li>
+    <li><time>next</time><b>Internship opportunities</b> I am seeking an internship in computer architecture, digital design, embedded systems or machine learning systems.</li>
+  </ol>
+</template>
+
+<template id="page-beyond">
+  <p class="den-kicker">05 · Beyond</p>
+  <h1>Service and interests</h1>
+  <div class="den-cols">
+    <div>
+      <h2>Urban Arbor</h2>
+      <p>Through Pro Bono Environment, I led Urban Arbor, a project with a target of planting 100 trees in Kampala. The first planting took place at the Kampala School for the Physically Handicapped, which serves more than 180 students. We planted 20 trees and provided gardening tools, ergonomic equipment and sanitary supplies worth 860,000 UGX.</p>
+      <h2>IEEE · Senate · EOP</h2>
+      <p>As an Outreach Officer for NJIT's IEEE branch, I find industry speakers for our students. I also represent more than 200 computer engineering students in the Student Senate, and through the Educational Opportunity Program I taught 50 incoming students mathematics, physics, English and Python.</p>
+    </div>
+    <div>
+      <h2>Outside engineering</h2>
+      <p><b>Running.</b> I am working toward a 10 km time below 40 minutes.</p>
+      <p><b>Reading.</b> Brian Christian's <i>The Alignment Problem</i>.</p>
+      <p><b>Cooking.</b> I enjoy cooking and experimenting with different preparations.</p>
+      <p><b>Writing.</b> I have written stories since I was six, and I am now developing a fictional universe of my own.</p>
+      <p><b>Listening.</b> Enya, usually, while I work.</p>
+    </div>
+  </div>
+</template>
+
+<template id="page-contact">
+  <p class="den-kicker">06 · Contact</p>
+  <h1>Let's talk.</h1>
+  <p class="den-lede">I am seeking internships in computer architecture, digital design, embedded systems and machine learning systems, where I can develop my technical understanding through practical work. I would also be happy to discuss the implementation, limitations or further development of any of the projects described here.</p>
+  <p class="den-links den-links--big">
+    <a href="mailto:kama.rwezahura@gmail.com">kama.rwezahura@gmail.com</a>
+    <a href="https://github.com/rwezzy" target="_blank" rel="noopener">GitHub ↗</a>
+    <a href="https://www.linkedin.com/in/keith-rwezahura" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <a href="resume.pdf" target="_blank" rel="noopener">Résumé ↗</a>
+  </p>
+</template>
+
+<noscript><p class="den-noscript">This room needs JavaScript. The <a href="index.html">plain version</a> has everything.</p></noscript>
+<script type="module" src="js/den/main.js?v=1"></script>
+</body>
+</html>

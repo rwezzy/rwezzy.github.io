@@ -1,0 +1,98 @@
+/* The den: one room at night. Warm lamp light, glass pages, a robot arm. */
+:root {
+  --night: #120d16;
+  --ink: #fbf3e6;
+  --ink-2: rgba(251, 243, 230, .72);
+  --ink-3: rgba(251, 243, 230, .48);
+  --amber: #ffb35c;
+  --ember: #ff7a45;
+  --glass: rgba(255, 246, 232, .09);
+  --glass-line: rgba(255, 236, 210, .26);
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Figtree", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --cup: 46px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--night); color: var(--ink); font: 400 16px/1.6 var(--sans); overflow: hidden; }
+a { color: inherit; }
+.den-skip { position: absolute; left: 12px; top: -60px; z-index: 50; padding: 8px 14px; border-radius: 999px; background: var(--ink); color: var(--night); font-weight: 600; text-decoration: none; }
+.den-skip:focus { top: 12px; }
+.den { position: fixed; inset: 0; }
+.den-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.den-mast { position: absolute; left: clamp(18px, 3vw, 40px); top: clamp(16px, 3vh, 32px); pointer-events: none; transition: opacity .4s; }
+.den-name { margin: 0; font: italic 400 clamp(28px, 3.6vw, 52px)/1 var(--serif); letter-spacing: -.01em; color: var(--ink); text-shadow: 0 2px 30px rgba(255, 150, 60, .25); }
+.den-role { margin: 8px 0 0; font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+
+.den-pendant { position: absolute; right: clamp(14px, 2.4vw, 32px); top: clamp(14px, 2.6vh, 30px); width: 196px; padding: 12px 14px; border-radius: 12px; background: rgba(18, 13, 22, .55); border: 1px solid rgba(255, 236, 210, .12); backdrop-filter: blur(8px); font: 11px/1.5 var(--mono); color: var(--ink-2); }
+.den-pendant__title { margin: 0 0 8px; font-size: 10px; letter-spacing: .12em; color: var(--amber); }
+.den-pendant dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; margin: 0; }
+.den-pendant dt { color: var(--ink-3); }
+.den-pendant dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.den-pendant__state { margin: 9px 0 0; display: flex; align-items: center; gap: 7px; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+.den-pendant__state i { width: 7px; height: 7px; border-radius: 50%; background: #5bd38b; box-shadow: 0 0 10px #5bd38b; }
+.den-pendant[data-state="moving"] .den-pendant__state i { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.den-pendant[data-state="suction"] .den-pendant__state i { background: #6fb6ff; box-shadow: 0 0 10px #6fb6ff; }
+
+.den-hint { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); margin: 0; font: italic 400 18px var(--serif); color: var(--ink-2); pointer-events: none; transition: opacity .4s; }
+.den-tip { position: absolute; margin: 0; padding: 5px 12px; border-radius: 999px; background: rgba(18, 13, 22, .78); border: 1px solid var(--glass-line); font: 600 13px var(--sans); pointer-events: none; transform: translate(-50%, -150%); white-space: nowrap; }
+
+.den-dock { position: absolute; left: 50%; bottom: clamp(14px, 3vh, 28px); transform: translateX(-50%); display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: rgba(18, 13, 22, .55); border: 1px solid rgba(255, 236, 210, .14); backdrop-filter: blur(10px); max-width: calc(100vw - 24px); overflow-x: auto; scrollbar-width: none; z-index: 5; }
+.den-dock button { flex: none; display: flex; align-items: baseline; gap: 6px; border: 0; border-radius: 999px; padding: 9px 15px; background: none; color: var(--ink-2); font: 600 14px var(--sans); cursor: pointer; transition: background .2s, color .2s; }
+.den-dock button[hidden] { display: none; }
+.den-dock button span { font: 500 10px var(--mono); color: var(--ink-3); }
+.den-dock button:hover, .den-dock button:focus-visible { background: rgba(255, 236, 210, .1); color: var(--ink); outline: none; }
+.den-dock button[aria-current="true"] { background: var(--ink); color: var(--night); }
+.den-dock button[aria-current="true"] span { color: rgba(18, 13, 22, .55); }
+.den-dock__back { color: var(--amber) !important; }
+
+/* The page on the glass. The circle in the middle is left clear so the suction cup shows through. */
+.den-sheet { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: clamp(70px, 9vh, 110px) clamp(14px, 4vw, 60px) clamp(80px, 12vh, 120px); pointer-events: none; z-index: 4; }
+.den-sheet[hidden] { display: none; }
+.den-sheet__inner { pointer-events: auto; position: relative; width: min(1060px, 100%); max-height: 100%; overflow: auto; padding: clamp(24px, 4vw, 56px); border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-line); box-shadow: 0 40px 120px -40px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .18); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-mask: radial-gradient(circle var(--cup) at var(--cup-x, 50%) var(--cup-y, 50%), transparent 96%, #000 100%);
+  mask: radial-gradient(circle var(--cup) at var(--cup-x, 50%) var(--cup-y, 50%), transparent 96%, #000 100%);
+  opacity: 0; transform: scale(.97); transition: opacity .35s ease, transform .35s ease; outline: none; scrollbar-width: thin; scrollbar-color: rgba(255, 236, 210, .3) transparent; }
+.den-sheet.is-open .den-sheet__inner { opacity: 1; transform: none; }
+.den-kicker { margin: 0 0 6px; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--amber); }
+.den-sheet h1 { margin: 0 0 22px; font: 400 clamp(32px, 4.4vw, 60px)/1.02 var(--serif); letter-spacing: -.015em; max-width: 18ch; }
+.den-sheet h2 { margin: 18px 0 6px; font: 500 21px/1.2 var(--serif); }
+.den-sheet p { margin: 0 0 12px; color: var(--ink-2); }
+.den-lede { font-size: 18px; max-width: 70ch; color: var(--ink) !important; }
+.den-cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(20px, 4vw, 56px); }
+.den-cols--3 { grid-template-columns: repeat(3, 1fr); }
+.den-meta { font: 500 11px var(--mono) !important; letter-spacing: .04em; color: var(--ink-3) !important; margin: 0 0 2px !important; text-transform: uppercase; }
+.den-now, .den-facts { list-style: none; padding: 0; margin: 0 0 22px; }
+.den-now li { padding: 9px 0 9px 22px; border-bottom: 1px solid rgba(255, 236, 210, .12); position: relative; color: var(--ink-2); }
+.den-now li::before { content: ""; position: absolute; left: 2px; top: 17px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+.den-facts li { font: italic 400 19px/1.5 var(--serif); color: var(--ink-2); }
+.den-facts b { font-style: normal; color: var(--ink); font-weight: 600; }
+.den-projects { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 40px; }
+.den-projects article { padding: 14px 0 6px; border-top: 1px solid rgba(255, 236, 210, .14); }
+.den-projects h2 { margin-top: 4px; font-size: 26px; }
+.den-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.den-links a { font: 600 14px var(--sans); color: var(--amber); text-decoration: none; border-bottom: 1px solid rgba(255, 179, 92, .35); }
+.den-links a:hover { border-color: var(--amber); }
+.den-links--big a { font: 400 clamp(20px, 2.4vw, 30px) var(--serif); color: var(--ink); }
+.den-path { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 48px; }
+.den-path li { break-inside: avoid; padding: 10px 0; border-top: 1px solid rgba(255, 236, 210, .12); color: var(--ink-2); font-size: 15px; }
+.den-path time { display: block; font: 500 11px var(--mono); color: var(--amber); letter-spacing: .06em; }
+.den-path b { display: block; color: var(--ink); font-weight: 600; }
+
+.den-loader { position: absolute; inset: 0; display: grid; place-items: center; background: var(--night); z-index: 20; transition: opacity .8s; }
+.den-loader p { font: italic 400 22px var(--serif); color: var(--ink-2); }
+.den-loader.is-done { opacity: 0; pointer-events: none; }
+.den-noscript { position: fixed; inset: auto 0 40%; text-align: center; }
+
+.den.is-reading .den-mast, .den.is-reading .den-hint, .den.is-reading .den-pendant { opacity: 0; }
+.den-pendant { transition: opacity .4s; }
+
+@media (max-width: 760px) {
+  .den-pendant { display: none; }
+  .den-cols, .den-cols--3, .den-projects { grid-template-columns: 1fr; }
+  .den-path { columns: 1; }
+  .den-hint { bottom: 80px; font-size: 16px; }
+  .den-dock { left: 12px; right: 12px; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .den-sheet__inner { transition: none; } }
