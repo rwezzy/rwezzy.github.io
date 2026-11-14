@@ -106,35 +106,35 @@
       <div class="proj__intro">
         <p class="proj__meta mono"><span class="tag tag--hw">hardware</span><span class="tag tag--sw">software</span> Nov 2026</p>
         <h3>SoundScope</h3>
-        <p class="ss-lede">What if you could look for a sound?</p>
-        <p>A ringing phone is useful until you can't tell where it is. I wanted to put the sound into the picture, so I built SoundScope: four microphones, a depth camera, and a view of where the sound might be coming from. The microphones hear it at slightly different times. Comparing those differences gives me a direction; the camera adds the scene and the depth of the surfaces it can see.</p>
-        <p>I also wanted to be able to ask what happened after it had happened. SoundScope keeps an event history with audio, images and location estimates, so a question like <q>did my phone ring?</q> can lead back to a recording. Muse Voice Transcribe handles speech, while Muse Spark 1.3 helps interpret spectrograms and camera crops and search the saved events. An optional SAM 3.1 pass outlines a visible candidate. The microphones still decide the direction.</p>
-        <p>The difficult part is the room. Reflections can put a convincing marker in the wrong place, and quiet sounds are harder to separate from everything else. This is still a prototype, but I like the possibility of making a sound easier to find for someone who can't hear it clearly. I designed the adjustable stand too, because the camera and microphones need to stay in the same positions relative to each other.</p>
+        <p class="ss-lede">Sound localization, captions and searchable event history.</p>
+        <p>I built SoundScope to estimate where a sound is coming from and display that direction over a camera feed. I wanted someone to be able to locate a ringing phone visually, including if they have difficulty hearing where it is. The system combines a Seeed reSpeaker XVF3800 microphone array with an Orbbec Gemini 2 depth camera. Because sound reaches each of the four microphones at a slightly different time, comparing those arrival times gives an estimate of its direction. The camera supplies the image and depth measurements for visible surfaces.</p>
+        <p>I added an event history that stores audio, images and location estimates, so a question like <q>did my phone ring?</q> can lead back to the recorded event. Muse Voice Transcribe provides speech captions, while Muse Spark 1.3 helps interpret spectrograms and camera crops and search the saved events. An optional SAM 3.1 pass outlines a visible candidate. These model outputs provide context for the direction estimated from the microphone signals.</p>
+        <p>Reflections can produce an incorrect direction estimate, while quiet sounds and multiple sources make localization more difficult. The system is still a prototype. I also designed and printed an adjustable stand to keep the camera and microphone array in fixed positions relative to each other, with a carrier that accommodates different device dimensions.</p>
         <p class="proj__foot mono">Python · signal processing · RGB-D · Meta Model API · 3D-printed hardware · <a href="https://github.com/rwezzy/soundscope" target="_blank" rel="noopener">code ↗</a></p>
-        <a class="pill pill--solid" href="#soundscope-lab">Try the sound experiment ↓</a>
+        <a class="pill pill--solid" href="#soundscope-lab">Open the interactive demo ↓</a>
       </div>
       <div class="proj__media">
         <div class="demo ss-hardware">
-          <div class="demo__top mono"><span>The stand I actually printed</span><span class="ss-badge">interactive CAD</span></div>
+          <div class="demo__top mono"><span>Adjustable sensor stand</span><span class="ss-badge">interactive CAD</span></div>
           <div class="ss-hardware-stage">
             <canvas data-hardware-canvas aria-label="Interactive 3D model of the adjustable SoundScope carrier. Drag to orbit; scroll to zoom."></canvas>
             <span class="ss-hardware-hint mono">drag to turn · scroll to zoom</span>
           </div>
           <div class="ss-hardware-controls">
-            <label for="ss-explode">Take it apart <input id="ss-explode" data-explode type="range" min="0" max="1" step="0.01" value="0"></label>
+            <label for="ss-explode">Exploded view <input id="ss-explode" data-explode type="range" min="0" max="1" step="0.01" value="0"></label>
             <button class="pill" data-hardware-reset type="button">Reset view</button>
           </div>
           <p class="ss-hardware-status mono" data-hardware-status aria-live="polite">Loading the carrier's CAD…</p>
-          <p class="demo__cap">The adjustable v3 carrier, assembled from my print files. Camera and microphone shapes are dimensional stand-ins for the Gemini 2 and reSpeaker XVF3800; the tripod is omitted. <a href="models/soundscope/carrier-v3.glb" download>Download the carrier model</a> · <a href="models/soundscope/README.md">Model notes</a></p>
+          <p class="demo__cap">Assembly model of the adjustable v3 carrier. Camera and microphone shapes represent the dimensions of the Gemini 2 and reSpeaker XVF3800; the tripod is omitted. <a href="models/soundscope/carrier-v3.glb" download>Download the carrier model</a> · <a href="models/soundscope/README.md">Model notes</a></p>
         </div>
       </div>
 
       <div class="ss-lab" id="soundscope-lab">
         <div class="ss-lab-head">
-          <div><p class="label mono">a small experiment</p><h4>Move the sound. Watch the timings change.</h4></div>
+          <div><p class="label mono">interactive demo</p><h4>Sound direction simulation</h4></div>
           <span class="ss-badge mono">browser simulation</span>
         </div>
-        <p class="ss-lab-intro">Drag the pink source, or use the position sliders. The colored region shows which directions agree with the four simulated microphone timings. Add some timing error to see why a sharp-looking marker isn't always a correct one.</p>
+        <p class="ss-lab-intro">Drag the pink source or use the position sliders. The colored region shows the directions that agree with the four simulated microphone timings. Increase the timing error to see how it affects the direction estimate.</p>
         <div class="ss-lab-grid">
           <div class="ss-experiment">
             <div class="ss-stage">
@@ -149,7 +149,7 @@
             </div>
           </div>
           <div class="ss-controls">
-            <p class="mono ss-step">01 / PLACE A SOUND</p>
+            <p class="mono ss-step">01 / SOURCE SETTINGS</p>
             <label class="ss-field">Sound <select id="ss-sound"><option value="ring">Phone ring</option><option value="clap">Hand clap</option><option value="chime">Chime</option></select></label>
             <label class="ss-slider">Left ↔ right <output id="ss-x-out">25% right</output><input id="ss-x" type="range" min="-1" max="1" step="0.01" value="0.25"></label>
             <label class="ss-slider">Down ↔ up <output id="ss-y-out">10% up</output><input id="ss-y" type="range" min="-0.7" max="0.7" step="0.02" value="0.1"></label>
@@ -161,7 +161,7 @@
           </div>
         </div>
         <div class="ss-memory">
-          <div class="ss-memory-head"><div><p class="mono ss-step">02 / FIND IT AGAIN</p><h4>A little sound memory</h4></div><button type="button" id="ss-clear" class="ss-text-button">Clear session</button></div>
+          <div class="ss-memory-head"><div><p class="mono ss-step">02 / SEARCH EVENTS</p><h4>Session event history</h4></div><button type="button" id="ss-clear" class="ss-text-button">Clear session</button></div>
           <form id="ss-search-form"><label class="ss-sr" for="ss-query">Search the sounds you played</label><input id="ss-query" type="search" placeholder="Did my phone ring?" maxlength="160"><button type="submit" class="pill">Search sounds</button></form>
           <p id="ss-search-answer" class="ss-search-answer" aria-live="polite">Play a sound above to start a history. Nothing is recorded from your microphone.</p>
           <ol id="ss-events" aria-label="Sounds played in this browser session"></ol>
