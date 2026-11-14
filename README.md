@@ -4,7 +4,7 @@ A static site built with HTML, CSS, JavaScript and Three.js. No build step is re
 
 ## Studio version
 
-The homepage uses the Lite6 CAD model to pick up one of six section plaques. Selecting a different section returns the current plaque before picking the next one. The reading view, navigation and demo controls share a responsive layout. The Motion control and the system's reduced-motion preference allow navigation without the animation.
+The homepage uses the Lite6 CAD model to pick up one of six translucent section plaques. The arm presents the selected plaque before the camera moves into its reading view. The suction contact remains behind the page. Selecting a different section reverses the camera movement and returns the current plaque before picking the next one. The reading view, navigation and demo controls share a responsive layout. The Motion control and the system's reduced-motion preference allow navigation without the animation.
 
 This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
 
@@ -13,6 +13,9 @@ This version is maintained in the separate `portfolio-studio` checkout on `desig
 - `css/studio.css`: site layout and page presentation.
 - `css/studio-demos.css`: presentation of the existing demo controls.
 - `tests/studio-preservation.test.mjs`: checks the original project text and demo implementations against a frozen snapshot, including a regression check for the SoundScope texture-loading race fixed in this version.
+- `tests/studio-navigation.test.mjs`: checks deep links, delayed graphics loading, section changes and interrupted pick/return transitions.
+
+The canvas stays within the homepage's scene area, independent of its drawing-buffer resolution. Section text is immediately visible when scrolling; it does not wait for reveal animations. The Gaze Arm module loads when Projects is opened. The held scene renders on demand while reading instead of maintaining an idle animation loop.
 
 Run the checks with `node --test tests/*.test.mjs`. The demo previews run locally in the browser; the Einstein chat still requires its configured backend. Loading Three.js and the existing detector dependencies requires internet access.
 

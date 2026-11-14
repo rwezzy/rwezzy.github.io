@@ -138,6 +138,11 @@ test('the original demo scripts and Three.js import map remain wired into the st
   const scripts = [...classic.matchAll(/<script\b[^>]*\bsrc="[^"]+"[^>]*><\/script>/g)].map(match => match[0]);
   assert.equal(scripts.length, 5, 'The classic snapshot should load five demo/support scripts');
   for (const script of scripts) {
+    if (script.includes('src="js/pick.js"')) {
+      const shell = readFileSync(new URL('../js/studio-shell.js', import.meta.url), 'utf8');
+      assert.ok(shell.includes("import('./pick.js')"), 'Original picking demo must still load on demand');
+      continue;
+    }
     // Asset versions can change to invalidate an old cached renderer after the startup fix.
     const withoutVersion = text => text.replace(/(src="[^"?]+)\?[^"\s]+/g, '$1');
     assert.ok(withoutVersion(studio).includes(withoutVersion(script)), `Missing original script element: ${script}`);

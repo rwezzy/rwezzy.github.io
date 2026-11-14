@@ -1,10 +1,10 @@
 /* Studio presentation for the existing demos. Keep canvas geometry, positioned
    scene overlays, interaction classes, and [hidden] behavior in the originals. */
 body.studio-site {
-  --studio-demo-paper: #f7f7f2;
-  --studio-demo-panel: #ffffff;
-  --studio-demo-soft: #eff1e7;
-  --studio-demo-line: #d9ddd0;
+  --studio-demo-paper: rgba(247, 249, 243, .62);
+  --studio-demo-panel: rgba(255, 255, 255, .58);
+  --studio-demo-soft: rgba(235, 241, 222, .6);
+  --studio-demo-line: rgba(115, 130, 98, .23);
   --studio-demo-control: #8d947d;
   --studio-demo-ink: #282923;
   --studio-demo-muted: #626854;
@@ -16,11 +16,13 @@ body.studio-site {
 /* A common frame for demonstrations, with labels separate from the media. */
 body.studio-site :is(.demo, .pick, .ss-lab, .einchat) {
   min-width: 0;
-  border: 1px solid var(--studio-demo-line);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .92);
+  border-radius: 13px;
   background: var(--studio-demo-panel);
   color: var(--studio-demo-ink);
-  box-shadow: none;
+  box-shadow: 0 15px 35px -25px rgba(40, 51, 35, .28), inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 body.studio-site .demo__top {
   gap: 12px;
@@ -49,11 +51,11 @@ body.studio-site :is(.demo, .pick, .ss-lab, .einchat) .pill {
   min-height: 44px;
   padding: 10px 16px;
   border: 1px solid var(--studio-demo-control);
-  border-radius: 5px;
-  background: var(--studio-demo-panel);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .42));
   color: var(--studio-demo-ink);
   font: 500 13px/1.4 var(--sans);
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
   text-decoration: none;
   transition: background-color .16s, border-color .16s, color .16s;
 }
@@ -144,8 +146,8 @@ body.studio-site .ss-lede {
 body.studio-site .ss-badge {
   padding: 4px 9px;
   border: 1px solid #c4cdb0;
-  border-radius: 3px;
-  background: var(--studio-demo-soft);
+  border-radius: 5px;
+  background: rgba(240, 245, 230, .64);
   color: var(--studio-demo-olive);
   font: 500 10px/1.5 var(--mono);
 }
@@ -193,6 +195,21 @@ body.studio-site .ss-lab-intro {
   font: 400 14px/1.8 var(--sans);
 }
 body.studio-site .ss-lab-grid { border-color: var(--studio-demo-line); }
+body.studio-site #soundscope:not([data-room-ready="ready"]) .ss-stage::after {
+  content: "Loading the interactive room…";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 40px 24px 90px;
+  background: rgba(247, 249, 243, .76);
+  color: var(--studio-demo-olive);
+  font: 500 13px/1.6 var(--sans);
+  text-align: center;
+  pointer-events: none;
+}
+body.studio-site .ss-stage > .ss-say { z-index: 2; }
 body.studio-site .ss-say {
   padding: 8px 12px;
   border-color: var(--studio-demo-line);
@@ -224,6 +241,8 @@ body.studio-site .ss-app {
   border-color: var(--studio-demo-line);
   background: var(--studio-demo-paper);
   color: var(--studio-demo-ink);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 body.studio-site .ss-app-bar {
   flex-wrap: wrap;
@@ -268,13 +287,13 @@ body.studio-site .ss-modes {
   margin-bottom: 22px;
   padding: 4px;
   border-color: var(--studio-demo-line);
-  border-radius: 6px;
+  border-radius: 9px;
   background: var(--studio-demo-paper);
 }
 body.studio-site .ss-modes button {
   min-height: 40px;
   padding: 9px 12px;
-  border-radius: 3px;
+  border-radius: 6px;
   color: var(--studio-demo-muted);
   font: 500 13px/1.4 var(--sans);
   transition: background-color .16s, color .16s;
@@ -301,8 +320,9 @@ body.studio-site .ss-score { gap: 10px; }
 body.studio-site .ss-score div {
   padding: 14px 16px;
   border-color: var(--studio-demo-line);
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--studio-demo-paper);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 body.studio-site .ss-score dt { color: var(--studio-demo-muted); }
 body.studio-site .ss-score dd { margin-top: 5px; font-size: 24px; font-weight: 500; }
@@ -338,9 +358,10 @@ body.studio-site .ss-event {
   height: 100%;
   padding: 16px;
   border-color: var(--studio-demo-line);
-  border-radius: 5px;
+  border-radius: 8px;
   background: var(--studio-demo-paper);
   color: var(--studio-demo-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
   transition: background-color .16s, border-color .16s;
 }
 body.studio-site .ss-event:hover, body.studio-site .ss-event:focus-visible {
@@ -391,7 +412,7 @@ body.studio-site .zone__state b {
 body.studio-site .zone__state b.on { background: var(--studio-demo-lime); color: #3c4e23; }
 body.studio-site .zone__state .demo__state { flex-basis: 100%; margin-left: 0; }
 body.studio-site .zone__log { gap: 12px; }
-body.studio-site .zone__log li { border-color: var(--studio-demo-line); border-radius: 4px; background: var(--studio-demo-paper); }
+body.studio-site .zone__log li { border-color: var(--studio-demo-line); border-radius: 8px; background: var(--studio-demo-paper); box-shadow:inset 0 1px 0 #ffffffb3; }
 body.studio-site .zone__log span { padding: 8px; color: var(--studio-demo-plum); font-size: 10px; line-height: 1.5; }
 
 /* Gesture confidence and optics measurements retain their native canvas sizes. */
@@ -454,7 +475,7 @@ body.studio-site .einchat__note b { color: var(--studio-demo-olive); }
   body.studio-site .ss-app-note { padding-top: 18px; }
 }
 @media (max-width: 600px) {
-  body.studio-site :is(.demo, .pick, .ss-lab, .einchat) { border-radius: 6px; }
+  body.studio-site :is(.demo, .pick, .ss-lab, .einchat) { border-radius: 10px; }
   body.studio-site .demo__top, body.studio-site .demo__cap { padding: 14px 15px; }
   body.studio-site .pick__bar { padding: 16px; }
   body.studio-site .pick__bar .pill { flex: 1 1 auto; }

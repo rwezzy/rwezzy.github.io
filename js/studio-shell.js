@@ -6,6 +6,7 @@
   const content = document.querySelector('#s-content-root');
   const status = document.querySelector('#s-status');
   const nav = document.querySelector('.s-nav');
+  const stage = document.querySelector('.s-scene-wrap');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const pages = [
     ['about', 'About', ['.intro']],
@@ -63,13 +64,53 @@
   updateMotion();
   motionButton.addEventListener('click', () => { motion = !motion; updateMotion(); });
   reduced.addEventListener('change', () => { motion = !reduced.matches; updateMotion(); });
-  const sceneReady = import('./studio-scene.js?v=studio2').then(async module => {
+  let pickingDemo = null;
+  const prepareDemos = view => {
+    if (view !== 'projects' || pickingDemo) return;
+    pickingDemo = import('./pick.js').catch(error => {
+      console.warn('Gaze demo unavailable:', error);
+      const message = document.querySelector('.pick__say');
+      if (message) message.textContent = 'The robot preview could not load. Please refresh to retry.';
+      pickingDemo = null;
+    });
+  };
+  async function fitStage(presenting, { immediate = false } = {}) {
+    const from = stage.getBoundingClientRect();
+    document.body.classList.toggle('s-presenting', presenting);
+    home.hidden = false;
+    home.inert = presenting;
+    if (presenting) home.setAttribute('aria-hidden', 'true');
+    else home.removeAttribute('aria-hidden');
+    const to = stage.getBoundingClientRect();
+    const rect = box => ({ position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, margin: '0px', zIndex: 4 });
+    if (motion && !immediate && from.width && to.width) {
+      try { await stage.animate([rect(from), rect(to)], { duration: 280, easing: 'cubic-bezier(.22,1,.36,1)' }).finished; } catch (_) { /* layout can be interrupted */ }
+    }
+    window.dispatchEvent(new Event('resize'));
+  }
+  const presentStage = options => fitStage(true, options);
+  const retractStage = options => fitStage(false, options);
+  const sceneReady = import('./studio-scene.js?v=glass4').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => navigate(id),
       onStatus: text => { status.textContent = text; },
       onReady: () => { document.body.classList.add('s-scene-ready'); },
+      onPresent: presentStage,
+      onRetract: retractStage,
+      onPresentationChange: rect => {
+        if (!rect || rect.progress < 0.999) return;
+        document.body.style.setProperty('--s-reader-top', `${Math.max(0, rect.top)}px`);
+        document.body.style.setProperty('--s-reader-side', `${Math.max(0, rect.left)}px`);
+      },
     });
-    if (current !== 'home') scene.setActive(false);
+    // Deep links show their text immediately; the held background joins when its assets are ready.
+    if (current !== 'home' && !processing) {
+      const opening = current;
+      await scene.pick(opening, { immediate: true });
+      held = true;
+      if (current === opening) scene.setReaderMode(true);
+      else { await scene.putBack({ immediate: true }); held = false; }
+    }
     return scene;
   }).catch(error => {
     console.warn('Studio illustration unavailable:', error);
@@ -107,16 +148,19 @@
   };
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   async function show(req) {
+    prepareDemos(req.view);
     for (const [id, view] of views) view.hidden = id !== req.view;
     document.querySelector('#s-page-label').textContent = `${String(pages.findIndex(p => p[0] === req.view) + 1).padStart(2, '0')} / ${pages.find(p => p[0] === req.view)[1].toUpperCase()}`;
     current = req.view;
-    reader.hidden = false; home.hidden = true; home.inert = true;
+    reader.hidden = false; home.hidden = !held; home.inert = true;
+    home.setAttribute('aria-hidden', 'true');
     document.body.classList.add('s-reading');
-    scene?.setActive(false);
+    scene?.setReaderMode(held);
+    scene?.setActive(held);
     await nextFrame();
     window.dispatchEvent(new Event('resize'));
     scrollTarget(req);
-    if (!req.instant) await animate(reader, [{ opacity: 0, transform: 'translateY(36px) scale(.965)' }, { opacity: 1, transform: 'none' }], 340);
+    if (!req.instant) await animate(reader, [{ opacity: 0 }, { opacity: 1 }], 170);
     focusTarget(req);
   }
   function scrollTarget(req) {
@@ -142,16 +186,19 @@
         if (current === req.view && !(req.view === 'home' && held)) { scrollTarget(req); focusTarget(req); continue; }
         document.body.classList.add('s-transitioning');
         if (current !== 'home') {
-          if (!req.instant) await animate(reader, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(18px) scale(.98)' }], 180);
+          if (!req.instant) await animate(reader, [{ opacity: 1 }, { opacity: 0 }], 140);
           reader.hidden = true; home.hidden = false; home.inert = false;
+          home.removeAttribute('aria-hidden');
           document.body.classList.remove('s-reading');
           current = 'home'; window.scrollTo({ top: 0, behavior: 'instant' });
           scene?.setActive(true);
+          scene?.setReaderMode(false);
           await nextFrame(); window.dispatchEvent(new Event('resize'));
         }
         if (held) { if (scene) await scene.putBack({ immediate: !motion || req.instant }); held = false; }
         if (desired) continue;
         if (req.view === 'home') {
+          if (document.body.classList.contains('s-presenting')) await retractStage({ immediate: true });
           status.textContent = scene ? 'Select a plaque or a section' : 'Choose a section below';
           document.querySelector('.s-brand').focus({ preventScroll: true });
           continue;
@@ -159,9 +206,9 @@
         // A slow or unsupported graphics loader must never prevent reading the site.
         if (!scene && motion && !req.instant) await Promise.race([sceneReady, new Promise(resolve => setTimeout(resolve, 2200))]);
         if (desired) continue;
-        if (scene && motion && !req.instant) {
+        if (scene) {
           home.inert = true;
-          await scene.pick(req.view);
+          await scene.pick(req.view, { immediate: !motion || req.instant });
           held = true;
         }
         if (desired) { home.inert = false; continue; }
@@ -171,8 +218,9 @@
       console.warn('Page transition recovered:', error);
       const fallback = desired || resolve(location.hash); desired = null;
       home.inert = false;
+      home.removeAttribute('aria-hidden');
       if (fallback.view !== 'home') await show({ ...fallback, instant: true });
-      else { reader.hidden = true; home.hidden = false; current = 'home'; scene?.setActive(true); document.body.classList.remove('s-reading'); }
+      else { reader.hidden = true; home.hidden = false; current = 'home'; scene?.setActive(true); document.body.classList.remove('s-reading', 's-presenting'); }
     } finally {
       processing = false;
       document.body.removeAttribute('aria-busy');

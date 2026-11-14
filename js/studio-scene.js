@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
@@ -11,7 +11,7 @@ const PAGES = [
   ['about', 'About'], ['projects', 'Projects'], ['research', 'Research'],
   ['background', 'Background'], ['beyond', 'Beyond'], ['contact', 'Contact'],
 ];
-const COLORS = { studio: '#f7f7f2', paper: '#e9e6dc', ivory: '#deded4', ink: '#312b39', lime: '#d5df9f', joint: '#36353b' };
+const COLORS = { studio: '#f7f7f2', paper: '#e6f0ec', ivory: '#deded4', ink: '#312b39', lime: '#dceac6', joint: '#36353b' };
 const PLAQUE = { width: 0.145, height: 0.104, thickness: 0.009, radius: 0.37 };
 const INITIAL_JOINTS = [0, 0.3, 1.2, 0, 1.2, 0];
 const REST = pose([0.18, 0, 0.255], [0.35, 0, -1], [0, 1, 0]);
@@ -22,13 +22,52 @@ const above = (matrix, height) => { const next = matrix.slice(); next[14] += hei
 const ease = t => t * t * t * (t * (t * 6 - 15) + 10);
 const abortError = () => new DOMException('The studio scene was disposed.', 'AbortError');
 
+// STL coordinates are metres. Match coincident vertices to a micrometre, then
+// average only nearby face normals, weighted by each corner's angle. Positions
+// remain byte-for-byte unchanged, including the manufacturer's sharp seams.
+function smoothSTLNormals(input) {
+  const geometry = input.index ? input.toNonIndexed() : input;
+  const positions = geometry.getAttribute('position'), adjacency = new Map();
+  const normals = new Float32Array(positions.count * 3), faces = [];
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  const u = new THREE.Vector3(), v = new THREE.Vector3(), normal = new THREE.Vector3();
+  const keyAt = index => `${Math.round(positions.getX(index) * 1e6)},${Math.round(positions.getY(index) * 1e6)},${Math.round(positions.getZ(index) * 1e6)}`;
+  for (let index = 0; index < positions.count; index += 3) {
+    a.fromBufferAttribute(positions, index); b.fromBufferAttribute(positions, index + 1); c.fromBufferAttribute(positions, index + 2);
+    normal.crossVectors(u.subVectors(b, a), v.subVectors(c, a)).normalize();
+    const face = normal.clone(); faces.push(face);
+    const corners = [a, b, c];
+    corners.forEach((point, corner) => {
+      u.subVectors(corners[(corner + 1) % 3], point).normalize();
+      v.subVectors(corners[(corner + 2) % 3], point).normalize();
+      const weight = Math.acos(THREE.MathUtils.clamp(u.dot(v), -1, 1));
+      const key = keyAt(index + corner), list = adjacency.get(key) || [];
+      list.push({ face, weight }); adjacency.set(key, list);
+    });
+  }
+  const threshold = Math.cos(Math.PI / 3);
+  for (let index = 0; index < positions.count; index += 1) {
+    const face = faces[Math.floor(index / 3)]; normal.set(0, 0, 0);
+    for (const neighbor of adjacency.get(keyAt(index))) {
+      if (face.dot(neighbor.face) > threshold) normal.addScaledVector(neighbor.face, neighbor.weight);
+    }
+    normal.normalize().toArray(normals, index * 3);
+  }
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  return geometry;
+}
+
 /**
  * Create the minimal portfolio stage. pick() and putBack() are serialized and
  * resolve only when their whole choreography has finished; either accepts
- * { immediate: true } to settle directly into its final state. Call setActive(false)
- * while the HTML reader covers the stage. The scene renders only when it changes.
+ * { immediate: true } to settle directly into its final state. Async presentation
+ * hooks let the host resize the same canvas before zooming and before lowering.
+ * The scene renders only when it changes, including behind a translucent reader.
  */
-export async function createStudioScene(canvas, { onSelect = () => {}, onStatus = () => {}, onReady = () => {} } = {}) {
+export async function createStudioScene(canvas, {
+  onSelect = () => {}, onStatus = () => {}, onReady = () => {},
+  onPresent = async () => {}, onRetract = async () => {}, onPresentationChange = () => {},
+} = {}) {
   if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError('A canvas is required for the studio scene.');
   let renderer;
   try {
@@ -52,9 +91,8 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
   const homeTarget = cameraTarget.clone();
   const homePosition = new THREE.Vector3();
   const homeDirection = new THREE.Vector3(0.57, 0.84, 1.04).normalize();
-  const focusTarget = new THREE.Vector3(0, 0.235, 0.11);
   let cameraProgress = 0;
-  let active = true, disposed = false, contextLost = false, held = null, hovered = null, pointerDown = null;
+  let active = true, readerMode = false, disposed = false, contextLost = false, held = null, hovered = null, pointerDown = null;
   let joints = INITIAL_JOINTS.slice(), operationQueue = Promise.resolve(), animationFrame = 0, cancelMotion = null;
   let width = 1, height = 1;
   const textures = new Set(), geometries = new Set(), materials = new Set();
@@ -64,16 +102,32 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
   let environmentTarget;
 
   const render = () => {
-    if (!disposed && active && !contextLost && width > 0 && height > 0) renderer.render(scene, camera);
+    if (!disposed && active && !contextLost && width > 0 && height > 0) {
+      renderer.render(scene, camera);
+      onPresentationChange(getPresentationRect());
+    }
   };
   const notify = message => { if (!disposed) onStatus(message); };
   const setCamera = progress => {
     cameraProgress = progress;
-    // A small dolly after the lift, never an orbit or a jump into the plaque.
-    const closer = homeTarget.clone().add(homePosition.clone().sub(homeTarget).multiplyScalar(0.85));
+    // The cup presents the plaque upright before the camera moves. The final
+    // view is exactly frontal and the plate spans 92% of the canvas width.
+    const face = new THREE.Matrix4().fromArray(multiply(DISPLAY, ATTACH)).premultiply(robot.matrix);
+    const center = new THREE.Vector3(0, 0, -PLAQUE.thickness / 2).applyMatrix4(face);
+    const normal = new THREE.Vector3(0, 0, -1).transformDirection(face);
+    const up = new THREE.Vector3(0, -1, 0).transformDirection(face);
+    const distance = PLAQUE.width / (0.92 * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
+    const worldHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const reader = document.querySelector('#s-reader');
+    const headerHeight = document.querySelector('.s-header')?.getBoundingClientRect().height || 74;
+    const readerMargin = reader ? parseFloat(getComputedStyle(reader).marginTop) || 0 : 36;
+    const topFraction = Math.min(0.32, (headerHeight + readerMargin) / Math.max(height, 1));
+    const focusTarget = center.clone().addScaledVector(up, PLAQUE.height / 2 - worldHeight * (0.5 - topFraction));
+    const closer = focusTarget.clone().addScaledVector(normal, distance);
     camera.position.lerpVectors(homePosition, closer, progress);
     cameraTarget.lerpVectors(homeTarget, focusTarget, progress);
     camera.lookAt(cameraTarget);
+    if (held) held.labelMaterial.opacity = readerMode ? 0 : 1 - THREE.MathUtils.smoothstep(progress, 0.12, 0.72);
   };
   const resize = () => {
     if (disposed) return;
@@ -97,6 +151,8 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
   robot.matrix.set(0, 1, 0, 0, 0, 0, 1, 0.007, 1, 0, 0, -0.11, 0, 0, 0, 1);
   scene.add(robot);
   const links = [], plaques = [];
+  const suctionSeal = new THREE.Group();
+  suctionSeal.matrixAutoUpdate = false; robot.add(suctionSeal);
   const applyJoints = q => {
     const frames = forward(q);
     if (links.length) {
@@ -104,6 +160,7 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
       frames.links.forEach((frame, index) => links[index + 1].matrix.fromArray(frame));
       links[7].matrix.fromArray(frames.links[5]);
     }
+    suctionSeal.matrix.fromArray(frames.tcp);
     if (held) held.mesh.matrix.fromArray(multiply(frames.tcp, ATTACH));
     robot.updateMatrixWorld(true);
   };
@@ -113,6 +170,28 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
   const paperGeometry = keepGeometry(new RoundedBoxGeometry(PLAQUE.width, PLAQUE.height, PLAQUE.thickness, 4, 0.004));
   const labelGeometry = keepGeometry(new THREE.PlaneGeometry(PLAQUE.width * 0.94, PLAQUE.height * 0.94));
 
+  // The STL's actual cup tip is 15 mm across. Add its thin silicone sealing
+  // lip at the real TCP, not a decorative circle on the front of the page.
+  const sealLip = new THREE.Mesh(keepGeometry(new THREE.TorusGeometry(0.0078, 0.00065, 12, 72)),
+    keepMaterial(new THREE.MeshPhysicalMaterial({ color: '#bfcbc4', roughness: 0.3, metalness: 0, clearcoat: 0.7, envMapIntensity: 0.25 })));
+  sealLip.position.z = -0.00015; suctionSeal.add(sealLip);
+  const sealInner = new THREE.Mesh(keepGeometry(new THREE.TorusGeometry(0.0065, 0.00022, 8, 64)),
+    keepMaterial(new THREE.MeshStandardMaterial({ color: '#344c3c', roughness: 0.5, envMapIntensity: 0.15 })));
+  sealInner.position.z = -0.00025; suctionSeal.add(sealInner);
+
+  // Wait briefly for the actual label font; slow font servers must not block
+  // navigation. The later fonts.ready refresh also covers the timeout case.
+  if (document.fonts?.load) {
+    let fontTimer;
+    try {
+      await Promise.race([
+        Promise.all([document.fonts.load('500 48px Figtree'), document.fonts.load('600 48px Figtree'), document.fonts.load('500 48px "DM Mono"')]),
+        new Promise(resolve => { fontTimer = setTimeout(resolve, 900); }),
+      ]);
+    } catch (_) { /* The system sans-serif remains a usable fallback. */ }
+    clearTimeout(fontTimer);
+  }
+
   function drawLabel(title, index) {
     const label = document.createElement('canvas');
     label.width = 1024; label.height = 736;
@@ -120,13 +199,19 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     if (!ctx) throw new Error('The studio could not create its page labels.');
     ctx.clearRect(0, 0, label.width, label.height);
     ctx.fillStyle = COLORS.ink;
-    ctx.font = '500 100px "DM Mono", monospace';
-    ctx.fillText(String(index + 1).padStart(2, '0'), 64, 154);
-    ctx.strokeStyle = '#b7b0b7'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(64, 210); ctx.lineTo(960, 210); ctx.stroke();
+    ctx.font = '500 90px "DM Mono", monospace';
+    ctx.fillText(String(index + 1).padStart(2, '0'), 66, 148);
+    ctx.strokeStyle = 'rgba(64,73,64,.24)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(66, 202); ctx.lineTo(958, 202); ctx.stroke();
     ctx.fillStyle = COLORS.ink;
-    ctx.font = '600 180px Figtree, Arial, sans-serif';
-    ctx.fillText(title, 60, 500, 910);
+    // Preserve letter proportions: shrink the font instead of canvas maxWidth,
+    // which horizontally compresses long names such as Background.
+    let fontSize = 172;
+    ctx.font = `600 ${fontSize}px Figtree, Arial, sans-serif`;
+    while (ctx.measureText(title).width > 890 && fontSize > 100) {
+      fontSize -= 2; ctx.font = `600 ${fontSize}px Figtree, Arial, sans-serif`;
+    }
+    ctx.fillText(title, 64, 486);
     const texture = keepTexture(new THREE.CanvasTexture(label));
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
@@ -140,10 +225,15 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     // the fan. The grasp pose is derived from this same physical plaque frame.
     const facing = Math.atan2(homeDirection.x, homeDirection.z), fs = Math.sin(facing), fc = Math.cos(facing);
     const rest = new Float64Array([-fs, fc, 0, 0, -fc, -fs, 0, 0, 0, 0, 1, 0, PLAQUE.radius * c, PLAQUE.radius * s, 0.006 + PLAQUE.thickness / 2, 1]);
-    const material = keepMaterial(new THREE.MeshPhysicalMaterial({ color: COLORS.paper, roughness: 0.7, metalness: 0.01, clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.18 }));
+    const material = keepMaterial(new THREE.MeshPhysicalMaterial({
+      color: COLORS.paper, roughness: 0.16, metalness: 0, transmission: 0.62,
+      transparent: true, opacity: 0.7, thickness: PLAQUE.thickness, ior: 1.46,
+      attenuationColor: '#c4dacf', attenuationDistance: 0.2,
+      clearcoat: 1, clearcoatRoughness: 0.15, envMapIntensity: 0.7,
+    }));
     const mesh = new THREE.Mesh(paperGeometry, material);
     mesh.matrixAutoUpdate = false; mesh.matrix.fromArray(rest);
-    mesh.castShadow = true; mesh.receiveShadow = true; mesh.userData.page = id;
+    mesh.castShadow = false; mesh.receiveShadow = true; mesh.userData.page = id;
     const labelMaterial = keepMaterial(new THREE.MeshBasicMaterial({ map: drawLabel(title, index), transparent: true, depthWrite: false, toneMapped: false }));
     const front = new THREE.Mesh(labelGeometry, labelMaterial);
     front.position.z = PLAQUE.thickness / 2 + 0.00015;
@@ -188,6 +278,36 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     environment.dispose(); pmrem.dispose();
   }
 
+  async function buildPlant() {
+    const loader = new GLTFLoader();
+    const { scene: plant } = await loader.loadAsync(new URL('../den/models/potted_plant_02/potted_plant_02.gltf', import.meta.url).href);
+    const ceramic = keepMaterial(new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.46, clearcoat: 0.2, clearcoatRoughness: 0.4, envMapIntensity: 0.24 }));
+    const soil = keepMaterial(new THREE.MeshStandardMaterial({ color: '#383327', roughness: 1, envMapIntensity: 0.08 }));
+    plant.traverse(object => {
+      if (!object.isMesh) return;
+      keepGeometry(object.geometry);
+      const originals = Array.isArray(object.material) ? object.material : [object.material];
+      originals.forEach(material => {
+        keepMaterial(material);
+        Object.values(material).forEach(value => { if (value?.isTexture) keepTexture(value); });
+      });
+      if (object.name.endsWith('_pot')) object.material = ceramic;
+      else if (object.name.endsWith('_dirt')) object.material = soil;
+      else {
+        object.material.envMapIntensity = 0.22;
+        object.material.roughness = 0.78;
+      }
+      object.castShadow = true; object.receiveShadow = true;
+    });
+    const bounds = new THREE.Box3().setFromObject(plant), size = bounds.getSize(new THREE.Vector3());
+    plant.scale.setScalar(0.33 / Math.max(size.y, 0.001));
+    bounds.setFromObject(plant);
+    const center = bounds.getCenter(new THREE.Vector3());
+    plant.position.set(0.36 - center.x, -bounds.min.y, -0.29 - center.z);
+    plant.rotation.y = -0.22;
+    scene.add(plant);
+  }
+
   async function buildArm() {
     const loader = new STLLoader();
     const names = ['link_base', 'link1', 'link2', 'link3', 'link4', 'link5', 'link6', 'vacuum_gripper_lite'];
@@ -200,7 +320,7 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     }
     results.forEach((result, index) => {
       const original = result.value;
-      const smooth = toCreasedNormals(original, Math.PI / 5);
+      const smooth = smoothSTLNormals(original);
       if (smooth !== original) original.dispose();
       keepGeometry(smooth);
       // Small wrist/shoulder parts are charcoal; the long housing stays ivory.
@@ -244,17 +364,25 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     const id = pageId === 'path' ? 'background' : pageId;
     hovered = held ? null : plaques.find(plaque => plaque.id === id) || null;
     plaques.forEach(plaque => {
-      plaque.material.color.set(plaque === hovered || plaque === held ? COLORS.lime : COLORS.paper);
+      plaque.material.color.set(plaque === hovered ? COLORS.lime : COLORS.paper);
       plaque.material.emissive.set(plaque === hovered ? '#aeb77b' : '#000000');
-      plaque.material.emissiveIntensity = plaque === hovered ? 0.12 : 0;
+      plaque.material.emissiveIntensity = plaque === hovered ? 0.045 : 0;
+      plaque.material.opacity = plaque === held ? 0.56 : 0.7;
     });
     canvas.style.cursor = hovered ? 'pointer' : 'default'; render();
   }
   async function returnHeld({ immediate = false } = {}) {
+    readerMode = false;
     if (immediate || reduceMotion.matches) {
       const result = inverse(REST, joints, { iterations: 220 });
       if (!result.ok) throw new Error('The studio could not return to its resting pose.');
-      if (held) held.mesh.matrix.fromArray(held.rest);
+      if (held) {
+        setCamera(0); render();
+        await onRetract({ pageId: held.id, immediate: true });
+        if (disposed) throw abortError();
+        held.labelMaterial.opacity = 1;
+        held.mesh.matrix.fromArray(held.rest);
+      }
       held = null;
       joints = result.q; applyJoints(joints); setCamera(0); hover(null);
       notify('Ready when you are');
@@ -264,10 +392,13 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     const plaque = held;
     notify(`Putting ${plaque.title} back`);
     // Restore the wide camera completely before the robot begins to lower.
-    await dolly(0, 220);
+    await dolly(0, 520);
+    await onRetract({ pageId: plaque.id, immediate: false });
+    if (disposed) throw abortError();
+    resize();
     await move(above(plaque.contact, 0.135), 330);
     await move(plaque.contact, 210);
-    held = null; plaque.mesh.matrix.fromArray(plaque.rest);
+    held = null; plaque.labelMaterial.opacity = 1; plaque.mesh.matrix.fromArray(plaque.rest);
     robot.updateMatrixWorld(true); hover(null);
     await move(above(plaque.contact, 0.09), 150);
     await move(REST, 220);
@@ -288,11 +419,15 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     if (!plaque) throw new RangeError(`Unknown studio page: ${pageId}`);
     if (held === plaque) return;
     if (held) await returnHeld({ immediate });
+    readerMode = false;
     if (immediate || reduceMotion.matches) {
       const result = inverse(DISPLAY, joints, { iterations: 220 });
       if (!result.ok) throw new Error('The studio could not reach this page.');
       held = plaque;
-      joints = result.q; applyJoints(joints); setCamera(1); hover(null);
+      joints = result.q; applyJoints(joints);
+      await onPresent({ pageId: id, immediate: true });
+      if (disposed) throw abortError();
+      resize(); setCamera(1); hover(null);
       notify(`${plaque.title} is ready`);
       return;
     }
@@ -305,10 +440,39 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
     await tween(70, () => {});
     await move(above(plaque.contact, 0.135), 270);
     await move(DISPLAY, 430);
-    await dolly(1, 260);
+    await onPresent({ pageId: id, immediate: false });
+    if (disposed) throw abortError();
+    resize();
+    await dolly(1, 650);
     notify(`${plaque.title} is ready`);
   });
   const putBack = (options = {}) => enqueue(() => returnHeld(options));
+
+  function getPresentationRect() {
+    if (disposed || !held || !width || !height) return null;
+    const bounds = canvas.getBoundingClientRect();
+    camera.updateMatrixWorld(); robot.updateMatrixWorld(true);
+    const project = world => {
+      const point = world.clone().project(camera);
+      return { x: bounds.left + (point.x + 1) * bounds.width / 2, y: bounds.top + (1 - point.y) * bounds.height / 2, depth: point.z };
+    };
+    const w = PLAQUE.width / 2, h = PLAQUE.height / 2, z = -PLAQUE.thickness / 2;
+    // Clockwise, beginning at the reading face's top-left corner.
+    const corners = [[-w, -h, z], [w, -h, z], [w, h, z], [-w, h, z]]
+      .map(point => project(new THREE.Vector3(...point).applyMatrix4(held.mesh.matrixWorld)));
+    const left = Math.min(...corners.map(point => point.x)), top = Math.min(...corners.map(point => point.y));
+    const right = Math.max(...corners.map(point => point.x)), bottom = Math.max(...corners.map(point => point.y));
+    const center = project(new THREE.Vector3(0, 0, z).applyMatrix4(held.mesh.matrixWorld));
+    const toolFrame = new THREE.Matrix4().fromArray(forward(joints).tcp).premultiply(robot.matrix);
+    const cupCenter = project(new THREE.Vector3(0, 0, 0).applyMatrix4(toolFrame));
+    const cupEdge = project(new THREE.Vector3(0.00845, 0, 0).applyMatrix4(toolFrame));
+    return {
+      pageId: held.id, corners, left, top, right, bottom, width: right - left, height: bottom - top, center,
+      suction: { x: cupCenter.x, y: cupCenter.y, radius: Math.hypot(cupEdge.x - cupCenter.x, cupEdge.y - cupCenter.y) },
+      progress: cameraProgress,
+      visible: corners.some(point => point.depth > -1 && point.depth < 1) && right > bounds.left && left < bounds.right && bottom > bounds.top && top < bounds.bottom,
+    };
+  }
 
   const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
   const hitPlaque = event => {
@@ -366,7 +530,9 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
   try {
     notify('Preparing the studio');
     buildStage(); resize();
-    await buildArm();
+    const assets = await Promise.allSettled([buildArm(), buildPlant()]);
+    if (assets[0].status === 'rejected') throw assets[0].reason;
+    if (assets[1].status === 'rejected') console.warn('The optional plant model could not load:', assets[1].reason);
     const rest = inverse(REST, INITIAL_JOINTS, { iterations: 220 });
     if (!rest.ok) throw new Error('The Lite 6 could not reach its resting pose.');
     joints = rest.q; applyJoints(joints); resize();
@@ -383,8 +549,14 @@ export async function createStudioScene(canvas, { onSelect = () => {}, onStatus 
       render();
     });
     return {
-      pick, putBack, hover, dispose,
+      pick, putBack, hover, dispose, getPresentationRect,
       setActive(value) { if (!disposed) { active = Boolean(value); if (active) resize(); } },
+      setReaderMode(value) {
+        if (disposed) return;
+        readerMode = Boolean(value);
+        if (readerMode) active = true;
+        setCamera(cameraProgress); resize();
+      },
     };
   } catch (error) {
     notify('The 3D studio is unavailable. You can still open every page.');
