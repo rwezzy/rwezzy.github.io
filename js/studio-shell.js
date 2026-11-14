@@ -13,7 +13,7 @@
     ['projects', 'Projects', ['#work', '#try']],
     ['research', 'Research', ['#research', '#optics']],
     ['background', 'Background', ['#path']],
-    ['beyond', 'Beyond', ['#beyond', '#offclock']],
+    ['beyond', 'Beyond', ['#campus', '#beyond', '#offclock']],
     ['contact', 'Contact', ['#contact']],
   ];
   const nodes = new Map(pages.map(([id, , selectors]) => [id, selectors.map(s => content.querySelector(s)).filter(Boolean)]));
@@ -24,6 +24,62 @@
     view.setAttribute('aria-label', label); view.hidden = true;
     for (const node of nodes.get(id)) view.append(node);
     content.append(view); views.set(id, view);
+  }
+  // Section links use the existing content nodes; their text and demo state stay intact.
+  const anchor = (id, element) => { if (element && !element.id) element.id = id; };
+  const researchItems = document.querySelectorAll('#research .research__item');
+  anchor('research-hardware', researchItems[0]);
+  anchor('research-gaze', researchItems[1]);
+  anchor('research-optics', researchItems[2]);
+  anchor('background-education', document.querySelector('#path .path__school'));
+  anchor('background-njit', Array.from(document.querySelectorAll('#path li')).find(item => item.querySelector('h4')?.textContent.trim() === 'NJIT'));
+  anchor('background-opportunities', document.querySelector('#path .path__next'));
+  anchor('urban-arbor', document.querySelector('#beyond .arbor'));
+  anchor('volunteering', document.querySelector('#beyond .service'));
+  ['running', 'reading', 'cooking', 'writing'].forEach((id, index) => anchor(`interest-${id}`, document.querySelectorAll('#offclock .hobby')[index]));
+  const sectionLinks = {
+    projects: [
+      ['soundscope', 'SoundScope', 'Sound localization, captions and event search'],
+      ['gaze-arm', 'Gaze Arm', 'Gaze-controlled object selection'],
+      ['zonelogic', 'ZoneLogic', 'Video rules and incident review'],
+      ['omniring', 'OmniRing', 'Embedded gesture recognition'],
+      ['einstein', 'Einstein', 'Conversational tutoring'],
+      ['robot', 'Obstacle-avoiding robot', 'Sensors, circuitry and control'],
+    ],
+    research: [
+      ['research-hardware', 'Hardware research', 'Exploring hardware labs at NJIT'],
+      ['research-gaze', 'Gaze estimation', 'A colour pipeline with provision for depth'],
+      ['optics', 'Optical deconvolution', 'Image restoration and an interactive experiment'],
+    ],
+    background: [
+      ['background-education', 'Education & early experience', 'School, independent work and internships'],
+      ['background-njit', 'At NJIT', 'Engineering, research and student roles'],
+      ['background-opportunities', 'Next steps', 'Internship interests and contact details'],
+    ],
+    beyond: [
+      ['ieee-viam', 'IEEE × Viam', 'A robotics hackathon for NJIT students at Viam'],
+      ['urban-arbor', 'Urban Arbor', 'Tree planting and community support'],
+      ['volunteering', 'Volunteering & teaching', 'Community work and student involvement'],
+      ['interest-running', 'Running', 'Working toward a sub-40-minute 10 km'],
+      ['interest-reading', 'Reading', 'The Alignment Problem'],
+      ['interest-cooking', 'Cooking', 'Trying different preparations'],
+      ['interest-writing', 'Writing', 'Developing a fictional universe'],
+    ],
+  };
+  function populateSectionLinks(view) {
+    const grid = document.querySelector('#s-section-links');
+    if (!grid) return;
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+    grid.setAttribute('aria-label', `${pages.find(page => page[0] === view)[1]} sections`);
+    (sectionLinks[view] || []).forEach(([id, title, description], index) => {
+      if (!document.getElementById(id)) return;
+      const link = document.createElement('a'); link.href = `#${id}`; link.className = 's-section-tile';
+      const number = document.createElement('span'); number.className = 's-section-number'; number.textContent = String(index + 1).padStart(2, '0');
+      const arrow = document.createElement('span'); arrow.className = 's-section-arrow'; arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('strong'); label.textContent = title;
+      const detail = document.createElement('span'); detail.className = 's-section-description'; detail.textContent = description;
+      link.append(number, arrow, label, detail); grid.append(link);
+    });
   }
   // Both demos belong to their original project: move intact nodes, never recreate canvases.
   const gaze = document.querySelector('#gaze-arm');
@@ -93,7 +149,7 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=desk5').then(async module => {
+  const sceneReady = import('./studio-scene.js?v=desk6').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => navigate(id),
       onStatus: text => { status.textContent = text; },
@@ -181,6 +237,7 @@
     if (leadIndex) leadIndex.textContent = `${String(pages.findIndex(p => p[0] === req.view) + 1).padStart(2, '0')} / PORTFOLIO`;
     const lead = document.querySelector('#s-reader-lead');
     if (lead) lead.hidden = req.view === 'about' || req.view === 'contact';
+    populateSectionLinks(req.view);
     reader.hidden = false; home.hidden = !held; home.inert = true;
     home.setAttribute('aria-hidden', 'true');
     document.body.classList.add('s-reading');

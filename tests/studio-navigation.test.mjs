@@ -37,6 +37,9 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     set className(value) { this._className = value; }
     get id() { return this.getAttribute('id') || ''; }
     set id(value) { this.setAttribute('id', value); }
+    get href() { return this.getAttribute('href') || ''; }
+    set href(value) { this.setAttribute('href', value); }
+    get firstChild() { return this.children[0] || null; }
     setAttribute(name, value) {
       this.attributes.set(name, String(value));
       if (name === 'class') this.className = String(value);
@@ -47,6 +50,10 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     removeAttribute(name) { this.attributes.delete(name); }
     append(...nodes) {
       for (const node of nodes) { node.remove(); node.parentElement = this; this.children.push(node); }
+    }
+    removeChild(node) {
+      assert.equal(node.parentElement, this, 'Only a direct child can be removed');
+      node.remove(); return node;
     }
     remove() {
       if (this.parentElement) this.parentElement.children.splice(this.parentElement.children.indexOf(this), 1);
@@ -64,6 +71,18 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
         if (part.includes(' > ')) {
           const [parent, child] = part.split(' > ');
           return this.matches(child) && !!this.parentElement?.matches(parent);
+        }
+        if (/\s/.test(part)) {
+          const ancestors = part.split(/\s+/);
+          if (!this.matches(ancestors.pop())) return false;
+          let parent = this.parentElement;
+          while (ancestors.length) {
+            const wanted = ancestors.pop();
+            while (parent && !parent.matches(wanted)) parent = parent.parentElement;
+            if (!parent) return false;
+            parent = parent.parentElement;
+          }
+          return true;
         }
         if (part.startsWith('#')) return this.id === part.slice(1);
         if (part.startsWith('.')) return this.classList.contains(part.slice(1));
@@ -104,6 +123,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   add(reader, 'p', { id: 's-page-label' });
   const lead = add(reader, 'div', { id: 's-reader-lead' });
   add(lead, 'h1', { id: 's-lead-title' }); add(lead, 'p', { id: 's-lead-index' });
+  const sectionLinks = add(lead, 'nav', { id: 's-section-links' });
   add(lead, 'button', { id: 's-read-section' });
   const telemetry = add(reader, 'aside', { class: 's-telemetry' }); telemetry.hidden = true;
   add(telemetry, 'span', { id: 's-phase' }); add(telemetry, 'div', { id: 's-joints' });
@@ -111,11 +131,32 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   const intro = add(content, 'section', { class: 'intro' }); add(intro, 'h1');
   const work = add(content, 'section', { id: 'work' });
   const heading = add(work, 'header', { class: 'section__head' }); add(heading, 'h2');
-  for (const id of ['soundscope', 'gaze-arm', 'research', 'zonelogic', 'omniring', 'optics', 'einstein']) {
+  for (const id of ['soundscope', 'gaze-arm', 'research', 'zonelogic', 'omniring', 'optics', 'einstein', 'robot']) {
     const article = add(work, 'article', { id }); add(article, 'h3');
     if (id === 'soundscope') add(article, 'div', { id: 'soundscope-lab' });
+    if (id === 'research') {
+      const items = add(article, 'div', { class: 'research' });
+      for (const title of ['Hardware research', 'Gaze estimation with a depth camera', 'Optical image restoration']) {
+        const item = add(items, 'div', { class: 'research__item' });
+        add(item, 'h4').textContent = title;
+      }
+    }
   }
   for (const id of ['try', 'path', 'beyond', 'offclock', 'contact']) { const section = add(content, 'section', { id }); add(section, 'h2'); }
+  const path = add(content.querySelector('#path'), 'ol', { class: 'path' });
+  for (const [className, title] of [['path__school', 'Aga Khan High School, Kampala'], ['', 'NJIT'], ['path__next', 'Internship opportunities']]) {
+    const item = add(path, 'li', { class: className }); add(add(item, 'div'), 'h4').textContent = title;
+  }
+  const beyond = content.querySelector('#beyond');
+  add(add(beyond, 'article', { class: 'arbor' }), 'h3').textContent = 'Urban Arbor';
+  const service = add(beyond, 'ul', { class: 'service' });
+  add(add(service, 'li'), 'h4').textContent = 'New Jersey, 2025';
+  const hobbies = add(content.querySelector('#offclock'), 'div', { class: 'hobbies' });
+  for (const title of ['Running', 'Reading', 'Cooking', 'Writing']) {
+    add(add(hobbies, 'article', { class: 'hobby' }), 'h4').textContent = title;
+  }
+  const campus = add(content, 'section', { id: 'campus' }); add(campus, 'h2').textContent = 'Campus involvement';
+  add(add(campus, 'article', { id: 'ieee-viam' }), 'h3').textContent = 'IEEE × Viam';
   add(reader, 'button', { id: 's-next' });
   const document = {
     body, documentElement: new Element('html'), createElement: tag => new Element(tag),
@@ -179,7 +220,9 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   runInNewContext(executable, context, { filename: 'studio-shell.js' });
   const click = element => { for (const fn of events.get('click') || []) fn({ target: element, preventDefault() {} }); };
   return {
-    document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click,
+    document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click, sectionLinks,
+    cards: () => sectionLinks.querySelectorAll('a'),
+    card: title => sectionLinks.querySelectorAll('a').find(link => link.querySelector('strong')?.textContent === title),
     present: emitPresentation, telemetry: value => hooks.onTelemetry?.(value),
     get focused() { return focused; },
     get scenePage() { return scenePage; },
@@ -299,6 +342,129 @@ test('links within an open view scroll to the target without another robot lift'
   assert.equal(app.calls.filter(([action]) => action === 'pick').length, picks);
   assert.equal(app.view('projects').hidden, false);
 });
+
+test('project cards jump to original content without replacing demo nodes or moving the held scene', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('projects')); await flush();
+  const demo = app.document.getElementById('soundscope-lab');
+  demo.dataset.session = 'existing events';
+  const choreography = app.calls.filter(([action]) => action === 'pick' || action === 'putBack');
+  const soundScope = app.card('SoundScope');
+  assert.ok(soundScope, 'SoundScope must be offered on the section landing page');
+  // A click on the visible label must bubble through the same real link handler.
+  app.click(soundScope.querySelector('strong')); await flush();
+  assert.equal(app.location.hash, '#soundscope');
+  assert.equal(app.scrolls.at(-1).id, 'soundscope');
+  assert.equal(app.focused, app.document.getElementById('soundscope').querySelector('h3'));
+  assert.equal(app.document.getElementById('soundscope-lab'), demo);
+  assert.equal(demo.dataset.session, 'existing events');
+
+  // Exercise the rest of the rendered links rather than duplicating the shell's menu table.
+  for (const card of app.cards()) {
+    const id = card.getAttribute('href').slice(1);
+    const target = app.document.getElementById(id);
+    assert.ok(target, `The visible card must have an existing destination: ${id}`);
+    assert.equal(target.closest('[data-reader-view]'), app.view('projects'));
+    app.click(card.querySelector('strong')); await flush();
+    assert.equal(app.scrolls.at(-1).id, id);
+    assert.equal(app.document.getElementById(id), target, 'Navigation must preserve the existing content node');
+    assert.equal(app.view('projects').hidden, false);
+  }
+  assert.equal(app.scenePage, 'projects');
+  assert.deepEqual(app.calls.filter(([action]) => action === 'pick' || action === 'putBack'), choreography);
+});
+
+test('research cards reach each topic with matching keyboard focus and no extra pickup', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('research')); await flush();
+  const choreography = app.calls.filter(([action]) => action === 'pick' || action === 'putBack');
+  for (const [title, destination] of [
+    ['Hardware research', 'research-hardware'],
+    ['Gaze estimation', 'research-gaze'],
+    ['Optical deconvolution', 'optics'],
+  ]) {
+    const card = app.card(title);
+    assert.ok(card, `${title} must have a usable section card`);
+    const target = app.document.getElementById(destination);
+    app.click(card.querySelector('strong')); await flush();
+    assert.equal(app.location.hash, `#${destination}`);
+    assert.equal(app.scrolls.at(-1).id, destination);
+    assert.equal(app.focused, target.querySelector('h3,h4'));
+    assert.equal(app.view('research').hidden, false);
+  }
+  assert.equal(app.scenePage, 'research');
+  assert.deepEqual(app.calls.filter(([action]) => action === 'pick' || action === 'putBack'), choreography);
+});
+
+test('Beyond cards reach IEEE and every interest while preserving the open Beyond scene', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('beyond')); await flush();
+  const choreography = app.calls.filter(([action]) => action === 'pick' || action === 'putBack');
+  for (const [title, destination] of [
+    ['IEEE × Viam', 'ieee-viam'], ['Urban Arbor', 'urban-arbor'],
+    ['Volunteering & teaching', 'volunteering'], ['Running', 'interest-running'],
+    ['Reading', 'interest-reading'], ['Cooking', 'interest-cooking'], ['Writing', 'interest-writing'],
+  ]) {
+    const card = app.card(title);
+    assert.ok(card, `Beyond must expose ${title}`);
+    const target = app.document.getElementById(destination);
+    assert.equal(target.closest('[data-reader-view]'), app.view('beyond'));
+    app.click(card.querySelector('strong')); await flush();
+    assert.equal(app.location.hash, `#${destination}`);
+    assert.equal(app.scrolls.at(-1).id, destination);
+    assert.equal(app.focused, target.querySelector('h3,h4'));
+  }
+  assert.equal(app.scenePage, 'beyond');
+  assert.equal(app.view('beyond').hidden, false);
+  assert.deepEqual(app.calls.filter(([action]) => action === 'pick' || action === 'putBack'), choreography);
+});
+
+test('changing sections replaces old cards and clears them on the direct Contact page', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('projects')); await flush();
+  const projectCards = app.cards();
+  assert.ok(projectCards.length > 0);
+  app.click(app.buttons.get('background')); await flush();
+  assert.ok(projectCards.every(card => card.parentElement === null), 'Previous links must be removed, not left in the new landing page');
+  assert.equal(app.card('SoundScope'), undefined);
+  assert.equal(app.sectionLinks.getAttribute('aria-label'), 'Background sections');
+  const njit = app.card('At NJIT');
+  assert.ok(njit);
+  app.click(njit.querySelector('strong')); await flush();
+  assert.equal(app.location.hash, '#background-njit');
+  assert.equal(app.scrolls.at(-1).id, 'background-njit');
+  assert.equal(app.focused.textContent, 'NJIT');
+
+  const backgroundCards = app.cards();
+  app.click(app.buttons.get('contact')); await flush();
+  assert.equal(app.cards().length, 0);
+  assert.ok(backgroundCards.every(card => card.parentElement === null));
+  assert.equal(app.sectionLinks.getAttribute('aria-label'), 'Contact sections');
+  assert.equal(app.document.getElementById('s-reader-lead').hidden, true);
+  app.click(app.buttons.get('projects')); await flush();
+  assert.ok(app.card('SoundScope'), 'Returning must rebuild the correct section links');
+  assert.equal(app.card('At NJIT'), undefined);
+});
+
+for (const [destination, view, heading] of [
+  ['research-gaze', 'research', 'Gaze estimation with a depth camera'],
+  ['research-optics', 'research', 'Optical image restoration'],
+  ['background-njit', 'background', 'NJIT'],
+  ['interest-reading', 'beyond', 'Reading'],
+  ['ieee-viam', 'beyond', 'IEEE × Viam'],
+]) {
+  test(`an initial #${destination} deep link opens its content before graphics are ready`, async () => {
+    const app = browser({ hash: `#${destination}`, sceneGate: deferred() });
+    await flush();
+    assert.equal(app.reader.hidden, false);
+    assert.equal(app.view(view).hidden, false);
+    assert.equal(app.scrolls.at(-1).id, destination);
+    assert.equal(app.focused.textContent, heading);
+    assert.equal(app.location.hash, `#${destination}`);
+    assert.deepEqual(app.pushed, [], 'An initial deep link must not add a duplicate history entry');
+    assert.equal(app.calls.some(([action]) => action === 'pick'), false);
+  });
+}
 
 test('browser history restores the correct deep link without pushing another entry', async () => {
   const app = browser(); await flush();

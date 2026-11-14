@@ -12,7 +12,7 @@ const PAGES = [
   ['projects', 'Projects', 2], ['research', 'Research', 3],
   ['background', 'Background', 4], ['beyond', 'Beyond', 5],
 ];
-const COLORS = { studio: '#f7f7f2', paper: '#e6f0ec', ivory: '#deded4', ink: '#312b39', lime: '#dceac6', joint: '#36353b' };
+const COLORS = { studio: '#f7f7f2', paper: '#0f1517', ivory: '#deded4', ink: '#edf2ef', lime: '#21302d', joint: '#36353b' };
 const PLAQUE = { width: 0.145, height: 0.104, thickness: 0.009, radius: 0.37 };
 const INITIAL_JOINTS = [0, 0.3, 1.2, 0, 1.2, 0];
 const REST = pose([0.18, 0, 0.255], [0.35, 0, -1], [0, 1, 0]);
@@ -201,27 +201,30 @@ export async function createStudioScene(canvas, {
 
   function drawLabel(title, index) {
     const label = document.createElement('canvas');
-    label.width = 1024; label.height = 736;
+    label.width = 2048; label.height = 1472;
     const ctx = label.getContext('2d');
     if (!ctx) throw new Error('The studio could not create its page labels.');
-    ctx.clearRect(0, 0, label.width, label.height);
-    ctx.fillStyle = COLORS.ink;
-    ctx.font = '500 90px "DM Mono", monospace';
+    ctx.scale(2, 2);
+    ctx.clearRect(0, 0, 1024, 736);
+    // Native sans-serif glyphs stay consistent from the first frame. The
+    // oversampled texture and anisotropic filtering keep oblique labels crisp.
+    ctx.fillStyle = '#aabbb3';
+    ctx.font = '500 86px Arial, Helvetica, sans-serif';
     ctx.fillText(String(index + 1).padStart(2, '0'), 66, 148);
-    ctx.strokeStyle = 'rgba(64,73,64,.24)'; ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(196,213,204,.32)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(66, 202); ctx.lineTo(958, 202); ctx.stroke();
     ctx.fillStyle = COLORS.ink;
     // Preserve letter proportions: shrink the font instead of canvas maxWidth,
     // which horizontally compresses long names such as Background.
-    let fontSize = 172;
-    ctx.font = `600 ${fontSize}px Figtree, Arial, sans-serif`;
+    let fontSize = 176;
+    ctx.font = `500 ${fontSize}px Arial, Helvetica, sans-serif`;
     while (ctx.measureText(title).width > 890 && fontSize > 100) {
-      fontSize -= 2; ctx.font = `600 ${fontSize}px Figtree, Arial, sans-serif`;
+      fontSize -= 2; ctx.font = `500 ${fontSize}px Arial, Helvetica, sans-serif`;
     }
     ctx.fillText(title, 64, 486);
     const texture = keepTexture(new THREE.CanvasTexture(label));
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+    texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
     return texture;
   }
 
@@ -233,10 +236,10 @@ export async function createStudioScene(canvas, {
     const facing = Math.atan2(homeDirection.x, homeDirection.z), fs = Math.sin(facing), fc = Math.cos(facing);
     const rest = new Float64Array([-fs, fc, 0, 0, -fc, -fs, 0, 0, 0, 0, 1, 0, PLAQUE.radius * c, PLAQUE.radius * s, 0.006 + PLAQUE.thickness / 2, 1]);
     const material = keepMaterial(new THREE.MeshPhysicalMaterial({
-      color: COLORS.paper, roughness: 0.16, metalness: 0, transmission: 0.62,
-      transparent: true, opacity: 0.7, thickness: PLAQUE.thickness, ior: 1.46,
-      attenuationColor: '#c4dacf', attenuationDistance: 0.2,
-      clearcoat: 1, clearcoatRoughness: 0.15, envMapIntensity: 0.7,
+      color: COLORS.paper, roughness: 0.44, metalness: 0, transmission: 0.12,
+      transparent: true, opacity: 0.94, thickness: PLAQUE.thickness, ior: 1.46,
+      attenuationColor: '#243532', attenuationDistance: 0.06,
+      clearcoat: 0.32, clearcoatRoughness: 0.38, envMapIntensity: 0.24,
     }));
     const mesh = new THREE.Mesh(paperGeometry, material);
     mesh.matrixAutoUpdate = false; mesh.matrix.fromArray(rest);
@@ -340,9 +343,9 @@ export async function createStudioScene(canvas, {
     hovered = selection ? null : plaques.find(plaque => plaque.id === id) || studioProps?.targets[id] || null;
     plaques.forEach(plaque => {
       plaque.material.color.set(plaque === hovered ? COLORS.lime : COLORS.paper);
-      plaque.material.emissive.set(plaque === hovered ? '#aeb77b' : '#000000');
+      plaque.material.emissive.set(plaque === hovered ? '#43574d' : '#000000');
       plaque.material.emissiveIntensity = plaque === hovered ? 0.045 : 0;
-      plaque.material.opacity = plaque === held ? 0.56 : 0.7;
+      plaque.material.opacity = 0.94;
     });
     canvas.style.cursor = hovered ? 'pointer' : 'default'; render();
   }

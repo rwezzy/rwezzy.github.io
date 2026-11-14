@@ -157,7 +157,9 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   });
 
   // ------------------------------------------------------------- About frame
-  const frame = new THREE.Group(); frame.name = 'About — portrait frame'; frame.position.set(-.46, 0, -.10); frame.rotation.y = .28; group.add(frame);
+  // Keep the portrait outside the carrier's silhouette, with a slight inward
+  // turn toward the arm rather than facing across the entire desk.
+  const frame = new THREE.Group(); frame.name = 'About — portrait frame'; frame.position.set(-.64, 0, -.16); frame.rotation.y = .18; group.add(frame);
   const frameFace = new THREE.Group(); frameFace.position.set(0, .132, 0); frameFace.rotation.x = -.08; frame.add(frameFace);
   const walnut = material('#4e3930', { roughness: .45, metalness: 0 });
   const frameBack = pageHit(mesh(box(.184, .244, .012, .002), walnut, frameFace), 'about');
@@ -259,7 +261,9 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
 
   // --------------------------------------------------------- SoundScope rig
   const rig = new THREE.Group(); rig.name = 'SoundScope original carrier with schematic sensors and tripod';
-  rig.position.set(-.38, 0, -.35); rig.rotation.y = .45; group.add(rig);
+  // Forward and left of the arm: the board and tripod stay visible without
+  // occupying the front-left plaque's pickup area.
+  rig.position.set(-.30, 0, -.045); rig.rotation.y = .45; group.add(rig);
   const column = cylinder(.0055, .072, darkMetal, rig); column.position.y = .051;
   const collar = cylinder(.010, .014, rubber, rig); collar.position.y = .031;
   const head = mesh(box(.036, .008, .026, .003), darkMetal, rig); head.position.y = .090;
