@@ -340,17 +340,17 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
  .s-section-links { grid-template-columns:1fr; flex:none; }
  .s-section-tile { min-height:137px; }
 }
-.studio-site .s-responsibility-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin:24px 0 0; }
+.studio-site .s-responsibility-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin:24px 0 0; }
+.studio-site .s-responsibility-grid .s-eop-feature { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:28px; align-items:start; }
 .studio-site .s-responsibility-grid article { padding:26px; border:1px solid #dcd4f22e; border-radius:16px; background:linear-gradient(140deg,#ffffff0e,#ad9cd908); box-shadow:inset 0 1px 0 #ffffff0b; }
 .studio-site .s-responsibility-grid h3 { font-size:22px; line-height:1.3; margin:12px 0; }
 .studio-site .s-responsibility-grid p { line-height:1.75; }
-.studio-site .s-dogs-illustration { min-height:210px; display:grid; place-items:center; background:radial-gradient(ellipse at 30% 25%,#305a43,#172b25); }
-.studio-site .s-dogs-illustration svg { width:135px; height:135px; stroke:#a4d9b6; stroke-width:2; fill:#91cba712; }
-.studio-site .hobby--pets { grid-column:1/-1; display:grid; grid-template-columns:minmax(150px,.38fr) minmax(0,1fr); }
+.studio-site .hobby--pets { grid-column:1/-1; display:grid; grid-template-columns:minmax(150px,.55fr) minmax(0,1fr); align-items:start; }
+.s-pets-photo { padding:24px 0 24px 24px; }
 .studio-site .service-intro { color:#c5d0c8; font-size:17px; line-height:1.8; margin:32px 0 0; max-width:75ch; }
 .studio-site .service .service-hours { color:#a9bba9; font-size:11px; letter-spacing:.03em; margin:8px 0 14px; }
-@media(max-width:760px){.studio-site .hobby--pets{grid-template-columns:1fr;}.studio-site .hobby--pets .s-dogs-illustration{min-height:150px;}}
-@media(max-width:760px){.studio-site .s-responsibility-grid{grid-template-columns:1fr;}}
+@media(max-width:760px){.studio-site .hobby--pets{grid-template-columns:1fr;}.s-pets-photo{padding:22px 22px 0;}}
+@media(max-width:760px){.studio-site .s-responsibility-grid,.studio-site .s-responsibility-grid .s-eop-feature{grid-template-columns:1fr;}}
 
 /* Supplied photos retain their composition; captions stay outside the image. */
 .s-personal-photo { margin:0; min-width:0; }
@@ -366,11 +366,18 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-content-root .service .s-service-feature { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:28px; align-items:start; }
 .s-content-root .s-service-feature p a { color:#c6dbb5; text-underline-offset:3px; }
 .s-content-root .service .s-service-wide { grid-column:1/-1; }
+.s-content-root .service .s-ngamba-feature { grid-template-columns:minmax(0,1fr) minmax(0,.65fr); }
+.s-portrait-media { width:100%; max-width:320px; justify-self:center; }
 .s-service-more { grid-column:1/-1; margin-top:12px; }
 .s-cleanup-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; align-items:start; }
 .s-personal-photo video { display:block; width:100%; height:auto; border-radius:14px; background:#111; }
 .s-senior-gallery { margin:24px 0; }
 .s-service-selfie { max-width:640px; }
+.s-gaze-winner-photo { width:100%; max-width:440px; margin-inline:auto; }
+.s-gaze-memories .s-personal-photo { max-width:900px; }
+.s-gallery-wide { grid-column:1/-1; }
+.s-service-journal { max-width:75ch; padding:0 0 10px; }
+.s-content-root .service .s-service-journal p { font-size:16px; line-height:1.85; margin:0 0 20px; }
 .s-content-root #service-making-strides { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:32px; align-items:start; }
 .s-service-photo { margin-top:6px; }
 .s-soundscope-photos { grid-column:1/-1; grid-template-columns:minmax(0,.86fr) minmax(0,1.17fr); margin:12px 0 24px; }

@@ -17,5 +17,10 @@ These images were supplied by Keith for his portfolio. Originals remain unchange
 | `running-6-mile.webp` | `IMG_3807.PNG` | Activity and route crop, 6.25 miles |
 | `running-september.webp` | `IMG_4624.PNG` | Metrics and route crop, 6.31 miles on September 22, 2026; call overlay excluded |
 | `making-strides-volunteer.webp` | Supplied Making Strides volunteer photo | Full photograph, 1600 × 1200; orientation corrected and resized |
+| `casper-dimitri-rafiki.webp` | Supplied Casper, Dimitri and Rafiki photo | Full photograph, 531 x 544; no upscaling |
+| `running-10k-metric.webp` | Supplied metric Strava 10K result graphic | Black-padding crop preserving the medal, 10K, 49:41, 4:58/km and Strava logo; 450 x 500 |
+| `eop-english-class-2025.webp` | Supplied 2025 EOP English class last-day photo | Full photograph, 1600 x 1492; orientation corrected and resized |
+| `viam-hackathon-win.webp` | Supplied Viam hackathon win photo (`IMG_1214.JPEG`) | Full photograph, 1600 x 1200; orientation corrected and resized |
+| `viam-winner-robot.webp` | Supplied Viam hackathon winner and robot photo (`IMG_1219.JPEG`) | Full photograph, 1200 x 1600; orientation corrected and resized |
 
 The 49:41 graphic is a recorded 10K result, not a claim about the current personal best. The 49:21 activity time covers 6.31 miles. The goal widget therefore keeps its personal-best field unset. SoundScope stills document the setup and interface, not verified localization accuracy; the separate browser simulation retains its existing explanation.

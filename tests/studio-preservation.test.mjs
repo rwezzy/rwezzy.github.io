@@ -137,7 +137,7 @@ const approvedMedia = {
   },
   running: {
     current: `      <article class="hobby hobby--running">
-        <figure class="s-personal-photo s-running-badge"><img src="assets/personal/running-10k.webp" alt="A Strava 10K record: 49 minutes 41 seconds, at 8 minutes per mile" width="450" height="500" loading="lazy" decoding="async"></figure>
+        <figure class="s-personal-photo s-running-badge"><img src="assets/personal/running-10k-metric.webp" alt="A Strava 10K record: 49 minutes 41 seconds, at 4 minutes 58 seconds per kilometre" width="450" height="500" loading="lazy" decoding="async"></figure>
 `,
     original: `      <article class="hobby">
         <img src="assets/running.jpg" alt="A runner on a forest trail" loading="lazy">
@@ -272,6 +272,142 @@ const approvedMedia = {
       </li>
 `,
   },
+  alternativeSpringBreak: {
+    current: `      <li id="service-alternative-spring-break" class="s-service-feature">
+        <div>
+          <h4>Alternative spring break</h4>
+          <p class="service-hours mono">Camp Hoover · Greater Newark Conservancy</p>
+          <p>I volunteered with a group to clean up Camp Hoover and also spent time gardening at the Greater Newark Conservancy.</p>
+          <p>Working with people I had never met before helped me become a better communicator and teammate. Learning about gardening also gave me new ideas to bring back home to Uganda and into my work as an engineer.</p>
+        </div>
+        <figure class="s-personal-photo s-service-photo">
+          <a href="assets/alternative-spring-break/camp-team.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/camp-team.webp" alt="Our alternative spring break group gathered by the lake at Camp Hoover" width="1600" height="983" loading="lazy" decoding="async"></a>
+          <figcaption>The Camp Hoover crew.</figcaption>
+        </figure>
+        <details class="s-service-more s-spring-reflection">
+          <summary>Read my journal entry <span aria-hidden="true">＋</span></summary>
+          <div class="s-service-journal">
+            <p>During the Camp Hoover portion of alternative spring break, I met so many new people, as I did not know anybody in my crew. On my bus ride to the location, I hardly spoke with anybody and dreaded the thought of working with all these strangers. I am grateful that this attitude did not carry over into my participation in the various tasks we did throughout the day. I spent hours teaming up with one new person after another to achieve a common goal, gaining a sense of camaraderie along the way.</p>
+            <p>I learned how to talk to strangers. This skill would transfer to other activities I engaged in throughout the semester, from volunteering to my Senate duties. Beyond that, I learned how to inspire and borrow motivation from the people I work with. It was an especially useful skill to develop through the hours of work that we undertook.</p>
+            <p>Besides Camp Hoover, I also volunteered at the Greater Newark Conservancy. In addition to developing my growing interpersonal skills, this experience required me to learn new technical gardening skills. I was not thoroughly educated on hydroponic farming, and I still have questions, but I now recognize it as a venture I could implement back home in my country, Uganda, where access to water for irrigation tends to be scarce in certain communities.</p>
+            <p>It was educational to plant different crops. I learned from the caretakers that they offered more than just aesthetic value: they contributed to the ecosystem of the soil while simultaneously providing produce for human consumption. I found this inspirational—the ability to implement systems that span a vast number of benefits. I hope to transfer this synchronized interdependency into how I approach my professional and academic career as an engineer.</p>
+            <p>These were memorable experiences that gave me the opportunity to grow as a person, a scholar, a problem solver and a leader during spring break, and I look forward to volunteering with each of these organizations again. The relationships I have made have offered me inspiration and professional development, and the undertakings I performed have broadened my perspective on what it means to be a positive influence in a society. I am grateful for such opportunities to grow.</p>
+          </div>
+        </details>
+        <details class="s-service-more">
+          <summary>More from alternative spring break <span aria-hidden="true">＋</span></summary>
+          <div class="s-photo-gallery">
+            <figure class="s-personal-photo">
+              <a href="assets/alternative-spring-break/cabin-cleanup.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/cabin-cleanup.webp" alt="Cleaning a bunk mattress inside a wooden cabin at Camp Hoover" width="1200" height="1600" loading="lazy" decoding="async"></a>
+              <figcaption>Cleaning the cabins.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/alternative-spring-break/outdoor-team.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/outdoor-team.webp" alt="Five volunteers together outdoors with a rake during the camp cleanup" width="1200" height="1600" loading="lazy" decoding="async"></a>
+              <figcaption>Outdoors with the cleanup crew.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/alternative-spring-break/crew-cart.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/crew-cart.webp" alt="Volunteers gathered around a utility cart carrying cleaning equipment" width="1600" height="1200" loading="lazy" decoding="async"></a>
+              <figcaption>The team and our cleaning supplies.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/alternative-spring-break/indoor-team.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/indoor-team.webp" alt="Our group in red volunteer shirts gathered inside the camp building" width="1600" height="1066" loading="lazy" decoding="async"></a>
+              <figcaption>A moment together at camp.</figcaption>
+            </figure>
+            <figure class="s-personal-photo s-gallery-wide">
+              <a href="assets/alternative-spring-break/volunteer-group.webp" target="_blank" rel="noopener"><img src="assets/alternative-spring-break/volunteer-group.webp" alt="A large group of alternative spring break volunteers posing together indoors" width="1600" height="739" loading="lazy" decoding="async"></a>
+              <figcaption>Alternative spring break volunteers.</figcaption>
+            </figure>
+          </div>
+        </details>
+      </li>
+`,
+  },
+  ngambaIsland: {
+    current: `      <li id="service-ngamba-island" class="s-service-feature s-ngamba-feature">
+        <div>
+          <h4>Ngamba Island, 2022</h4>
+          <p class="service-hours mono">Chimpanzee care · Enrichment preparation</p>
+          <p>During high school, I volunteered at the Ngamba Island chimpanzee sanctuary on Lake Victoria, where I helped feed the rescued chimpanzees, clean their habitats and prepare enrichment activities.</p>
+          <p>Ngamba Island provides a home for orphaned and rescued chimpanzees in Uganda. Chimpanzee Trust manages the sanctuary, providing ongoing care, food, veterinary support and enrichment. <a href="https://chimpanzeetrust.org/sanctuary-welfare/" target="_blank" rel="noopener">About the sanctuary ↗</a></p>
+          <p>In the clip, I am the one in the pink patterned shirt preparing a food puzzle. We placed food at the bottom of a cylinder, with the idea that the chimpanzees would use materials from their environment as tools to retrieve it.</p>
+          <p>Feeding puzzles are a form of enrichment: they encourage natural behaviours such as foraging and give the chimpanzees opportunities to explore and solve problems while finding food. <a href="https://www.pasa.org/post/primate-enrichment-at-pasa-wildlife-centers" target="_blank" rel="noopener">How enrichment works ↗</a></p>
+        </div>
+        <figure class="s-personal-photo s-portrait-media s-service-photo">
+          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp" width="368" height="650" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
+            <source src="assets/ngamba-island/enrichment-preparation.mp4" type="video/mp4">
+            <a href="assets/ngamba-island/enrichment-preparation.mp4">Watch the enrichment preparation clip</a>.
+          </video>
+          <figcaption>Preparing enrichment for the chimpanzees.</figcaption>
+        </figure>
+        <details class="s-service-more">
+          <summary>More photos and a clip from Ngamba Island <span aria-hidden="true">＋</span></summary>
+          <div class="s-photo-gallery">
+            <figure class="s-personal-photo">
+              <a href="assets/ngamba-island/enrichment-team.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/enrichment-team.webp" alt="Our group preparing food and enrichment cylinders around a table" width="1080" height="720" loading="lazy" decoding="async"></a>
+              <figcaption>Preparing the food puzzles together.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/ngamba-island/chimpanzees.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/chimpanzees.webp" alt="Chimpanzees along the wooded shoreline at Ngamba Island" width="1024" height="683" loading="lazy" decoding="async"></a>
+              <figcaption>The chimpanzees by the water.</figcaption>
+            </figure>
+            <figure class="s-personal-photo s-gallery-wide">
+              <a href="assets/ngamba-island/sanctuary-group.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/sanctuary-group.webp" alt="Our group beside Lake Victoria holding a cloth banner covered in messages" width="1600" height="1068" loading="lazy" decoding="async"></a>
+              <figcaption>Our group at the sanctuary.</figcaption>
+            </figure>
+            <figure class="s-personal-photo s-portrait-media">
+              <a href="assets/ngamba-island/preparation.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/preparation.webp" alt="A close view of the group handling white enrichment cylinders and cut fruit" width="768" height="1024" loading="lazy" decoding="async"></a>
+              <figcaption>A closer look at the preparation.</figcaption>
+            </figure>
+            <figure class="s-personal-photo s-portrait-media">
+              <video controls muted playsinline preload="none" poster="assets/ngamba-island/sanctuary-poster.webp" width="368" height="736" aria-label="Chimpanzees in the sanctuary enclosure at Ngamba Island">
+                <source src="assets/ngamba-island/sanctuary-chimpanzees.mp4" type="video/mp4">
+                <a href="assets/ngamba-island/sanctuary-chimpanzees.mp4">Watch the chimpanzees at the sanctuary</a>.
+              </video>
+              <figcaption>A short clip of the chimpanzees at the sanctuary.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/ngamba-island/briefing.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/briefing.webp" alt="Sanctuary staff explaining the ground rules beside a conservation display" width="1600" height="1060" loading="lazy" decoding="async"></a>
+              <figcaption>Learning from the sanctuary staff.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/ngamba-island/chimpanzee-branches.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/chimpanzee-branches.webp" alt="A chimpanzee standing on fallen branches beside the island shoreline" width="1024" height="683" loading="lazy" decoding="async"></a>
+              <figcaption>Exploring along the shore.</figcaption>
+            </figure>
+            <figure class="s-personal-photo s-gallery-wide">
+              <a href="assets/ngamba-island/lake-sunset.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/lake-sunset.webp" alt="Soft evening colours above Lake Victoria" width="1600" height="1068" loading="lazy" decoding="async"></a>
+              <figcaption>Evening on Lake Victoria.</figcaption>
+            </figure>
+          </div>
+        </details>
+      </li>
+`,
+    original: '      <li><h4>Ngamba Island, 2022</h4><p>During high school, I volunteered at the Ngamba Island chimpanzee sanctuary on Lake Victoria, where I helped feed the rescued chimpanzees, clean their habitats and prepare enrichment activities.</p><figure class="slot" data-src="images/ngamba.jpg" data-caption="Ngamba Island"></figure></li>\n',
+  },
+  eopClassPhoto: {
+    current: `        <figure class="s-personal-photo">
+          <a href="assets/personal/eop-english-class-2025.webp" target="_blank" rel="noopener"><img src="assets/personal/eop-english-class-2025.webp" alt="Our 2025 EOP English class gathered in the hallway on the last day" width="1600" height="1492" loading="lazy" decoding="async"></a>
+          <figcaption>Last day of our 2025 EOP English class.</figcaption>
+        </figure>
+`,
+  },
+  gazeWinnerPhoto: {
+    current: `        <figure class="s-personal-photo s-gaze-winner-photo">
+          <a href="assets/personal/viam-winner-robot.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-winner-robot.webp" alt="Beside the robot arm at Viam, with our hackathon winner medals" width="1200" height="1600" loading="lazy" decoding="async"></a>
+          <figcaption>Our winner medals, with the robot we built Gaze Arm around.</figcaption>
+        </figure>
+`,
+    original: '        <figure class="slot" data-src="images/gaze-arm-1.jpg" data-caption="The xArm6 at the Viam hackathon"></figure>\n',
+  },
+  gazeMemories: {
+    current: `      <details class="s-service-more s-gaze-memories">
+        <summary>Celebrating the win <span aria-hidden="true">＋</span></summary>
+        <figure class="s-personal-photo">
+          <a href="assets/personal/viam-hackathon-win.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-hackathon-win.webp" alt="A group selfie at Viam after the hackathon win, with winner medals on display" width="1600" height="1200" loading="lazy" decoding="async"></a>
+          <figcaption>Celebrating after the Viam hackathon.</figcaption>
+        </figure>
+      </details>
+`,
+  },
 };
 
 function beforeApprovedMedia(source, names = Object.keys(approvedMedia)) {
@@ -313,10 +449,10 @@ test('original portfolio sections survive apart from the requested personal cont
     .replace(/^      <li id="service-(?:nrhh|st-patricks|making-strides)">[\s\S]*?^      <\/li>\n/gm, '');
   for (const [originalSection] of sections) {
     let section = originalSection;
-    // These are the user's explicit November 14 changes, not a new baseline.
+    // These are the user's explicitly requested changes, not a new baseline.
     // All project copy, demo DOM and other text remain compared byte-for-byte.
     section = section.replace('      <li><h4>IEEE · Senate · EOP</h4><p>As an Outreach Officer for NJIT\'s IEEE branch, I find industry speakers for our students. I also represent more than 200 computer engineering students in the Student Senate, and through the Educational Opportunity Program I taught 50 incoming students mathematics, physics, English and Python.</p></li>\n', '');
-    section = section.replace('          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>', '          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>\n          <p>“How did your calves get so big?”<br>“A decade of trying to reach the top shelf.”</p>');
+    section = section.replace('          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>', '          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>\n          <p>“How did your calves get so big?”<br>A decade of trying to reach the top shelf.</p>');
     section = section.replace('I enjoy cooking and experimenting with different preparations.', "I like cooking chapatis and Ugandan cuisine, but I'm also generally a pretty good cook when I'm not burning the food.");
     section = section.replace('          <p>I have written stories since I was six, and I am now developing a fictional universe of my own.</p>', `          <p>When my thoughts aren't haunting me, I'm turning them into fiction. I now have a pretty haunting repertoire of emotionally damaged characters and love-bound protagonists.</p>
           <p>I share these fun little stories with family and friends (whose characters have not yet made their way into my fiction). I do write children's stories though, and I hope to one day publish them.</p>`);
@@ -327,6 +463,8 @@ test('original portfolio sections survive apart from the requested personal cont
   assert.ok(studio.includes('I represent more than 300 computer engineering students in the Student Senate.'));
   assert.ok(studio.includes('Through EOP, I taught 50 incoming students mathematics, physics, English and Python.'));
   assert.ok(studio.includes('<article class="hobby hobby--pets" id="interest-dogs">'));
+  assert.ok(studio.includes('<img src="assets/personal/casper-dimitri-rafiki.webp"'));
+  assert.ok(read('assets/personal/casper-dimitri-rafiki.webp').byteLength > 0, 'The supplied pet photo must exist');
 });
 
 test('original demo IDs remain unique and available for selectors and deep links', () => {
