@@ -63,7 +63,8 @@ export function mountOmniRingDemo(root) {
   async function start() {
     if (disposed || starting) return starting;
     if (loading) loading.hidden = false;
-    starting = import('./omniring-living-room.js?v=tv1').then(({ createLivingRoom }) => createLivingRoom(canvas, { onError: showGraphicsFailure })).then(instance => {
+    const loadRoom = () => import('./omniring-living-room.js?v=tv1').then(({ createLivingRoom }) => createLivingRoom(canvas, { onError: showGraphicsFailure }));
+    starting = (window.portfolioGraphics?.defer(canvas.parentElement, loadRoom, { label: 'Load the 3D room', detail: 'You can try the gesture controls below before loading the room.' }) || loadRoom()).then(instance => {
       if (disposed) { instance.dispose(); return; }
       room = instance; room.update({ ...state }); setActive(); room.resize();
       if (loading) loading.hidden = true;

@@ -8,7 +8,7 @@
   };
   const MONO = '"DM Mono", ui-monospace, monospace';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const onVisible = (el, fn, margin = '200px') => { const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: margin }); io.observe(el); };
+  const onVisible = (el, fn, margin = '200px') => { if (el.id === 'demo-zone' && window.portfolioGraphics) return window.portfolioGraphics.defer(el.querySelector('.demo__video'), fn, { label: 'Load video analysis', detail: 'Runs object detection on this device. Loading may take a moment.' }); const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: margin }); io.observe(el); };
   const watchVisible = (el, cb) => new IntersectionObserver(es => cb(es[0].isIntersecting), { rootMargin: '60px' }).observe(el);
   function fit(canvas) {
     const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();

@@ -4,13 +4,10 @@
  * <figure class="slot" data-video="videos/x.mp4" data-caption="..."> a muted looping video
  *
  * Drop a file at that path and it appears. A missing file shows a dashed
- * placeholder naming the path while you edit locally (file://, localhost, or
- * ?edit in the URL); on the live site a missing slot is hidden instead.
+ * placeholder naming the path when ?edit is present in the URL; on the live site a missing slot is hidden instead.
  */
 (function () {
-  const editing = location.protocol === 'file:' ||
-    ['localhost', '127.0.0.1', ''].includes(location.hostname) ||
-    new URLSearchParams(location.search).has('edit');
+  const editing = new URLSearchParams(location.search).has('edit');
 
   function empty(fig, path) {
     if (fig.dataset.missing) return;   // <video> and <source> can both report the same failure

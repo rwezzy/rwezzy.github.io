@@ -98,21 +98,27 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   const brass = material('#b89d62', { roughness: .36, metalness: .65 });
 
   // ---------------------------------------------------------- running shoes
-  // Original procedural red Hoka-style trainers: a continuous fitted upper
+  // Original procedural red/green Hoka-style trainers: a continuous fitted upper
   // over a deep rocker midsole, with actual collar openings and separate laces.
-  const shoes = new THREE.Group(); shoes.name = 'Running — red trainers resting on their toes';
-  shoes.position.set(-.98, .001, -.18); shoes.rotation.y = -.27; group.add(shoes);
-  const knitBump = canvasMap(128, 128, ctx => {
-    ctx.fillStyle = '#999'; ctx.fillRect(0, 0, 128, 128);
-    ctx.fillStyle = '#666';
-    for (let y = 0; y < 128; y += 8) for (let x = 0; x < 128; x += 8) ctx.fillRect(x + (y % 16 ? 3 : 0), y, 2, 4);
+  const shoes = new THREE.Group(); shoes.name = 'Running — red and green trainers resting on their toes';
+  shoes.position.set(-1.25, .001, -.065); shoes.rotation.y = 2.60; group.add(shoes);
+  const knitBump = canvasMap(256, 256, ctx => {
+    ctx.fillStyle = '#999'; ctx.fillRect(0, 0, 256, 256);
+    for (let y = 0; y < 256; y += 8) for (let x = 0; x < 256; x += 8) {
+      const offset = y % 16 ? 4 : 0;
+      ctx.strokeStyle = '#c9c9c9'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(x + offset, y); ctx.lineTo(x + offset + 3, y + 4); ctx.lineTo(x + offset, y + 8); ctx.stroke();
+      ctx.fillStyle = '#555'; ctx.beginPath(); ctx.ellipse(x + offset + 5, y + 3, 1, 2, .3, 0, Math.PI * 2); ctx.fill();
+    }
   });
   knitBump.colorSpace = THREE.NoColorSpace; knitBump.wrapS = knitBump.wrapT = THREE.RepeatWrapping; knitBump.repeat.set(3, 5);
-  const knit = material('#d52737', { roughness: .93, metalness: 0, bumpMap: knitBump, bumpScale: .00018 });
-  const shoeAccent = material('#a7192c', { roughness: .8, metalness: 0 });
-  const soleFoam = material('#f4f0df', { roughness: .88, metalness: 0 });
-  const soleGroove = material('#d5d0bc', { roughness: .92, metalness: 0 });
-  const laceMaterial = material('#ffccc0', { roughness: .96, metalness: 0 });
+  const knit = material('#df3448', { roughness: .87, metalness: 0, bumpMap: knitBump, bumpScale: .00032 });
+  const shoeAccent = material('#a72137', { roughness: .74, metalness: 0 });
+  const heelGreen = material('#80b843', { roughness: .72, metalness: 0 });
+  const soleFoam = material('#c8e685', { roughness: .82, metalness: 0 });
+  const soleGroove = material('#7da744', { roughness: .86, metalness: 0 });
+  const outsole = material('#243f30', { roughness: .96, metalness: 0 });
+  const laceMaterial = material('#e0f1af', { roughness: .9, metalness: 0 });
   // z, half-width, lower surface, upper surface. Toe is negative z.
   // The upturned ends and broad forefoot describe a running last, not spheres.
   const soleSections = [
@@ -131,10 +137,16 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     const next = sections.findIndex(row => row[0] >= z);
     if (next <= 0) return sections[Math.max(0, next)];
     const a = sections[next - 1], b = sections[next], t = (z - a[0]) / (b[0] - a[0]);
-    return a.map((value, index) => THREE.MathUtils.lerp(value, b[index], t));
+    const p = sections[Math.max(0, next - 2)], n = sections[Math.min(sections.length - 1, next + 1)];
+    // Cubic sections keep the toe, waist and rocker tangent-continuous.
+    return a.map((value, index) => {
+      if (!index) return z;
+      const span = b[0] - a[0], m0 = (b[index] - p[index]) / (b[0] - p[0]) * span, m1 = (n[index] - a[index]) / (n[0] - a[0]) * span;
+      return Math.max(index === 1 ? .001 : 0, (2*t*t*t - 3*t*t + 1)*value + (t*t*t - 2*t*t + t)*m0 + (-2*t*t*t + 3*t*t)*b[index] + (t*t*t - t*t)*m1);
+    });
   };
   function shoeLoft(sections, upper = false) {
-    const vertices = [], uvs = [], indices = [], around = 32, along = 64;
+    const vertices = [], uvs = [], indices = [], around = 48, along = 80;
     const start = sections[0][0], end = sections.at(-1)[0];
     for (let i = 0; i <= along; i++) {
       const [z, width, low, high] = shoeSectionAt(sections, THREE.MathUtils.lerp(start, end, i / along));
@@ -156,11 +168,26 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   }
   const foamGeometry = shoeLoft(soleSections), upperGeometry = shoeLoft(upperSections, true);
   const shoeBrand = canvasMap(512, 128, (ctx, w, h) => {
-    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#fff5e7'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#e1f5ad'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = 'italic 900 112px Arial, sans-serif'; ctx.fillText('HOKA', w / 2, h / 2 + 4);
   });
   const brandMaterial = material('#ffffff', { map: shoeBrand, transparent: true, roughness: .9, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });
   const curvedLine = (points, radius, appearance, parent) => mesh(keep(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, radius, 5, false)), appearance, parent);
+  const upperPoint = (z, fraction, side, offset = .0006) => {
+    const [, width, low, high] = shoeSectionAt(upperSections, z);
+    return [side * (width * Math.sqrt(1 - fraction * fraction) + offset), low + (high - low) * fraction, z];
+  };
+  function heelPanel(side, parent) {
+    const positions = [], indices = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24, z = .043 + t * .064, top = .24 + .55 * Math.sin(t * Math.PI / 2);
+      positions.push(...upperPoint(z, .08, side), ...upperPoint(z, top, side));
+      if (i < 24) { const a = i * 2; if (side > 0) indices.push(a,a+1,a+3,a,a+3,a+2); else indices.push(a,a+3,a+1,a,a+2,a+3); }
+    }
+    const geometry = keep(new THREE.BufferGeometry());
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
+    mesh(geometry, heelGreen, parent).name = 'Green heel support panel';
+  }
   function makeShoe(parent) {
     const shoe = new THREE.Group(); parent.add(shoe);
     mesh(foamGeometry, soleFoam, shoe).name = 'Sculpted rocker midsole';
@@ -169,21 +196,22 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     for (const z of [-.104, -.079, -.052, .064, .092]) {
       const [, width, low] = shoeSectionAt(soleSections, z);
       for (const side of [-1, 1]) {
-        const pad = mesh(box(width * .77, .003, .019, .001), rubber, shoe);
+        const pad = mesh(box(width * .77, .003, .019, .001), outsole, shoe);
         pad.position.set(side * width * .48, low + .0001, z);
         pad.rotation.x = z < -.09 ? -.38 : z > .08 ? .3 : 0;
       }
     }
     const opening = mesh(keep(new THREE.CircleGeometry(.023, 40)), rubber, shoe);
     opening.rotation.x = -Math.PI / 2; opening.scale.y = 1.28; opening.position.set(0, .087, .068);
-    const collar = mesh(keep(new THREE.TorusGeometry(.023, .0038, 10, 40)), shoeAccent, shoe);
+    const collar = mesh(keep(new THREE.TorusGeometry(.023, .0046, 16, 64)), heelGreen, shoe);
     collar.rotation.x = Math.PI / 2; collar.scale.y = 1.28; collar.position.set(0, .087, .068);
     const tongue = mesh(box(.031, .004, .075, .002), shoeAccent, shoe); tongue.position.set(0, .075, .008); tongue.rotation.x = -.22;
-    const heelTab = mesh(box(.011, .018, .003, .001), shoeAccent, shoe); heelTab.position.set(0, .087, .103); heelTab.rotation.x = -.15;
+    const heelTab = mesh(box(.011, .024, .003, .001), heelGreen, shoe); heelTab.position.set(0, .090, .103); heelTab.rotation.x = -.15;
+    const heelReflector = mesh(box(.003, .013, .0034, .0006), laceMaterial, shoe); heelReflector.position.set(0, .092, .103); heelReflector.rotation.x = -.15;
     for (let i = 0; i < 5; i++) {
       const z = -.022 + i * .011, y = .069 + i * .0035;
       for (const side of [-1, 1]) {
-        const eyelet = mesh(keep(new THREE.TorusGeometry(.0017, .0005, 6, 12)), shoeAccent, shoe);
+        const eyelet = mesh(keep(new THREE.TorusGeometry(.0017, .0005, 6, 12)), heelGreen, shoe);
         eyelet.rotation.x = Math.PI / 2; eyelet.position.set(side * .015, y, z);
       }
       tubeBetween([-.015, y + .001, z], [.015, y + .0035, z + .009], .0009, laceMaterial, shoe);
@@ -192,17 +220,23 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     // Small tied loops at the top of the lacing, rather than loose parallel bars.
     for (const side of [-1, 1]) curvedLine([[0, .087, .029], [side * .014, .090, .024], [side * .018, .089, .034], [0, .087, .029]], .00085, laceMaterial, shoe);
     for (const side of [-1, 1]) {
-      const sidewall = soleSections.slice(1, -1).map(([z, width, low, high]) => [side * width, low + (high - low) * .43, z]);
-      curvedLine(sidewall, .00065, soleGroove, shoe);
+      heelPanel(side, shoe);
+      for (const fraction of [.28, .62]) {
+        const sidewall = soleSections.slice(1, -1).map(([z, width, low, high]) => [side * width * .99, low + (high - low) * fraction, z]);
+        curvedLine(sidewall, .00065, soleGroove, shoe);
+      }
       const seam = upperSections.slice(2, -1).map(([z, width, low]) => [side * width * .99, low + .003, z]);
       curvedLine(seam, .0012, shoeAccent, shoe);
+      // Bonded eyestay rails and a toe reinforcement follow the curved mesh.
+      curvedLine([[-.039,.82],[-.01,.91],[.025,.92],[.048,.84]].map(([z,f]) => upperPoint(z,f,side)), .00115, shoeAccent, shoe);
+      curvedLine([[-.105,.24],[-.097,.37],[-.088,.30],[-.075,.12]].map(([z,f]) => upperPoint(z,f,side)), .00085, shoeAccent, shoe);
       // A conforming side graphic follows the mesh instead of floating beside it.
       const positions = [], uv = [], indices = [];
       for (let i = 0; i <= 16; i++) {
-        const t = i / 16, z = -.043 + t * .074;
+        const t = i / 16, z = -.052 + t * .091;
         const [, width, low, high] = shoeSectionAt(upperSections, z);
         for (let row = 0; row < 2; row++) {
-          const fraction = row ? .72 : .37;
+          const fraction = row ? .81 : .27;
           positions.push(side * (width * Math.sqrt(1 - fraction * fraction) + .0005), low + (high - low) * fraction, z);
           uv.push(side > 0 ? 1 - t : t, row);
         }
@@ -215,10 +249,10 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     return shoe;
   }
   const leftShoe = makeShoe(shoes), rightShoe = makeShoe(shoes);
-  // Toes touch the desk; heels lean upward. YXZ keeps the red uppers facing
-  // the viewer after turning the shoes around, rather than displaying soles.
-  leftShoe.position.set(-.049, 0, .016); leftShoe.rotation.set(-1.18, Math.PI - .10, -.07, 'YXZ');
-  rightShoe.position.set(.049, 0, .004); rightShoe.rotation.set(-1.28, Math.PI + .12, .06, 'YXZ');
+  // A staggered pair faces mainly to the right. The toes still meet the desk;
+  // the yaw exposes the side graphics, sculpted foam and green heel panels.
+  leftShoe.position.set(.055, 0, -.035); leftShoe.rotation.set(-.80, Math.PI - .07, -.04, 'YXZ');
+  rightShoe.position.set(-.055, 0, .035); rightShoe.rotation.set(-.88, Math.PI + .08, .04, 'YXZ');
   for (const shoe of [leftShoe, rightShoe]) {
     shoes.updateWorldMatrix(true, true);
     // The desk is at world y=0. Precise vertices avoid the false low corner
@@ -226,11 +260,6 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     const bounds = new THREE.Box3().setFromObject(shoe, true);
     shoe.position.y += .0002 - bounds.min.y;
   }
-  const backstopMaterial = material('#e3e1d8', { roughness: .96, metalness: 0, envMapIntensity: .12 });
-  const backstop = mesh(box(.205, .205, .010, .003), backstopMaterial, shoes);
-  backstop.name = 'Low shoe backstop'; backstop.position.set(0, .103, -.048);
-  const backstopFoot = mesh(box(.205, .004, .035, .0015), backstopMaterial, shoes);
-  backstopFoot.position.set(0, .002, -.038);
   const toeShadowMap = canvasMap(128, 128, ctx => {
     const gradient = ctx.createRadialGradient(64, 64, 5, 64, 64, 64);
     gradient.addColorStop(0, 'rgba(38,41,35,.23)'); gradient.addColorStop(.5, 'rgba(38,41,35,.10)'); gradient.addColorStop(1, 'rgba(38,41,35,0)');
@@ -315,40 +344,60 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     screenMaterial.map = texture; screenMaterial.needsUpdate = true;
   });
 
-  // ------------------------------------------------------------- About frame
-  // Keep the portrait outside the carrier's silhouette, with a slight inward
-  // turn toward the arm rather than facing across the entire desk.
-  const frame = new THREE.Group(); frame.name = 'About — portrait frame'; frame.position.set(-.59, 0, .015); frame.rotation.y = .16; group.add(frame);
-  const frameFace = new THREE.Group(); frameFace.position.set(0, .132, 0); frameFace.rotation.x = -.08; frame.add(frameFace);
-  const walnut = material('#4e3930', { roughness: .45, metalness: 0 });
-  const frameBack = pageHit(mesh(box(.184, .244, .012, .002), walnut, frameFace), 'about');
-  const mount = plane(.166, .224, material('#ebe6d8', { roughness: .95 }), frameFace); mount.position.z = .0062;
-  const nameCard = canvasMap(768, 1000, (ctx, w, h) => {
-    ctx.fillStyle = '#e5e5d9'; ctx.fillRect(0, 0, w, h);
-    const wash = ctx.createLinearGradient(0, 0, w, h);
-    wash.addColorStop(0, '#ffffff45'); wash.addColorStop(1, '#a5b29850'); ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#96a18b'; ctx.lineWidth = 2; ctx.strokeRect(40, 40, w - 80, h - 80);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#40513a'; ctx.font = '400 270px Georgia, serif'; ctx.fillText('kr.', w / 2, 455);
-    ctx.fillStyle = '#293529'; ctx.font = '500 34px Figtree, Arial, sans-serif'; ctx.fillText('KEITH RWEZAHURA', w / 2, 650);
-    ctx.fillStyle = '#53634b'; ctx.font = '500 25px Figtree, Arial, sans-serif'; ctx.fillText('KAMPALA · NEWARK', w / 2, 706);
-    ctx.font = '500 28px Figtree, Arial, sans-serif'; ctx.fillText('ABOUT', w / 2, 860);
+  // --------------------------------------------------------- About photo wall
+  // A small gallery board, front-facing from the desk camera. Unequal cells
+  // make the portrait the anchor without turning it into the page background.
+  const frame = new THREE.Group(); frame.name = 'About — red photo wall';
+  frame.position.set(-.66, 0, -.035); frame.rotation.y = .64; group.add(frame);
+  const frameFace = new THREE.Group(); frameFace.position.set(0, .165, 0); frameFace.rotation.x = -.18; frame.add(frameFace);
+  const galleryRed = material('#bd2036', { roughness: .38, metalness: .3 });
+  pageHit(mesh(box(.366, .318, .012, .003), galleryRed, frameFace), 'about');
+  const mount = pageHit(plane(.350, .302, material('#faf9f5', { roughness: .95, metalness: 0 }), frameFace), 'about');
+  mount.position.z = .0062;
+  const localPhoto = path => new URL(`../assets/${path}`, import.meta.url).href;
+  const wallPhotos = [
+    { name: 'Keith', url: portraitUrl || localPhoto('personal/keith-desk-portrait.webp'), cell: [0, 0, 444, 620], cover: true },
+    { name: 'Viam hackathon', url: localPhoto('personal/viam-hackathon-win.webp'), cell: [460, 0, 384, 288] },
+    { name: 'With the robot', url: localPhoto('personal/viam-winner-robot.webp'), cell: [860, 0, 340, 453] },
+    { name: 'EOP English class', url: localPhoto('personal/eop-english-class-2025.webp'), cell: [460, 304, 384, 316] },
+    { name: 'Ngamba sunset', url: localPhoto('ngamba-island/lake-sunset.webp'), cell: [860, 469, 340, 151], cover: true },
+    { name: 'Ngamba Island', url: localPhoto('ngamba-island/sanctuary-group.webp'), cell: [0, 636, 584, 364] },
+    { name: 'At home', url: localPhoto('personal/casper-dimitri-rafiki.webp'), cell: [600, 636, 354, 364] },
+    { name: 'Urban Arbor', url: localPhoto('urban-arbor/planting.webp'), cell: [970, 636, 230, 364] },
+  ];
+  // One shared atlas keeps the photo wall to one image draw call. Group photos
+  // fit inside their cells in full; no people are cut out to fill the grid.
+  const galleryMap = canvasMap(1200, 1000, (ctx, w, h) => {
+    ctx.fillStyle = '#faf9f5'; ctx.fillRect(0, 0, w, h);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '24px Arial, sans-serif';
+    for (const { name, cell: [x, y, width, height] } of wallPhotos) {
+      ctx.fillStyle = '#ebe9e5'; ctx.fillRect(x, y, width, height);
+      ctx.fillStyle = '#7e2c39'; ctx.fillText(name, x + width / 2, y + height / 2);
+    }
   });
-  const portraitMaterial = basic({ map: nameCard });
-  const portrait = pageHit(plane(.153, .1992, portraitMaterial, frameFace), 'about'); portrait.position.z = .0066;
-  const glazing = plane(.164, .222, keep(new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .055, roughness: .1, metalness: .08, clearcoat: .9, depthWrite: false })), frameFace);
-  glazing.position.z = .007; glazing.raycast = () => {};
-  tubeBetween([-.058, .165, -.012], [-.058, .004, -.074], .003, walnut, frame);
-  tubeBetween([.058, .165, -.012], [.058, .004, -.074], .003, walnut, frame);
-  const footBar = mesh(box(.14, .006, .018, .001), walnut, frame); footBar.position.set(0, .004, -.066);
-  const portraitReady = portraitUrl ? loadTexture(portraitUrl).then(texture => {
-    if (!texture || disposed) return;
-    const imageAspect = texture.image.width / texture.image.height;
-    const panelAspect = .153 / .1992;
-    // Crop the portrait to its mat; never stretch a person's face.
-    if (imageAspect > panelAspect) { texture.repeat.x = panelAspect / imageAspect; texture.offset.x = (1 - texture.repeat.x) / 2; }
-    else { texture.repeat.y = imageAspect / panelAspect; texture.offset.y = (1 - texture.repeat.y) / 2; }
-    portraitMaterial.map = texture; portraitMaterial.needsUpdate = true;
-  }) : Promise.resolve();
+  const gallery = pageHit(plane(.332, .2767, basic({ map: galleryMap }), frameFace), 'about');
+  gallery.position.z = .0066;
+  // Red folded-metal feet give the board a clean, shallow stand.
+  for (const x of [-.125, .125]) {
+    tubeBetween([x, .182, -.018], [x, .004, -.090], .0025, galleryRed, frame);
+    const foot = mesh(box(.050, .005, .075, .002), galleryRed, frame);
+    foot.position.set(x, .0025, -.060);
+  }
+  const portraitReady = Promise.allSettled(wallPhotos.map(photo => new THREE.ImageLoader().loadAsync(photo.url))).then(results => {
+    if (disposed) return;
+    const ctx = galleryMap.image.getContext('2d');
+    results.forEach((result, index) => {
+      const photo = wallPhotos[index];
+      if (result.status !== 'fulfilled') { warnings.push({ asset: photo.name, message: 'Photo unavailable' }); return; }
+      const image = result.value, [x, y, width, height] = photo.cell;
+      const scale = (photo.cover ? Math.max : Math.min)(width / image.width, height / image.height);
+      const w = image.width * scale, h = image.height * scale;
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, width, height); ctx.clip();
+      ctx.fillStyle = '#faf9f5'; ctx.fillRect(x, y, width, height);
+      ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h); ctx.restore();
+    });
+    galleryMap.needsUpdate = true;
+  });
 
   // ------------------------------------------------------------ Contact book
   // A top-bound notebook opens toward the rear, clear of the robot's plaque fan.
@@ -396,7 +445,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   }
 
   const targets = {
-    about: { id: 'about', kind: 'frame', object: frame, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .184, height: .244 },
+    about: { id: 'about', title: 'About', kind: 'frame', object: frame, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .366, height: .318 },
     contact: { id: 'contact', kind: 'notebook', object: notebook, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .22, height: .165, openProgress: 0 },
     hobbies: { id: 'hobbies', title: 'Running', description: 'Running shoes — open the interests and off-clock section.', kind: 'object', object: shoes, center: new THREE.Vector3(), normal: new THREE.Vector3(), up: new THREE.Vector3(), width: .22, height: .25 },
   };

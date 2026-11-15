@@ -5,18 +5,23 @@ import { describe, directionPhrase } from './soundscope-describe.js?v=3d1';
 
 const root = document.querySelector('#soundscope');
 if (root) {
-  const observer = new IntersectionObserver(entries => {
-    if (!entries.some(entry => entry.isIntersecting)) return;
-    observer.disconnect();
-    initLab(root).catch(error => {
-      console.warn('SoundScope room unavailable:', error);
-      const say = root.querySelector('#ss-say');
-      if (say) say.textContent = 'The 3D room could not load in this browser. The project description above still applies.';
+  const request = (element, start, label) => {
+    if (window.portfolioGraphics) return window.portfolioGraphics.defer(element, start, { label });
+    return new Promise((resolve, reject) => {
+      const observer = new IntersectionObserver(entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        observer.disconnect(); Promise.resolve().then(start).then(resolve, reject);
+      }, { rootMargin: '200px' });
+      observer.observe(element);
     });
-    import('./soundscope-hardware.js?v=3d1').then(module => module.initHardware(root.querySelector('.ss-hardware')))
-      .catch(() => { root.querySelector('[data-hardware-status]').textContent = 'The 3D viewer could not load. You can still download the carrier model below.'; });
-  }, { rootMargin: '300px' });
-  observer.observe(root);
+  };
+  request(root.querySelector('.ss-stage'), () => initLab(root), 'Load sound direction simulation').catch(error => {
+    console.warn('SoundScope room unavailable:', error);
+    const say = root.querySelector('#ss-say');
+    if (say) say.textContent = 'The 3D room could not load in this browser. The project description above still applies.';
+  });
+  request(root.querySelector('.ss-hardware-stage'), () => import('./soundscope-hardware.js?v=3d1').then(module => module.initHardware(root.querySelector('.ss-hardware'))), 'Load the carrier model')
+    .catch(() => { root.querySelector('[data-hardware-status]').textContent = 'The 3D viewer could not load. You can still download the carrier model below.'; });
 }
 
 const ROOM = { min: { x: -2.8, y: 0, z: -2.4 }, max: { x: 2.8, y: 2.7, z: 2.4 } };

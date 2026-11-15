@@ -1,0 +1,98 @@
+[
+  {
+    "before": "   <div class=\"s-location\">",
+    "after": "   <nav class=\"s-home-links\" aria-label=\"Professional links\">\n    <a class=\"s-resume-link resume-link\" href=\"resume.pdf\" target=\"_blank\" rel=\"noopener\">Résumé <span>PDF ↗</span></a>\n    <a href=\"https://github.com/rwezzy\" target=\"_blank\" rel=\"noopener\">GitHub <span aria-hidden=\"true\">↗</span></a>\n    <a href=\"https://www.linkedin.com/in/keith-rwezahura\" target=\"_blank\" rel=\"noopener\">LinkedIn <span aria-hidden=\"true\">↗</span></a>\n   </nav>\n   <div class=\"s-location\">"
+  },
+  {
+    "before": "      <p class=\"intro__lede\">I am from Kampala, Uganda, and my interest in computer engineering developed alongside my interests in biology and ethics. I am particularly interested in how machines can extend human capabilities, and in the conditions that determine whether they are useful to the people expected to rely on them.</p>\n      <p class=\"intro__lede\">These interests have informed my work on gaze-controlled robotics, gesture recognition on microcontrollers, and machine learning research. Working within the memory and processing constraints of these systems has also made me more interested in computer architecture, as the capabilities of a model are dependent on the hardware available to implement it. I am consequently exploring hardware research alongside my work in AI.</p>\n",
+    "after": "      <p class=\"intro__lede\">My greatest curiosity is a question of scale and boundary: to what extent can machines substitute, enhance, or otherwise influence our experience as humans? I adopted computer engineering to explore this question, motivated by a pre-existing fascination with biology, environmental science and ethics.</p>\n      <p class=\"intro__lede\">I am from Kampala, Uganda, where volunteering often meant helping where I saw gaps. Exposure granted me perspective; and perspective gave me purpose. I began to question what technology could make possible for people whose needs the world around them had not quite accounted for. That question now follows me into my work on gaze-controlled robotics, sound localization and wearable interfaces.</p>\n      <p class=\"intro__lede\">As these ideas become physical systems, I find myself equally interested in the constraints that shape them. A model must fit in memory; a sensor must capture the information the model needs; an arm must know when to stop. Solving the problems I care about consequently means understanding the hardware as well as the algorithms.</p>\n      <p class=\"intro__lede\">I approach work with the mindset that everyone offers mentorship, or at the very least, a different way of thinking that might be exactly what is needed to solve a problem. Beyond the lab, that has meant listening to the students I represent in NJIT's Senate, teaching through EOP, and helping other students find their way into robotics through IEEE.</p>\n"
+  },
+  {
+    "before": "<h3>SoundScope</h3>",
+    "after": "<h3>SoundScope</h3>\n        <p class=\"s-project-summary\">I built a microphone-and-depth-camera prototype that shows where a sound may be coming from, captions speech and lets me search earlier events.</p>\n        <div class=\"s-project-state\"><strong>Working hardware prototype</strong><p>The recording below shows the assembled system. The room demo uses simulated microphone signals; localization accuracy has not yet been established through a controlled benchmark.</p></div>"
+  },
+  {
+    "before": "<h3>Gaze Arm</h3>",
+    "after": "<h3>Gaze Arm</h3>\n        <p class=\"s-project-summary\">I co-built a robot arm that uses gaze to select an object for pickup and choose where to place it, with checks that stop the sequence when a grasp condition is not satisfied.</p>\n        <div class=\"s-project-state\"><strong>Hackathon hardware prototype</strong><p>My contribution was gaze calibration, target selection and grasp checks. The browser arm demonstrates the interaction; it does not control the xArm6 or validate physical grasp reliability.</p></div>"
+  },
+  {
+    "before": "<h3>ZoneLogic &amp; Occlusive Logic</h3>",
+    "after": "<h3>ZoneLogic &amp; Occlusive Logic</h3>\n        <p class=\"s-project-summary\">I built a video rule engine that turns detections inside a chosen region into timestamped incidents, with evidence retained for a person to review.</p>\n        <div class=\"s-project-state\"><strong>Implemented software prototype</strong><p>The demo runs object detection and Boolean rules in the browser. The full project also has a FastAPI backend and saved incident records; those services are not connected to this preview.</p></div>"
+  },
+  {
+    "before": "<h3>OmniRing</h3>",
+    "after": "<h3>OmniRing</h3>\n        <p class=\"s-project-summary\">I am developing a wearable interface that recognizes hand gestures on a microcontroller, so that a small movement can eventually become an instruction to another device.</p>\n        <div class=\"s-project-state\"><strong>On-device prototype · in development</strong><p>I have collected motion data and deployed a gesture classifier. Reliability testing is ongoing; TV control is planned functionality, illustrated here with simulated ring input.</p></div>"
+  },
+  {
+    "before": "<h3>Optical deconvolution</h3>",
+    "after": "<h3>Optical deconvolution</h3>\n        <p class=\"s-project-summary\">I developed a PyTorch pipeline to investigate how depth-dependent blur could be removed from complex optical measurements while retaining both amplitude and phase.</p>\n        <div class=\"s-project-state\"><strong>Research implementation · Sept–Dec 2025</strong><p>I worked with experimental MATLAB data and modelled blur. The browser example illustrates Wiener filtering on a test chart; its PSNR values are not results from my trained network.</p></div>"
+  },
+  {
+    "before": "<h3>Einstein, a tutoring chatbot</h3>",
+    "after": "<h3>Einstein, a tutoring chatbot</h3>\n        <p class=\"s-project-summary\">I built a tutor that begins by asking what a student already understands, then uses that answer to guide an explanation and a practice problem.</p>\n        <div class=\"s-project-state\"><strong>Software prototype</strong><p>The exchange below is an example conversation. A live model is available only when the chat service is connected.</p></div>"
+  },
+  {
+    "before": "<h3>Obstacle-avoiding robot</h3>",
+    "after": "<h3>Obstacle-avoiding robot</h3>\n        <p class=\"s-project-summary\">I assembled and programmed an Arduino robot that changes direction when its ultrasonic sensor detects an obstacle ahead.</p>\n        <div class=\"s-project-state\"><strong>Built hardware · first-year project</strong><p>The project used an Arduino Uno, an ultrasonic sensor and C++ control logic.</p></div>"
+  },
+  {
+    "before": "        <p class=\"ss-lede\">Sound localization, captions and searchable event history.</p>\n",
+    "after": ""
+  },
+  {
+    "before": "        <p>My interest in gaze control was partly informed by a visit to a children's home in Kampala, where a boy with cerebral palsy tried to give me a fist bump and his nurse helped me understand what he was communicating. At the Viam hackathon, I proposed a robot arm that could receive instructions through gaze, potentially allowing someone with limited hand mobility to select and retrieve an object. Looking at an object selects it for pickup, while looking at an empty position specifies where to place it. Gaze input is obtained through the laptop's webcam.</p>",
+    "after": "        <p>At the Viam hackathon, I proposed a robot arm that could receive instructions through gaze, potentially allowing someone with limited hand mobility to select and retrieve an object. Looking at an object selects it for pickup, while looking at an empty position specifies where to place it. Gaze input is obtained through the laptop's webcam.</p>"
+  },
+  {
+    "before": "        <ul class=\"nums\">\n          <li><b>163</b>",
+    "after": "        <p class=\"s-evidence-note\">The 5 mm, 2° and 700 mm values are software gate settings. The unit tests check program behaviour; they do not measure end-to-end grasp accuracy or establish safety for assistive use.</p>\n        <ul class=\"nums\">\n          <li><b>163</b>"
+  },
+  {
+    "before": "        <ul class=\"nums\">\n          <li><b>117</b>",
+    "after": "        <p class=\"s-evidence-note\">117 passing tests cover the software logic. Detection accuracy and incident relevance still depend on the footage and require human review.</p>\n        <ul class=\"nums\">\n          <li><b>117</b>"
+  },
+  {
+    "before": "      <div class=\"s-photo-gallery s-soundscope-photos\"",
+    "after": "      <figure class=\"s-hardware-recording\" id=\"soundscope-recording\">\n        <video controls muted playsinline preload=\"none\" poster=\"assets/personal/soundscope-video-hardware.webp\" width=\"720\" height=\"1280\" aria-label=\"SoundScope hardware and live interface running together on my desk\">\n          <source src=\"assets/personal/soundscope-prototype.mp4\" type=\"video/mp4\">\n          <a href=\"assets/personal/soundscope-prototype.mp4\">Watch the hardware recording</a>.\n        </video>\n        <figcaption><span class=\"label mono\">Physical prototype / recorded footage</span><h4>On the desk, running.</h4><p>The printed carrier holds the microphone array above the depth camera, while the laptop displays the camera feed and sound-direction heatmap. This is an 18-second excerpt from my prototype recording, with audio removed.</p><p>The recording documents the assembled system and its live interface. A controlled comparison of estimated direction against known source positions is still needed to establish localization error.</p></figcaption>\n      </figure>\n      <div class=\"s-photo-gallery s-soundscope-photos\""
+  },
+  {
+    "before": "My research at NJIT has involved machine learning for optical image restoration and gaze estimation, with more recent exploration of hardware research. These projects have required me to consider both the information available to a model and the computational constraints under which it is implemented.",
+    "after": "My research at NJIT has required me to question the measurements as carefully as the models. In optical deconvolution, this meant learning how a beam changes with depth; in gaze estimation, it meant checking whether the training labels described where a person was looking at the moment an image was captured. I am interested in what a result allows us to conclude, and in the assumptions that might prevent that conclusion from holding elsewhere."
+  },
+  {
+    "before": "          <h4>Gaze estimation with a depth camera</h4>\n          <p>This project investigates whether the inclusion of depth information can improve screen-based gaze estimation, particularly when the model is applied to people not represented in its training data. The proposed setup pairs an Intel RealSense D435 with a research-grade Tobii eye tracker. I have developed the colour-only PyTorch pipeline using a public webcam dataset, with provision for depth once the D435 recordings are available. Since depth has not yet been incorporated, any improvement from its inclusion remains to be established. The work is ongoing and unpublished, and auditing the training data is necessary to assess what the model's performance actually demonstrates.</p>\n",
+    "after": "          <h4>Does depth improve gaze estimation?</h4>\n          <p>I am investigating whether depth provides information about gaze that an ordinary camera cannot reliably recover, particularly when the model encounters someone it has not seen during training. I developed an RGB pipeline in PyTorch, combining face and eye features with head-geometry measurements, and investigated timing errors between webcam frames and eye-tracker labels.</p>\n          <p>Adding another sensor is only useful if its contribution can be distinguished from variation in training. In my November 13 experiment on RGBDGaze, I compared RGB, RGB with depth, and depth alone while keeping the network and training settings fixed. Each condition ran with three random seeds, with eight participants held out from training and validation.</p>\n          <div class=\"s-research-result\">\n            <p class=\"label mono\">RGBDGaze experiment · November 13, 2026</p>\n            <table>\n              <caption>Screen-position error on held-out participants; lower is better.</caption>\n              <thead><tr><th scope=\"col\">Input</th><th scope=\"col\">Mean error</th></tr></thead>\n              <tbody><tr><th scope=\"row\">RGB</th><td>2.15 cm</td></tr><tr><th scope=\"row\">RGB + depth</th><td>2.08 cm</td></tr><tr><th scope=\"row\">Depth only</th><td>3.78 cm</td></tr></tbody>\n            </table>\n            <p>The 0.07 cm difference between RGB and RGB with depth did not establish a reliable improvement: three of eight test participants improved, and the participant-paired 95% interval for the change was −0.33 to +0.20 cm. The result gives me a reason to examine how depth enters the network before assuming that more input will produce better estimates.</p>\n            <details class=\"s-research-method\"><summary>Method and limits of this comparison</summary><p>The experiment used 60,345 face crops from 45 participants: 31 for training, six for validation and eight for testing. Error was averaged within each participant, then across participants and three seeds. The exact paired permutation test gave p = 0.58.</p><p>The comparison used a ResNet-18 with depth added at the input. A separate depth branch and a RealSense D435 recording study remain next steps. These are preliminary, unpublished results on a public dataset, not measurements from my planned RealSense setup or a direct replication of the original paper's evaluation.</p></details>\n          </div>\n"
+  },
+  {
+    "before": "My first research project at NJIT concerned optical deconvolution, for which I studied Fourier optics and developed a complex-valued neural network. The implementation and an interactive demonstration are described below.",
+    "after": "My first research project at NJIT concerned optical deconvolution. I studied Fourier optics and developed a PyTorch implementation with complex convolution and activation layers, using a depth-dependent Gaussian point spread function and Wiener-deconvolved reference targets. The implementation required evaluating real, imaginary, magnitude and phase error; a visually sharper image alone would not establish that the complex signal had been recovered. <a href=\"#optics\">Read the implementation and try the filtering demonstration ↓</a>"
+  },
+  {
+    "before": "Test target: USAF 1951 resolution chart (Wikimedia Commons, CC BY-SA 2.5). PSNR is measured against the sharp chart.",
+    "after": "Browser filtering experiment, not CNN output. Test target: USAF 1951 resolution chart (Wikimedia Commons, CC BY-SA 2.5). PSNR is computed against the sharp chart after synthetic blur and noise; it is not an experimental-data benchmark."
+  },
+  {
+    "before": "      <li class=\"path__next\">",
+    "after": "      <li><time class=\"mono\">Nov 2026</time><div><h4>IEEE NJIT × Viam</h4><p>I initiated the collaboration and helped organize a robotics hackathon at Viam's New York headquarters, then supported teams with technical questions. <a href=\"#ieee-viam\">The event and my role ↗</a></p></div></li>\n      <li class=\"path__next\">"
+  },
+  {
+    "before": "        <p class=\"s-event-place\">Viam headquarters · New York City</p>",
+    "after": "        <p class=\"s-event-place\">Viam headquarters · New York City</p>\n        <p class=\"s-project-summary\">After competing at Viam, I wanted more NJIT students to have the opportunity to build there. I initiated the collaboration through IEEE and helped take it from an idea to a robotics hackathon.</p>"
+  },
+  {
+    "before": "          <h4>Writing</h4>",
+    "after": "          <h4>Writing</h4>\n          <a class=\"s-writing-feature\" href=\"https://mutedafricanmusicalinstruments.blogspot.com/2025/09/muted-histories-misrepresentation-of.html#more\" target=\"_blank\" rel=\"noopener\"><span class=\"label mono\">Published essay · September 2025</span><strong>Muted Histories: The Misrepresentation of African Musical Artifacts in Museums.</strong><span>Read the essay ↗</span></a>\n          <p>What does a museum preserve when it displays a musical instrument without its sound? After encountering a drum labelled simply “Ugandan,” I wrote about what such a description leaves out: the people who made it, the purposes it served, and the knowledge carried by the way it was played.</p>"
+  },
+  {
+    "before": "Loading the carrier's CAD…",
+    "after": "Choose Load the carrier model to explore the assembly."
+  },
+  {
+    "before": "starts when you scroll here",
+    "after": "Ready to load"
+  },
+  {
+    "before": "loading the robot…",
+    "after": "Load the demo to try object selection."
+  }
+]

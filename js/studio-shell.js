@@ -73,7 +73,7 @@
     ],
     research: [
       ['research-hardware', 'Hardware research', 'Exploring hardware labs at NJIT'],
-      ['research-gaze', 'Gaze estimation', 'A colour pipeline with provision for depth'],
+      ['research-gaze', 'Gaze estimation', 'RGB and depth: a measured comparison'],
       ['optics', 'Optical deconvolution', 'Image restoration and an interactive experiment'],
     ],
     background: [
@@ -87,9 +87,9 @@
       ['urban-arbor', 'Urban Arbor', 'Tree planting and community support'],
       ['volunteering', 'Volunteering', 'Community work in New Jersey and Uganda'],
       ['interest-running', 'Running', 'Working toward a sub-40-minute 10 km'],
-      ['interest-reading', 'Reading', 'The Alignment Problem'],
+      ['interest-reading', 'Reading', 'Psychology, ideas and my bookshelf in Uganda'],
       ['interest-cooking', 'Cooking', 'Chapatis and Ugandan cuisine'],
-      ['interest-writing', 'Writing', 'Fiction, children’s stories and familiar characters'],
+      ['interest-writing', 'Writing', 'Muted Histories, fiction and children’s stories'],
       ['interest-dogs', 'Pets', 'The dogs, Dimitri and who is actually in charge'],
       ['interest-music', 'Listening to music', 'Enya, above all'],
       ['interest-german', 'Learning German', 'Practising on Duolingo'],
@@ -155,7 +155,8 @@
   let pickingDemo = null;
   const prepareDemos = view => {
     if (view !== 'projects' || pickingDemo) return;
-    pickingDemo = import('./pick.js').catch(error => {
+    const loadPick = () => import('./pick.js');
+    pickingDemo = (window.portfolioGraphics?.defer(document.querySelector('.pick__stage'), loadPick, { label: 'Load gaze selection demo', detail: 'A simulated arm with optional webcam input. No camera starts without your permission.' }) || loadPick()).catch(error => {
       console.warn('Gaze demo unavailable:', error);
       const message = document.querySelector('.pick__say');
       if (message) message.textContent = 'The robot preview could not load. Please refresh to retry.';
@@ -171,16 +172,30 @@
     if (presenting) home.setAttribute('aria-hidden', 'true');
     else home.removeAttribute('aria-hidden');
     const to = stage.getBoundingClientRect();
-    const rect = box => ({ position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, margin: '0px', zIndex: 4 });
     if (motion && !immediate && from.width && to.width) {
-      try { await stage.animate([rect(from), rect(to)], { duration: 480, easing: 'cubic-bezier(.45,0,.25,1)' }).finished; } catch (_) { /* layout can be interrupted */ }
+      // The canvas gets its final layout once. Only a compositor transform
+      // animates; the scene follows the apparent aspect without reallocating.
+      const transform = `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`;
+      const animation = stage.animate([
+        { transform, transformOrigin: '0 0' },
+        { transform: 'none', transformOrigin: '0 0' },
+      ], { duration: 480, easing: 'cubic-bezier(.45,0,.25,1)' });
+      let fitting = true, fitFrame = 0;
+      const followViewport = () => {
+        if (!fitting) return;
+        scene?.resizeViewport?.();
+        fitFrame = requestAnimationFrame(followViewport);
+      };
+      followViewport();
+      try { await animation.finished; } catch (_) { /* layout can be interrupted */ }
+      finally { fitting = false; cancelAnimationFrame(fitFrame); animation.cancel(); }
     }
     window.dispatchEvent(new Event('resize'));
   }
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
-  let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=red-shoes5').then(async module => {
+  let telemetryTime = 0, telemetryPhase = '', telemetryAngles = '', lastBlend = '';
+  const sceneReady = window.portfolioGraphics?.lightweight ? Promise.resolve(null) : import('./studio-scene.js?v=gallery3').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
       onPartSelect: id => inspector?.selectPart(id),
@@ -190,23 +205,31 @@
       onPresent: presentStage,
       onRetract: retractStage,
       onPresentationChange: rect => {
-        if (!rect) return;
-        document.body.dataset.surface = rect.kind || 'plaque';
-        if (rect.suction) {
-          document.body.style.setProperty('--s-cup-x', `${rect.suction.x}px`);
-          document.body.style.setProperty('--s-cup-y', `${rect.suction.y}px`);
-          document.body.style.setProperty('--s-cup-radius', `${Math.max(30, rect.suction.radius + 5)}px`);
+        // Start the tint during the dolly, reaching exactly the reading colour
+        // before text appears. The same curve runs backwards on the way out.
+        const progress = rect && rect.kind !== 'assembly' ? Math.max(0, Math.min(1, (rect.progress - .25) / .75)) : 0;
+        const blend = progress * progress * (3 - 2 * progress);
+        const value = blend.toFixed(4);
+        if (value !== lastBlend) {
+          document.body.style.setProperty('--s-reader-blend', value);
+          document.body.style.setProperty('--s-reader-tint', `${(blend * 100).toFixed(2)}%`);
+          lastBlend = value;
         }
+        if (!rect) return;
+        const surface = rect.kind || 'plaque';
+        if (document.body.dataset.surface !== surface) document.body.dataset.surface = surface;
       },
       onTelemetry: ({ jointsDeg, phase }) => {
         const panel = document.querySelector('.s-telemetry');
         if (!panel || !jointsDeg) return;
         panel.hidden = false;
         const now = performance.now();
-        if (now - telemetryTime < 80 && phase !== 'idle' && phase !== 'reading') return;
+        if (now - telemetryTime < 100 && phase === telemetryPhase) return;
         telemetryTime = now;
+        telemetryPhase = phase;
         const angles = document.querySelector('#s-joints');
-        if (angles) angles.innerHTML = jointsDeg.map((value, index) => `<span>J${index + 1}</span><b>${Number(value).toFixed(1)}°</b>`).join('');
+        const markup = jointsDeg.map((value, index) => `<span>J${index + 1}</span><b>${Number(value).toFixed(1)}°</b>`).join('');
+        if (angles && markup !== telemetryAngles) { angles.innerHTML = markup; telemetryAngles = markup; }
         const phaseText = document.querySelector('#s-phase');
         if (phaseText) phaseText.textContent = phase.replaceAll('-', ' ').toUpperCase();
       },
@@ -257,6 +280,7 @@
     pump();
   }
   async function openInspector(id) {
+    if (window.portfolioGraphics?.lightweight) { navigate(id === 'soundscope' ? 'soundscope' : 'omniring', true); return; }
     if (processing || current !== 'home' || inspectionTask || closingInspection) return;
     const token = ++inspectionToken;
     inspectionId = id;

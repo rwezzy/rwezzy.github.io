@@ -1,0 +1,105 @@
+/* Hiring links and evidence use explicit foreground/background pairs. */
+.s-home-links { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; pointer-events:auto; }
+.s-home-links a { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:44px; padding:10px 13px; border:1px solid #b7beb2; border-radius:7px; color:#30382c; background:#fcfdf9; text-decoration:none; font-size:13px; font-weight:600; }
+.s-home-links .s-resume-link { background:#303b2c; color:#fff; border-color:#303b2c; }
+.s-home-links a:hover { box-shadow:0 0 0 2px #849768; }
+.s-home-links a span { font-size:11px; }
+.s-home-footer .s-mode-link,.s-reader-footer .s-mode-link { font-size:11px; text-decoration:underline; text-underline-offset:4px; }
+.s-home-footer .s-mode-link { color:#424e38; }
+.s-reader-footer .s-mode-link { color:inherit; }
+.s-name-dot,.s-cross { color:#63763c; }
+.s-clocks>span { color:#69735e; }
+.s-telemetry small { color:#bdcfc5; font-size:9px; }
+.s-project-summary { font-size:clamp(18px,1.6vw,21px); line-height:1.6; letter-spacing:-.015em; }
+.s-reader .s-content-root :is(.proj__intro,.mini,.s-event-heading) > .s-project-summary { color:#f0f5ef; }
+.s-project-state { margin:18px 0 24px; padding:15px 18px; border-left:3px solid #9fc4d9; background:#222533; border-radius:0 7px 7px 0; }
+.s-project-state strong { display:block; color:#bfe5f7; font:500 12px/1.6 var(--mono); }
+.s-reader .s-content-root .s-project-state p { color:#d1d9e2; margin:8px 0 0; font-size:14px; line-height:1.65; }
+.s-reader .s-content-root .s-evidence-note { color:#c8d7e3; font-size:14px; border-top:1px solid #ffffff25; padding-top:16px; }
+.s-hardware-recording { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,.7fr) minmax(0,1fr); gap:clamp(24px,4vw,60px); padding:28px; margin:10px 0 0; align-items:center; background:#191d29; border:1px solid #ffffff26; border-radius:14px; }
+.s-hardware-recording video { display:block; width:100%; height:470px; object-fit:contain; background:#0c1017; border-radius:8px; }
+.s-hardware-recording figcaption { max-width:560px; }
+.s-hardware-recording h4 { color:#f0f5ef; font-size:28px; font-weight:500; margin:15px 0; }
+.s-hardware-recording p { color:#cbd5dd; line-height:1.75; }
+.s-hardware-recording .label { color:#b9cfdf !important; font-size:11px; }
+.s-research-result { margin:22px 0 8px; padding:22px 24px; border:1px solid #526373; border-radius:10px; background:#1b2530; }
+.s-research-result table { width:100%; border-collapse:collapse; color:#eff6fb; margin:12px 0 18px; font-size:16px; }
+.s-research-result caption { text-align:left; color:#ccdce7; padding:0 0 12px; font-size:14px; }
+.s-research-result th,.s-research-result td { text-align:left; padding:12px 10px; border-bottom:1px solid #51616e; }
+.s-research-result thead th { color:#b3d9eb; font-size:12px; font-family:var(--mono); font-weight:400; }
+.s-research-result tbody th { font-weight:500; }
+.s-research-result td { font-variant-numeric:tabular-nums; }
+.s-reader .s-content-root .s-research-result p { color:#d2e0e9; }
+.s-research-method summary { color:#c3e7f7; cursor:pointer; padding:10px 0; }
+.s-research-method[open] { margin-top:16px; border-top:1px solid #51616e; }
+.s-writing-feature { display:flex; flex-direction:column; gap:12px; padding:20px 0; margin:0 0 16px; border-block:1px solid #ffffff35; text-decoration:none; color:#eff4ed; }
+.s-writing-feature strong { font-size:22px; font-weight:500; line-height:1.35; }
+.s-writing-feature>span:last-child { color:#c8ddf0; font-size:13px; text-decoration:underline; text-underline-offset:4px; }
+/* Personal photographs occupy the full row; their original framing stays intact. */
+.studio-site :is(.hobby--reading,.hobby--writing,.hobby--cooking) { grid-column:1/-1; min-width:0; }
+.s-reading-intro,.s-writing-copy { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(24px,4vw,64px); }
+.s-current-reading { border-left:2px solid #b9cbd5; padding-left:24px; }
+.s-current-reading>.label { color:#c6dce9; font-size:11px; }
+.s-interest-photo { margin:0; min-width:0; }
+.s-interest-photo>a { display:block; }
+.s-interest-photo img { display:block; width:100%; height:auto; aspect-ratio:auto; }
+.s-reading-shelf img { aspect-ratio:2632/1676; }
+.s-writing-page img { aspect-ratio:2852/2062; }
+.s-interest-photo figcaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 20px; padding:15px 28px; color:#e2e8df; font-size:14px; line-height:1.6; border-bottom:1px solid #ffffff25; }
+.s-interest-photo figcaption>span { color:#c5d8e4; font-size:12px; }
+.s-interest-photo>a:focus-visible { outline:3px solid #bfe5f7; outline-offset:-4px; }
+.s-reading-books>h5 { color:#c8d5df; font-size:11px; margin:0 0 20px; font-weight:400; }
+.s-book-list { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 30px; }
+.s-book-list>li { padding:13px 0; border-top:1px solid #ffffff20; min-width:0; }
+.s-book-list cite { display:block; color:#edf3eb; font-size:16px; line-height:1.45; font-style:normal; }
+.s-book-list span { display:block; color:#bbc9c4; font-size:13px; line-height:1.5; margin-top:3px; }
+.s-writing-heading p { max-width:none; }
+.s-writing-copy .s-writing-feature { border-top:0; padding-top:0; }
+.s-writing-copy>div>p:first-child { margin-top:0; }
+.studio-site .hobby--cooking { display:grid; grid-template-columns:minmax(0,.65fr) minmax(0,1.35fr); align-items:center; }
+.studio-site .hobby--cooking>img { display:block; width:100%; height:auto; }
+@media(max-width:900px) {
+ .s-book-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:650px) {
+ .s-reading-intro,.s-writing-copy { grid-template-columns:1fr; gap:24px; }
+ .s-current-reading { border-left:0; border-top:1px solid #ffffff30; padding:20px 0 0; }
+ .s-interest-photo figcaption { padding:14px 22px; }
+ .s-book-list { grid-template-columns:1fr; }
+ .studio-site .hobby--cooking { grid-template-columns:1fr; }
+}
+.s-demo-awaiting { position:relative; min-height:280px; }
+.s-demo-gate { position:absolute; z-index:15; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:28px; text-align:center; background:#eef2f5; color:#253846; border-radius:inherit; }
+.s-demo-gate p { max-width:380px; margin:0; font:400 15px/1.65 var(--sans); color:#425866 !important; }
+.s-demo-gate button { min-height:46px; padding:12px 20px; border:1px solid #294d62; border-radius:7px; background:#294d62; color:#fff; font:500 14px var(--sans); cursor:pointer; }
+.s-demo-gate button:disabled { background:#425b6a; border-color:#425b6a; cursor:wait; }
+.s-demo-gate .s-demo-load-status:empty { display:none; }
+.s-demo-gate button:focus-visible,.s-home-links a:focus-visible,.s-mode-link:focus-visible { outline:3px solid #5987b1; outline-offset:4px; }
+html[data-graphics=lite] #s-scene,html[data-graphics=lite] .s-scene-label { display:none; }
+.s-lightweight-photo { width:100%; height:100%; max-height:530px; object-fit:cover; border-radius:16px; padding:18px 0; }
+html[data-graphics=lite] .s-reader-frost { backdrop-filter:none; -webkit-backdrop-filter:none; }
+/* Light chips must not inherit the reader's pale foreground. */
+.studio-site .nums li { background:#e9edf0; color:#34444e; }
+.studio-site .nums li b { color:#253b4a; }
+.studio-site .tag--hw { background:#f1e2ed; color:#803c67; }
+.studio-site .tag--sw { background:#e1ebf7; color:#28568c; }
+.studio-site .tag--re { background:#dfeddf; color:#355e40; }
+.studio-site .ribbon { background:#dcefe2; color:#23533c !important; }
+.s-reading[data-surface="notebook"] .s-back kbd { color:#515a46; border-color:#969c8c; }
+/* The manual loading gate owns progress; an idle room is not still loading. */
+body.studio-site #soundscope:not([data-room-ready="ready"]) .ss-stage::after { content:none; }
+.s-demo-awaiting > :is(.ss-say,[data-room-loading]) { visibility:hidden; }
+@media(max-width:650px) {
+ .s-header .s-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 12px; overflow:visible; padding:0 0 6px; }
+ .s-header .s-nav a { display:flex; align-items:center; justify-content:center; min-height:38px; padding:8px 4px; }
+ .s-home-links { margin-top:18px; }
+ .s-home-links a { flex:1 1 auto; }
+ .s-hardware-recording { grid-template-columns:1fr; padding:18px; gap:22px; }
+ .s-hardware-recording video { height:390px; }
+ .s-research-result { padding:18px 14px; }
+ .s-research-result th,.s-research-result td { padding-inline:6px; }
+ .s-demo-gate { padding:20px; }
+ .s-demo-gate p { font-size:14px; }
+ html[data-graphics=lite] .s-scene-wrap { min-height:250px; }
+ .s-lightweight-photo { max-height:300px; }
+}

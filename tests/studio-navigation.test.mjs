@@ -15,7 +15,7 @@ const flush = async () => { for (let i = 0; i < 50; i += 1) await Promise.resolv
 // graphics/inspector boundaries are replaced; navigation, interruption, and history stay real.
 function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGate = null,
   inspectGate = null, returnGate = null, inspectorGate = null } = {}) {
-  const events = new Map(), pushed = [], scrolls = [], calls = [];
+  const events = new Map(), pushed = [], scrolls = [], calls = [], animations = [];
   let focused = null, hooks;
   class Element {
     constructor(tag = 'div', attrs = {}) {
@@ -107,7 +107,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     focus() { focused = this; }
     scrollIntoView(options) { scrolls.push({ id: this.id, options }); }
     getBoundingClientRect() { return { x: 0, y: 88, left: 0, top: 88, right: 1200, bottom: 738, width: 1200, height: 650 }; }
-    animate() { return { finished: Promise.resolve(), cancel() {} }; }
+    animate(frames, options) { animations.push({ element: this, frames, options }); return { finished: Promise.resolve(), cancel() {} }; }
   }
   const body = new Element('body', { class: 'studio-site' });
   const add = (parent, tag, attrs) => { const el = new Element(tag, attrs); parent.append(el); return el; };
@@ -301,7 +301,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
     for (const fn of events.get('click') || []) fn(event);
   };
   return {
-    document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click, sectionLinks,
+    document, body, home, reader, brand, buttons, calls, pushed, scrolls, location, click, sectionLinks, animations,
     cards: () => sectionLinks.querySelectorAll('a'),
     card: title => sectionLinks.querySelectorAll('a').find(link => link.querySelector('strong')?.textContent === title),
     present: emitPresentation, telemetry: value => hooks.onTelemetry?.(value),
@@ -605,16 +605,47 @@ test('changing reader pages keeps the stage expanded; Home retracts it', async (
   assert.equal(app.home.inert, false);
 });
 
-test('presentation reports update the plaque aperture and select surfaces without suction', async () => {
+test('the reader tint follows camera progress continuously in both directions', async () => {
+  const app = browser(); await flush();
+  const blend = progress => {
+    app.present({ kind: 'plaque', progress, suction: null });
+    return Number(app.body.style['--s-reader-blend']);
+  };
+  assert.equal(blend(0), 0);
+  const approaching = [.25, .4, .55, .7, .85, 1].map(blend);
+  assert.equal(approaching.at(-1), 1, 'The tint is complete before the reader appears');
+  assert.ok(approaching.every((value, index) => !index || value > approaching[index - 1]));
+  const returning = [1, .85, .7, .55, .4, .25].map(blend);
+  assert.deepEqual(returning, approaching.toReversed(), 'Returning uses the same colour progression');
+  app.present({ kind: 'assembly', progress: 1 });
+  assert.equal(Number(app.body.style['--s-reader-blend']), 0, 'Inspecting hardware must not darken its components');
+  app.present(null);
+  assert.equal(Number(app.body.style['--s-reader-blend']), 0);
+});
+
+test('expanding and retracting the stage animates transforms without changing layout dimensions per frame', async () => {
+  const app = browser(); await flush();
+  app.click(app.buttons.get('projects')); await flush();
+  app.click(app.brand); await flush();
+  const stageAnimations = app.animations.filter(({ element }) => element.id === 's-scene-wrap');
+  assert.equal(stageAnimations.length, 2);
+  for (const { frames } of stageAnimations) for (const frame of frames) {
+    assert.ok(frame.transform);
+    assert.ok(!['width', 'height', 'left', 'top'].some(key => key in frame), 'No layout-triggering animation properties');
+  }
+  assert.equal(app.body.classList.contains('s-presenting'), false);
+});
+
+test('presentation reports select the surface without unused per-frame aperture styles', async () => {
   const app = browser(); await flush();
   app.click(app.buttons.get('projects')); await flush();
   assert.equal(app.document.getElementById('s-reader-lead').hidden, false);
   assert.equal(app.document.getElementById('s-lead-title').textContent, 'Projects');
   app.present({ kind: 'plaque', progress: 0.5, suction: { x: 412, y: 287, radius: 18 } });
   assert.equal(app.body.dataset.surface, 'plaque');
-  assert.equal(app.body.style['--s-cup-x'], '412px');
-  assert.equal(app.body.style['--s-cup-y'], '287px');
-  assert.equal(app.body.style['--s-cup-radius'], '30px');
+  assert.equal(app.body.style['--s-cup-x'], undefined);
+  assert.equal(app.body.style['--s-cup-y'], undefined);
+  assert.equal(app.body.style['--s-cup-radius'], undefined);
   app.present({ kind: 'frame', progress: 1, suction: null });
   assert.equal(app.body.dataset.surface, 'frame');
   app.present({ kind: 'notebook', progress: 1, suction: null });

@@ -27,7 +27,7 @@
     const box = document.querySelector('.einchat'); if (!box) return;
     // data-api: your Hugging Face Space URL. On your own computer it falls back to run_local.py.
     const api = (box.dataset.api || '').trim();
-    const editing = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
+    const editing = new URLSearchParams(location.search).has('edit') && ['localhost', '127.0.0.1', ''].includes(location.hostname);
     const url = (api || (editing ? box.dataset.apiLocal || '' : '')).replace(/\/$/, '');
     if (!url) return; // no backend yet: visitors just see the example conversation
     const example = box.parentElement.querySelector('.chat');

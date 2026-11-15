@@ -7,3 +7,5 @@
 - The frame and top-bound notebook are original procedural geometry. The frame uses Keith's supplied red-background portrait, cropped in `assets/personal/keith-desk-portrait.webp`. `createStudioProps({ portraitUrl })` preserves its proportions with a centered crop. A name card remains the fallback while the photo loads.
 
 `js/studio-props.js` owns and disposes its geometry, materials and textures. It has no independent render loop or event listeners. Its About and Contact hit targets are handled by the studio scene; the host animates `setNotebookOpen(t)` and camera movement.
+
+The red-and-green running shoes are original procedural geometry inspired by the [HOKA Clifton silhouette](https://au.hoka.com/products/m-clifton-10-1162030-aynn-aynn), with smoothly lofted rocker soles, a woven bump texture, green heel panels, padded collars, laces and individual outsole pads. They are an illustrative model, not manufacturer CAD. The pair is positioned left of the photo wall and faces mainly right, with precise vertex bounds placing the toe contact on the desk.

@@ -6,11 +6,21 @@ A static site built with HTML, CSS, JavaScript and Three.js. No build step is re
 
 The homepage uses the Lite6 CAD model to pick up translucent plaques for Projects, Research, Background and Beyond. The arm presents the selected plaque before the camera moves into its reading view. Selecting a different section zooms out, returns the current plaque and picks the next one from the wide view. About zooms into a standing frame without using the arm; Contact opens a notebook. The Motion control and the system's reduced-motion preference allow navigation without the animation.
 
-The glass reading view has an uninterrupted dark frosted surface, with the suction tool softened behind it. Opening a plaque shows clickable glass tiles for that page's sections. These links scroll to the existing content without repeating the pickup, and can be opened directly by URL. The corner display reports the angles used to render the simulated arm during transitions, not telemetry from physical hardware. Desk props include the original adjustable SoundScope carrier on a tripod, detailed schematic sensors, and an OMEN-inspired laptop displaying the supplied screen image. About uses Keith's supplied striped-shirt portrait, while the desk frame uses his red-background portrait.
+The glass reading view has an uninterrupted dark frosted surface, with the suction tool softened behind it. Opening a plaque shows clickable glass tiles for that page's sections. These links scroll to the existing content without repeating the pickup, and can be opened directly by URL. The corner display reports the angles used to render the simulated arm during transitions, not telemetry from physical hardware. Desk props include the original adjustable SoundScope carrier on a tripod, detailed schematic sensors, and an OMEN-inspired laptop displaying the supplied screen image. About uses a four-portrait card stack: the striped-shirt and red-background portraits, the pink selfie, and the selected Ngamba enrichment still. Clicking, arrow keys, the previous/next buttons or a horizontal swipe turns a card. The final Project pictures card opens a labelled, fullscreen mosaic with category filters, individual views and silent video playback. Its 56 items are declared in `js/studio-gallery-data.js`; full gallery media is lazy-loaded. The desk has a red-bordered photo wall with eight supplied photos in an asymmetric grid, anchored by his red-background portrait; group photos are fitted without cropping people. The photos share one canvas texture. The red-and-green running shoes sit farther left of the wall, turned mainly rightward with their toes on the desk. Their curved rocker soles, mesh uppers, heel panels, laces and tread are original procedural geometry.
 
-Beyond groups IEEE outreach, Student Senate and EOP teaching under Responsibilities. Its IEEE NJIT × Viam event entry is based on the supplied project record and distinguishes the November 6 organizing work from the September Gaze Arm project. Two supplied event photos appear below that entry. The interests section includes running and the supplied Strava screenshots and link, cooking with Keith's chapati photo, writing, pets and learning German. About includes the physical desk setup; SoundScope includes two stills from the supplied recording. Existing project wording and demo mechanisms remain unchanged. Photo sources and crop notes are in `assets/personal/README.md`.
+The reader tint and header colours follow camera progress in both directions, reaching their final colour before the text appears. Stage expansion uses a CSS transform with a fixed drawing buffer; only the camera aspect follows the apparent viewport. `studio-render-budget.js` caps the canvas at 1.8 million physical pixels, retaining antialiasing and up to 1.5× sampling for smaller canvases. Shadows refresh for moving geometry and reuse their existing map during camera-only motion. Repeated hover and telemetry values do not redraw the scene or rebuild DOM content. For local diagnostics, `?studio-profile=1` exposes transition frame intervals and drawing-buffer allocation counts in the canvas's `data-frame-profile` attribute; background-tab throttling makes those timings unsuitable as a hardware benchmark.
 
-This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
+Beyond groups IEEE outreach, Student Senate and EOP teaching under Responsibilities. Its IEEE NJIT × Viam event entry is based on the supplied project record and distinguishes the November 6 organizing work from the September Gaze Arm project. Two supplied event photos appear below that entry. The interests section includes running, cooking, writing, music, pets and learning German. About includes the physical desk setup; SoundScope includes two stills and a manually played, silent excerpt from the supplied recording. Photo sources and crop notes are in `assets/personal/README.md`.
+
+This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot. The current page includes the November 2026 editorial revision described below; the demo mechanisms remain protected by preservation checks.
+
+### November 2026 editorial revision
+
+The biography draws on Keith's supplied scholarship and application essays, while leaving private application details out. The homepage and Contact both link to GitHub, LinkedIn and the public résumé. `resume.pdf` is a copy of the November 2026 résumé with the phone number removed; the original source is unchanged. Private essays and research decks are not part of this checkout.
+
+Projects now begin with a short summary and an explicit implementation status. SoundScope's recording documents hardware and its interface, not measured localization accuracy. Research includes the November 13 RGBDGaze comparison (RGB 2.15 cm, RGB + depth 2.08 cm, depth only 3.78 cm), the participant split and aggregation, and the inconclusive paired comparison. The synthetic optics demonstration remains separate from learned-model results. Beyond's Writing card links to Keith's published *Muted Histories* essay. Reading and Writing span full rows, using the supplied bedside bookshelf and handwritten Discrete Analysis exam page. Reading lists 19 visible titles and keeps The Alignment Problem as the current read. Both photos use responsive previews and open in the fullscreen gallery; the handwriting caption follows the user’s exact wording.
+
+`js/studio-performance.js` keeps each heavier project demo behind a load button. `?mode=lite` replaces the homepage 3D desk with a supplied workspace photo; Save-Data and reduced-motion preferences select this mode unless `?mode=full` is explicit. Both modes retain all text, evidence, navigation and optional demos. The mode switch is in each footer. The OmniRing gesture controls work before the optional 3D room loads.
 
 Urban Arbor includes supplied team, planting, donation and picnic photos, with credit to Sai, Paul, John, Chisom, Selihom, Matthew, Kaya and Pro Bono founder Aiko. Its photo sources are recorded in `assets/urban-arbor/README.md`. The Making Strides service entry includes Keith's volunteer photo.
 
@@ -24,11 +34,12 @@ Volunteering also includes the spring cleanup at Spring Reins of Hope and helpin
 - `js/studio-inspector.js` and `css/studio-inspector.css`: component details, assemble/explode controls, projected annotation cards and leader lines, and links back to the unchanged project demos. Click a desk object or use its named button; Escape returns to the desk.
 - `css/studio.css`: site layout and page presentation.
 - `css/studio-demos.css`: presentation of the existing demo controls.
-- `tests/studio-preservation.test.mjs`: checks the original project text and demo implementations against a frozen snapshot, including a regression check for the SoundScope texture-loading race fixed in this version.
+- `tests/studio-preservation.test.mjs`: checks the frozen classic page, demo mechanisms and retained text. `tests/fixtures/editorial-revision.json` lists the exact approved editorial replacements normalized by this check.
+- `tests/studio-performance.test.mjs`: checks lightweight preferences and explicit demo loading, including readable failure handling.
 - `tests/studio-navigation.test.mjs`: checks deep links, delayed graphics loading, section changes and interrupted pick/return transitions.
 - `tests/studio-inspector.test.mjs`: component selection, reassembly state, focus, Escape and cleanup. The hobbies view includes the supplied Strava link and German-learning note.
 
-The canvas stays within the homepage's scene area, independent of its drawing-buffer resolution. Section text is immediately visible when scrolling; it does not wait for reveal animations. The Gaze Arm module loads when Projects is opened. The held scene renders on demand while reading instead of maintaining an idle animation loop.
+The canvas stays within the homepage's scene area, independent of its drawing-buffer resolution. Section text is immediately visible when scrolling; it does not wait for reveal animations. Gaze Arm, SoundScope's room and carrier, ZoneLogic's detector, and OmniRing's room load only when requested. The held desk scene renders on demand while reading instead of maintaining an idle animation loop.
 
 Run the checks with `node --test tests/*.test.mjs`. The demo previews run locally in the browser; the Einstein chat still requires its configured backend. Loading Three.js and the existing detector dependencies requires internet access.
 
@@ -59,7 +70,8 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 | `assets/senior-tech/` | Senior technology support photos |
 | `images/ngamba.jpg` | Service: Ngamba Island |
 | `images/newark.jpg` | Service: Newark volunteering |
-| `resume.pdf` | The résumé button in the contact section |
+| `resume.pdf` | Public résumé linked from the homepage, About and Contact |
+| `assets/personal/soundscope-prototype.mp4` | Silent, manually played hardware recording in SoundScope |
 
 Tips:
 - Landscape photos at about 1600 px wide look best (they're shown 4:3).
@@ -67,7 +79,7 @@ Tips:
 - Don't use frames from the Eye of the Typer dataset that show participants' faces; use plots or your own face instead.
 - Want a new photo spot? Copy any `<figure class="slot" data-src="images/NAME.jpg" data-caption="...">` line in `index.html`.
 
-**Empty boxes only show while you're editing** (on `localhost`, on a `file://` path, or with `?edit` at the end of the URL). On the live site, a box without a photo simply disappears, and so does the résumé button until `resume.pdf` exists. So you can publish now and add photos later.
+**Empty boxes only show with `?edit` in the URL.** Otherwise a box without an image disappears. Localhost follows the same rule, so the ordinary preview matches the public presentation. The public résumé is included in this checkout.
 
 ## Edit the words
 
@@ -79,18 +91,20 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 
 ## Put it online (free, GitHub Pages)
 
-1. Create a public GitHub repo named exactly `rwezzy.github.io`.
-2. Push this folder to it:
-   ```bash
-   git init
-   git add .
-   git commit -m "Personal site"
-   git branch -M main
-   git remote add origin https://github.com/rwezzy/rwezzy.github.io.git
-   git push -u origin main
-   ```
-3. In the repo: Settings → Pages → Source: "Deploy from a branch", branch `main`, folder `/ (root)`.
-4. A minute later it's live at https://rwezzy.github.io. Put that link on your résumé and LinkedIn.
+GitHub Pages is already enabled for the public `rwezzy/rwezzy.github.io` repository, publishing `main` from `/ (root)` at https://rwezzy.github.io/. Verified on November 15, 2026: the URL returns HTTP 200 and serves the earlier portfolio, without the Studio redesign.
+
+This checkout's `github` remote points to that repository; `origin` is a separate local checkout. The Studio work is on `design/studio-pages`. To release it, review and commit the intended public site files, merge the approved work into the publishing branch without overwriting remote changes, then push `main` to `github`. Watch the repository's Pages build to completion and verify the public URL. Do not repeat `git init`, replace `origin`, or force-push.
+
+The source includes a descriptive page title, canonical URL, public profile structured data, social preview metadata, `robots.txt` and `sitemap.xml`. These refer to the confirmed GitHub Pages address. The sitemap lists the canonical homepage only: section anchors and `?mode=lite` are views of the same page. If a custom domain is adopted later, update all these URLs together.
+
+After the updated site is published:
+
+1. Add `https://rwezzy.github.io/` as a URL-prefix property in [Google Search Console](https://search.google.com/search-console/about), using the owner's Google account.
+2. Complete ownership verification with the exact HTML file or meta tag that Google supplies; no verification token is included in this checkout.
+3. Submit `sitemap.xml`, then inspect the homepage and request indexing. Google can discover the site automatically, and neither a sitemap nor an indexing request guarantees inclusion or ranking.
+4. Link the public site from the LinkedIn profile, GitHub profile and résumé so visitors can reach it directly.
+
+Official references: [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [Google's indexing requests](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl), and [sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap).
 
 ## What's inside
 
@@ -98,10 +112,10 @@ The hobby lines (cooking, writing) are short on purpose; rewrite them in your ow
 
 The project is at `#soundscope`, with an interactive experiment at `#soundscope-lab`.
 
-- `js/soundscope.js` and `css/soundscope.css`: a furnished 3D room (Three.js) with the carrier on a tripod on a desk beside a laptop. Visitors orbit the room, drag the alarm clock, kettle, boombox and television onto floors and furniture, and play them. A second view renders what the carrier's camera sees, with the direction heatmap, the estimate and the candidate object drawn over it; the laptop screen shows the same view. Includes the guessing game (5 rounds; your miss against SoundScope's, in metres), the microphone-spacing and room-echo sliders, spatial audio from the visitor's viewpoint, and session-only event history/replay.
+- `js/soundscope.js` and `css/soundscope.css`: a modern 3D room (Three.js) with the carrier on a tripod on a desk beside a laptop. Visitors orbit the room, drag the alarm clock, kettle, portable speaker and television onto floors and furniture, and play them. A second view renders what the carrier's camera sees, with the direction heatmap, the estimate and the candidate object drawn over it; the laptop screen shows the same view. Includes the guessing game (5 rounds; your miss against SoundScope's, in metres), the microphone-spacing and room-echo sliders, spatial audio from the visitor's viewpoint, and session-only event history/replay.
 - `js/soundscope-room.js`: the simulation. Each sound is a sum of sinusoids, so every microphone receives an exactly delayed copy: the direct path, one reflection off each of the six room surfaces, and a decaying diffuse tail whose strength follows the echo slider. Signals are sampled at 16 kHz like the XVF3800's 6-channel firmware; four microphones sit upright on a square facing the room, as on the carrier, and direction comes from GCC-PHAT over all six pairs, steered over ±70° azimuth and ±45° elevation. The default 66 mm square matches the app's four-microphone geometry. The normalized map is relative support, not a probability or measured device accuracy. Distance is never estimated from sound.
 - `js/soundscope-describe.js`: rule-based captions with no model or API. It uses only what the device could know: the sound's label, the estimated direction, the depth to the first visible surface along it, whether a visible object there could make that sound, and visible neighbours. That is how it reaches statements such as "nothing visible there makes that sound, so the source is probably behind or under the sofa."
-- `models/room/`: CC0 models, floor texture and lighting from Poly Haven (about 21 MB, loaded only when the section is near). The desk and tripod are simple geometry drawn in code.
+- `models/room/`: retained CC0 source assets from Poly Haven. The current room uses smooth geometry and modern materials in code; graphics load on request.
 - `js/soundscope-hardware.js`: a lazy-loaded, keyboard-accessible Three.js view of the original adjustable carrier. Sensors are dimensional placeholders. See `models/soundscope/README.md` for provenance and dimensions.
 - Search matches a small local vocabulary (sound names and left/right/front/behind) against sounds chosen by the visitor. It does not run Meta models or classify browser audio. No camera/microphone permission, upload, API key or persistent storage is used by the SoundScope demo. The project copy separately describes what runs in the physical application.
 

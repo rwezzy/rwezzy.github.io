@@ -4,7 +4,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
 import { prepareJointPath, sampleJointPath } from './studio-motion.js';
-import { createStudioProps } from './studio-props.js?v=red-shoes5';
+import { createStudioProps } from './studio-props.js?v=gallery3';
+import { drawingBufferSize } from './studio-render-budget.js';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
 // nothing in this module connects to, or issues commands to, robot hardware.
@@ -82,14 +83,17 @@ export async function createStudioScene(canvas, {
   const scene = new THREE.Scene();
   renderer.setClearColor(COLORS.studio, 0);
   scene.fog = new THREE.Fog(COLORS.studio, 2.8, 7);
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
+  // resize() controls physical pixels independently of the CSS viewport.
+  renderer.setPixelRatio(1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.88;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
   const camera = new THREE.PerspectiveCamera(36, 1, 0.015, 12);
-  const cameraTarget = new THREE.Vector3(0, 0.19, 0.03);
+  const cameraTarget = new THREE.Vector3(-0.14, 0.19, 0.03);
   const homeTarget = cameraTarget.clone();
   const homePosition = new THREE.Vector3();
   const homeDirection = new THREE.Vector3(0.57, 0.84, 1.04).normalize();
@@ -100,17 +104,31 @@ export async function createStudioScene(canvas, {
   const inspectionVisibility = new Map();
   let joints = INITIAL_JOINTS.slice(), restJoints = null, operationQueue = Promise.resolve(), animationFrame = 0, cancelMotion = null;
   let width = 1, height = 1;
+  let bufferWidth = 0, bufferHeight = 0;
   const textures = new Set(), geometries = new Set(), materials = new Set();
   const keepGeometry = geometry => { geometries.add(geometry); return geometry; };
   const keepMaterial = material => { materials.add(material); return material; };
   const keepTexture = texture => { textures.add(texture); return texture; };
   let environmentTarget;
+  // Opt-in local QA: expose frame timing on the canvas, never user data.
+  const profiling = new URLSearchParams(location.search).has('studio-profile');
+  let frameSamples = [], bufferResizes = 0;
+  const reportFrames = () => {
+    if (!profiling || !frameSamples.length) return;
+    const sorted = [...frameSamples].sort((a, b) => a - b);
+    canvas.dataset.frameProfile = JSON.stringify({ frames: sorted.length,
+      medianMs: +sorted[Math.floor(sorted.length * .5)].toFixed(1), p95Ms: +sorted[Math.floor(sorted.length * .95)].toFixed(1),
+      maxMs: +sorted.at(-1).toFixed(1), over50Ms: sorted.filter(ms => ms > 50).length,
+      bufferResizes, buffer: [canvas.width, canvas.height], drawCalls: renderer.info.render.calls });
+  };
 
   const render = () => {
     if (!disposed && active && !contextLost && width > 0 && height > 0) {
       partOutline?.update();
       renderer.render(scene, camera);
-      onPresentationChange(getPresentationRect());
+      // The page tint needs only camera progress. Do not force a DOM layout
+      // read and project the plaque/cup into CSS coordinates on every frame.
+      onPresentationChange(selection ? { pageId: selection.id, kind: selection.kind, progress: cameraProgress } : null);
       onInspectionChange(getInspectionAnchors());
       onTelemetry({ jointsDeg: joints.map(angle => THREE.MathUtils.radToDeg(angle)), phase });
     }
@@ -161,11 +179,20 @@ export async function createStudioScene(canvas, {
     if (!width || !height) return;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    // Keep the full fan of plaques visible in narrow/mobile canvas containers.
-    const distance = 1.42 * Math.max(1, 1.36 / camera.aspect);
+    // The shoes sit farther left than the photo wall. Leave a little breathing
+    // room on small screens, blending the margin without a breakpoint jump.
+    const edgeMargin = THREE.MathUtils.lerp(1.08, 1, THREE.MathUtils.smoothstep(width, 600, 900));
+    const distance = 1.62 * edgeMargin * Math.max(1, 1.64 / camera.aspect);
     homePosition.copy(homeTarget).addScaledVector(homeDirection, distance);
     setCamera(cameraProgress);
-    renderer.setSize(Math.round(width), Math.round(height), false);
+    // CSS transforms animate the apparent viewport, not its backing buffer.
+    // A FLIP expansion therefore allocates once instead of once per frame.
+    const buffer = drawingBufferSize(canvas.clientWidth, canvas.clientHeight, devicePixelRatio || 1);
+    if (buffer.width !== bufferWidth || buffer.height !== bufferHeight) {
+      renderer.setSize(buffer.width, buffer.height, false);
+      bufferWidth = buffer.width; bufferHeight = buffer.height;
+      bufferResizes++;
+    }
     render();
   };
 
@@ -179,6 +206,7 @@ export async function createStudioScene(canvas, {
   const suctionSeal = new THREE.Group();
   suctionSeal.matrixAutoUpdate = false; robot.add(suctionSeal);
   const applyJoints = q => {
+    renderer.shadowMap.needsUpdate = true;
     const frames = forward(q);
     if (links.length) {
       links[0].matrix.identity();
@@ -337,9 +365,12 @@ export async function createStudioScene(canvas, {
     if (reduceMotion.matches) { update(1); render(); return Promise.resolve(); }
     return new Promise((resolve, reject) => {
       const began = performance.now();
+      let previousFrame = began;
       cancelMotion = () => { cancelAnimationFrame(animationFrame); cancelMotion = null; reject(abortError()); };
       const frame = now => {
         if (disposed) { cancelMotion?.(); return; }
+        if (profiling) frameSamples.push(now - previousFrame);
+        previousFrame = now;
         const progress = Math.min(1, (now - began) / duration);
         update(ease(progress)); render();
         if (progress < 1) animationFrame = requestAnimationFrame(frame);
@@ -362,7 +393,9 @@ export async function createStudioScene(canvas, {
   function hover(pageId) {
     if (disposed) return;
     const id = pageId === 'path' ? 'background' : pageId;
-    hovered = selection ? null : plaques.find(plaque => plaque.id === id) || studioProps?.targets[id] || null;
+    const nextHovered = selection ? null : plaques.find(plaque => plaque.id === id) || studioProps?.targets[id] || null;
+    if (nextHovered === hovered) return;
+    hovered = nextHovered;
     plaques.forEach(plaque => {
       plaque.material.color.set(plaque === hovered ? COLORS.lime : COLORS.paper);
       plaque.material.emissive.set(plaque === hovered ? '#43574d' : '#000000');
@@ -385,6 +418,7 @@ export async function createStudioScene(canvas, {
     render();
   }
   function isolateAssembly(target) {
+    renderer.shadowMap.needsUpdate = true;
     // The interactive inspection uses the same models, isolated from the desk
     // so the arm cannot obscure a floating board when its camera angle changes.
     for (const object of [robot, ...(studioProps?.group.children || []), ...scene.children.filter(item => item.name === 'Robot mounting base')]) {
@@ -395,7 +429,10 @@ export async function createStudioScene(canvas, {
   function restoreDesk() {
     for (const [object, visible] of inspectionVisibility) object.visible = visible;
     inspectionVisibility.clear();
+    renderer.shadowMap.needsUpdate = true;
   }
+  const updateNotebook = value => { studioProps.setNotebookOpen(value); renderer.shadowMap.needsUpdate = true; };
+  const updateAssembly = (id, value) => { studioProps.setExploded(id, value); renderer.shadowMap.needsUpdate = true; };
   async function returnHeld({ immediate = false } = {}) {
     readerMode = false;
     const target = selection;
@@ -405,8 +442,8 @@ export async function createStudioScene(canvas, {
     if (target.kind === 'assembly') {
       const from = target.explodedProgress || 0;
       phase = 'assembling';
-      if (instant) studioProps.setExploded(target.id, 0);
-      else await tween(420, t => studioProps.setExploded(target.id, from * (1 - t)));
+      if (instant) updateAssembly(target.id, 0);
+      else await tween(420, t => updateAssembly(target.id, from * (1 - t)));
       restoreDesk();
     }
     notify(target.kind === 'plaque' ? `Putting ${target.title} back` : 'Returning to the studio');
@@ -426,9 +463,9 @@ export async function createStudioScene(canvas, {
       else await playPath(target.motion.approach, 450, true);
     } else if (target.kind === 'notebook') {
       phase = 'closing';
-      if (instant) studioProps.setNotebookOpen(0);
+      if (instant) updateNotebook(0);
       else await tween(480, progress => {
-        studioProps.setNotebookOpen(1 - progress); focusAlignment = 1 - progress; setCamera(0);
+        updateNotebook(1 - progress); focusAlignment = 1 - progress; setCamera(0);
       });
     } else if (!instant) {
       await tween(260, progress => { focusAlignment = 1 - progress; setCamera(0); });
@@ -452,6 +489,7 @@ export async function createStudioScene(canvas, {
     return operation;
   }
   const pick = (pageId, { immediate = false } = {}) => enqueue(async () => {
+    if (profiling) { frameSamples = []; bufferResizes = 0; }
     const id = pageId === 'path' ? 'background' : pageId;
     const target = plaques.find(item => item.id === id) || studioProps?.targets[id];
     if (!target) throw new RangeError(`Unknown studio page: ${pageId}`);
@@ -476,13 +514,14 @@ export async function createStudioScene(canvas, {
       }
     } else if (target.kind === 'notebook') {
       notify('Opening the contact notebook'); phase = 'opening';
-      if (instant) studioProps.setNotebookOpen(1);
-      else await tween(620, progress => studioProps.setNotebookOpen(progress));
+      if (instant) updateNotebook(1);
+      else await tween(620, progress => updateNotebook(progress));
     } else notify('Looking closer at About');
     phase = 'zooming-in';
     if (instant) setCamera(1); else await dolly(1, target.kind === 'plaque' ? 700 : 800);
-    phase = 'reading'; hover(null);
+    phase = 'reading'; hover(null); render();
     notify(`${target.title || (id === 'about' ? 'About' : 'Contact')} is ready`);
+    reportFrames();
   });
   const putBack = (options = {}) => enqueue(() => returnHeld(options));
 
@@ -497,10 +536,10 @@ export async function createStudioScene(canvas, {
     if (disposed) throw abortError();
     selection = target; isolateAssembly(target); resize();
     phase = 'inspecting'; notify(`Exploring ${target.title}`);
-    if (instant) { studioProps.setExploded(id, 1); setCamera(1); }
+    if (instant) { updateAssembly(id, 1); setCamera(1); }
     else {
       await dolly(1, 650);
-      await tween(560, t => studioProps.setExploded(id, t));
+      await tween(560, t => updateAssembly(id, t));
     }
     phase = 'inspecting'; render();
     return describeAssembly(target);
@@ -514,7 +553,7 @@ export async function createStudioScene(canvas, {
     if (selection?.kind !== 'assembly') return;
     const target = selection, from = target.explodedProgress || 0, to = value ? 1 : 0;
     phase = value ? 'exploding' : 'assembling';
-    await tween(480, t => studioProps.setExploded(target.id, from + (to - from) * t));
+    await tween(480, t => updateAssembly(target.id, from + (to - from) * t));
     phase = 'inspecting'; render();
   });
 
@@ -621,7 +660,7 @@ export async function createStudioScene(canvas, {
     event.preventDefault(); contextLost = true;
     notify('The 3D studio paused. You can still open every page.');
   };
-  const onContextRestored = () => { contextLost = false; resize(); notify(selection ? `${selection.title || selection.id} is ready` : 'Ready when you are'); };
+  const onContextRestored = () => { contextLost = false; renderer.shadowMap.needsUpdate = true; resize(); notify(selection ? `${selection.title || selection.id} is ready` : 'Ready when you are'); };
   const observer = new ResizeObserver(resize);
   observer.observe(canvas);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -688,7 +727,7 @@ export async function createStudioScene(canvas, {
       render();
     });
     return {
-      pick, putBack, inspect, setExploded, highlightPart, hover, dispose, getPresentationRect,
+      pick, putBack, inspect, setExploded, highlightPart, hover, dispose, getPresentationRect, resizeViewport: resize,
       setActive(value) { if (!disposed) { active = Boolean(value); if (active) resize(); } },
       setReaderMode(value) {
         if (disposed) return;

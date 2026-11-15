@@ -8,8 +8,30 @@ const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root));
 const hash = value => createHash('sha256').update(value).digest('hex');
 const manifest = JSON.parse(read('tests/studio-preservation.json').toString('utf8'));
-const classic = read('classic.html').toString('utf8');
-const studio = read('index.html').toString('utf8');
+const classic = read('classic.html').toString('utf8').replace(/\r\n/g, '\n');
+// Only the explicitly requested editorial changes are normalized; demo contracts,
+// untouched content and the original frozen fixtures remain independently checked.
+const reviewedEdits = JSON.parse(read('tests/fixtures/editorial-revision.json'));
+let studio = read('index.html').toString('utf8').replace(/\r\n/g, '\n');
+// The supplied bookshelf/exam photos and full-width interest layout are a later,
+// explicitly requested revision. Restore only these exact bounded fragments
+// before checking the earlier editorial changes and untouched classic content.
+const personalInterestEdits = JSON.parse(read('tests/fixtures/personal-interests-revision.json'));
+for (const { before, after } of personalInterestEdits) {
+  assert.equal(studio.split(after).length, 2, 'Approved personal-interest fragment must remain unique');
+  studio = studio.replace(after, before);
+}
+for (const { before, after } of [...reviewedEdits].reverse()) {
+  if (!after) { // A removed lede had a unique position between status and narrative.
+    const marker = '        <p>A ringing phone';
+    assert.equal(studio.split(marker).length, 2);
+    studio = studio.replace(marker, before + marker);
+  } else {
+    assert.equal(studio.split(after).length, 2, 'Reviewed editorial fragment must remain unique');
+    studio = studio.replace(after, before);
+  }
+}
+
 const soundscope = read('js/soundscope.js').toString('utf8');
 const protectedFiles = [
   'js/soundscope-room.js', 'js/soundscope-describe.js',
@@ -27,6 +49,7 @@ for (const path of protectedFiles) {
 // Restore only the approved Studio text palette, preserving the frozen demo bytes.
 test('legacy gesture demo is preserved apart from Studio contrast and the new demo routing guard', () => {
   let source = read('js/demos.js').toString('utf8');
+  source = source.replace("if (el.id === 'demo-zone' && window.portfolioGraphics) return window.portfolioGraphics.defer(el.querySelector('.demo__video'), fn, { label: 'Load video analysis', detail: 'Runs object detection on this device. Loading may take a moment.' }); ", '');
   const routingGuard = "    if (root.hasAttribute('data-living-room')) return; // Studio uses the simulated living-room interaction.\n";
   const ending = source.includes('\r\n') ? '\r\n' : '\n';
   assert.equal(source.split(routingGuard.replace(/\n/g, ending)).length, 2);
@@ -360,54 +383,31 @@ const approvedMedia = {
           <p>Ngamba Island provides a home for orphaned and rescued chimpanzees in Uganda. Chimpanzee Trust manages the sanctuary, providing ongoing care, food, veterinary support and enrichment. <a href="https://chimpanzeetrust.org/sanctuary-welfare/" target="_blank" rel="noopener">About the sanctuary ↗</a></p>
           <p>In the clip, I am the one in the pink patterned shirt preparing a food puzzle. We placed food at the bottom of a cylinder, with the idea that the chimpanzees would use materials from their environment as tools to retrieve it.</p>
           <p>Feeding puzzles are a form of enrichment: they encourage natural behaviours such as foraging and give the chimpanzees opportunities to explore and solve problems while finding food. <a href="https://www.pasa.org/post/primate-enrichment-at-pasa-wildlife-centers" target="_blank" rel="noopener">How enrichment works ↗</a></p>
+          <div class="s-ngamba-highlights" aria-label="More from Ngamba Island">
+            <a class="s-ngamba-tile" href="assets/ngamba-island/sanctuary-chimpanzees.mp4" data-gallery-item="ngamba-island-sanctuary-chimpanzees" aria-label="Watch the chimpanzees at the sanctuary">
+              <span class="s-ngamba-preview"><img src="assets/ngamba-island/sanctuary-poster.webp" alt="Chimpanzees in the sanctuary enclosure" width="368" height="736" loading="lazy" decoding="async"><span class="s-ngamba-play" aria-hidden="true">▶</span></span>
+              <span>At the sanctuary <small>Silent clip</small></span>
+            </a>
+            <a class="s-ngamba-tile" href="assets/ngamba-island/enrichment-team.webp" data-gallery-item="ngamba-island-enrichment-team" aria-label="View the enrichment preparation team">
+              <span class="s-ngamba-preview"><img src="assets/ngamba-island/enrichment-team.webp" alt="Our group preparing food and enrichment cylinders around a table" width="1080" height="720" loading="lazy" decoding="async"></span>
+              <span>Preparing together <small>Ngamba Island, 2022</small></span>
+            </a>
+            <a class="s-ngamba-tile s-ngamba-more" href="assets/ngamba-island/sanctuary-group.webp" data-gallery-category="Ngamba Island" aria-label="Open all Ngamba Island pictures">
+              <span aria-hidden="true">＋</span><strong>More pictures</strong><small>Open the Ngamba gallery ↗</small>
+            </a>
+          </div>
         </div>
         <figure class="s-personal-photo s-portrait-media s-service-photo">
-          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp?v=2" width="480" height="848" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
+          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp?v=24" width="480" height="848" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
             <source src="assets/ngamba-island/enrichment-preparation.mp4?v=2" type="video/mp4">
             <a href="assets/ngamba-island/enrichment-preparation.mp4?v=2">Watch the enrichment preparation clip</a>.
           </video>
           <figcaption>Preparing enrichment for the chimpanzees.</figcaption>
         </figure>
-        <details class="s-service-more">
-          <summary>More photos and a clip from Ngamba Island <span aria-hidden="true">＋</span></summary>
-          <div class="s-photo-gallery">
-            <figure class="s-personal-photo">
-              <a href="assets/ngamba-island/enrichment-team.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/enrichment-team.webp" alt="Our group preparing food and enrichment cylinders around a table" width="1080" height="720" loading="lazy" decoding="async"></a>
-              <figcaption>Preparing the food puzzles together.</figcaption>
-            </figure>
-            <figure class="s-personal-photo">
-              <a href="assets/ngamba-island/chimpanzees.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/chimpanzees.webp" alt="Chimpanzees along the wooded shoreline at Ngamba Island" width="1024" height="683" loading="lazy" decoding="async"></a>
-              <figcaption>The chimpanzees by the water.</figcaption>
-            </figure>
-            <figure class="s-personal-photo s-gallery-wide">
-              <a href="assets/ngamba-island/sanctuary-group.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/sanctuary-group.webp" alt="Our group beside Lake Victoria holding a cloth banner covered in messages" width="1600" height="1068" loading="lazy" decoding="async"></a>
-              <figcaption>Our group at the sanctuary.</figcaption>
-            </figure>
-            <figure class="s-personal-photo s-portrait-media">
-              <a href="assets/ngamba-island/preparation.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/preparation.webp" alt="A close view of the group handling white enrichment cylinders and cut fruit" width="768" height="1024" loading="lazy" decoding="async"></a>
-              <figcaption>A closer look at the preparation.</figcaption>
-            </figure>
-            <figure class="s-personal-photo s-portrait-media">
-              <video controls muted playsinline preload="none" poster="assets/ngamba-island/sanctuary-poster.webp" width="368" height="736" aria-label="Chimpanzees in the sanctuary enclosure at Ngamba Island">
-                <source src="assets/ngamba-island/sanctuary-chimpanzees.mp4" type="video/mp4">
-                <a href="assets/ngamba-island/sanctuary-chimpanzees.mp4">Watch the chimpanzees at the sanctuary</a>.
-              </video>
-              <figcaption>A short clip of the chimpanzees at the sanctuary.</figcaption>
-            </figure>
-            <figure class="s-personal-photo">
-              <a href="assets/ngamba-island/briefing.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/briefing.webp" alt="Sanctuary staff explaining the ground rules beside a conservation display" width="1600" height="1060" loading="lazy" decoding="async"></a>
-              <figcaption>Learning from the sanctuary staff.</figcaption>
-            </figure>
-            <figure class="s-personal-photo">
-              <a href="assets/ngamba-island/chimpanzee-branches.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/chimpanzee-branches.webp" alt="A chimpanzee standing on fallen branches beside the island shoreline" width="1024" height="683" loading="lazy" decoding="async"></a>
-              <figcaption>Exploring along the shore.</figcaption>
-            </figure>
-            <figure class="s-personal-photo s-gallery-wide">
-              <a href="assets/ngamba-island/lake-sunset.webp" target="_blank" rel="noopener"><img src="assets/ngamba-island/lake-sunset.webp" alt="Soft evening colours above Lake Victoria" width="1600" height="1068" loading="lazy" decoding="async"></a>
-              <figcaption>Evening on Lake Victoria.</figcaption>
-            </figure>
-          </div>
-        </details>
+        <figure class="s-personal-photo s-ngamba-lake">
+          <a href="assets/ngamba-island/lake-sunset.webp" data-gallery-item="ngamba-island-lake-sunset"><img src="assets/ngamba-island/lake-sunset.webp" alt="Soft evening colours above Lake Victoria" width="1600" height="1068" loading="lazy" decoding="async"></a>
+          <figcaption>Evening on Lake Victoria.</figcaption>
+        </figure>
       </li>
 `,
     original: '      <li><h4>Ngamba Island, 2022</h4><p>During high school, I volunteered at the Ngamba Island chimpanzee sanctuary on Lake Victoria, where I helped feed the rescued chimpanzees, clean their habitats and prepare enrichment activities.</p><figure class="slot" data-src="images/ngamba.jpg" data-caption="Ngamba Island"></figure></li>\n',
