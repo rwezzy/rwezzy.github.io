@@ -16,8 +16,10 @@ body.studio-site {
 /* Keep the instruments readable inside the dark glass document. Their scene
    controls retain a light surface and their existing interaction mechanisms. */
 body.studio-site.s-reading :is(.demo,.pick,.ss-lab,.einchat) {
-  --ink:#282923; --ink-2:#626854; --ink-3:#747c66;
-  --bg:#fafbf7; --bg-2:#f0f2e9; --line:#d8dece;
+  --ink:#282923; --ink-2:#626854; --ink-3:#626854;
+  --bg:#fafbf7; --bg-2:#f0f2e9; --card:#fff; --line:#d8dece;
+  --line-2:#8d947d; --green:#546338; --teal:#526b34;
+  --turq:#526b34; --pink:#855d81; --blue:#526780;
   background:rgba(244,247,239,.96);
 }
 body.studio-site.s-reading .ss-lede { color:#dce6dc !important; }

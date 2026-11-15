@@ -13,7 +13,7 @@ const studio = read('index.html').toString('utf8');
 const soundscope = read('js/soundscope.js').toString('utf8');
 const protectedFiles = [
   'js/soundscope-room.js', 'js/soundscope-describe.js',
-  'js/soundscope-hardware.js', 'js/pick.js', 'js/demos.js', 'css/soundscope.css',
+  'js/soundscope-hardware.js', 'js/pick.js', 'css/soundscope.css',
 ];
 
 // These are frozen inputs from before the studio redesign, not generated from index.html.
@@ -23,6 +23,23 @@ for (const path of protectedFiles) {
     assert.equal(hash(read(path)), manifest[path], `${path} differs from its saved baseline`);
   });
 }
+
+// Restore only the approved Studio text palette, preserving the frozen demo bytes.
+test('gesture demo matches its frozen baseline except for Studio text contrast', () => {
+  let source = read('js/demos.js').toString('utf8');
+  const palette = "    // Keep canvas and inline status text legible on Studio's light instrument panel.\r\n    const gestureText = document.body.classList.contains('studio-site')\r\n      ? { muted: '#626854', accent: '#704b72' }\r\n      : { muted: C.ink3, accent: C.hw };\r\n";
+  const changes = [
+    [palette, ''],
+    ['anomaly.style.color = odd ? gestureText.accent : gestureText.muted;', 'anomaly.style.color = odd ? C.hw : C.ink3;'],
+    ["text(ctx, 'press and draw here', w / 2, h / 2, gestureText.muted, 12, 'center')", "text(ctx, 'press and draw here', w / 2, h / 2, C.ink3, 12, 'center')"],
+    ['12, 22, gestureText.accent, 13);', '12, 22, C.hw, 13);'],
+  ];
+  for (const [current, original] of changes) {
+    assert.equal(source.split(current).length, 2, 'Each approved text contrast change must occur exactly once');
+    source = source.replace(current, original);
+  }
+  assert.equal(hash(source), manifest['js/demos.js'], 'Gesture behavior and classic colors must match the original demo');
+});
 
 // Permit only the reviewed initialization-order fix, then verify every original byte.
 function beforeRenderInitializationFix(source) {
@@ -437,12 +454,26 @@ test('the SoundScope region still matches its frozen manifest fingerprint', () =
   assert.equal(hash(region(beforeApprovedMedia(studio, ['soundscope']))), manifest.soundscope_article, 'Original Studio SoundScope region changed outside the approved gallery');
 });
 
-test('original portfolio sections survive apart from the requested personal content and responsibility edits', () => {
+function beforeApprovedInternshipCopy(source) {
+  const changes = [
+    ['<p class="s-home-description">Robotics, embedded systems <br>and machine learning.<br><a href="#contact" data-view="contact">Robotics internships · Summer 2027 ↗</a></p>', '<p class="s-home-description">Robotics, embedded systems <br>and machine learning.</p>'],
+    ['<li><span class="dot dot--blue"></span> seeking Summer 2027 internships in robotics, embedded systems, and digital hardware design</li>', '<li><span class="dot dot--blue"></span> open to internships in computer architecture, digital design, embedded systems, and ML systems</li>'],
+    ['<li class="path__next"><time class="mono">next</time><div><h4>Summer 2027 internships</h4><p>I am seeking Summer 2027 internships in robotics, embedded systems, and digital hardware design. <a href="#contact">Contact me.</a></p></div></li>', '<li class="path__next"><time class="mono">next</time><div><h4>Internship opportunities</h4><p>I am seeking an internship in computer architecture, digital design, embedded systems or machine learning systems. <a href="#contact">Contact me.</a></p></div></li>'],
+    ['<p>I am seeking Summer 2027 internships in robotics, embedded systems, and digital hardware design. I would also be happy to discuss the implementation, limitations or further development of any of the projects described here.</p>', '<p>I am seeking internships in computer architecture, digital design, embedded systems and machine learning systems, where I can develop my technical understanding through practical work. I would also be happy to discuss the implementation, limitations or further development of any of the projects described here.</p>'],
+  ];
+  for (const [current, original] of changes) {
+    assert.equal(source.split(current).length, 2, 'Each approved Summer 2027 internship edit must occur exactly once');
+    source = source.replace(current, original);
+  }
+  return source;
+}
+
+test('original portfolio sections survive apart from the requested personal content, responsibilities and internship edits', () => {
   // Original sections contain no nested sections. Exact source comparison also protects
   // links, media paths, captions, labels, and the demo DOM contracts inside each section.
   const sections = [...classic.replace(/\r\n/g, '\n').matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 7, 'The frozen classic snapshot should contain seven sections');
-  const candidate = beforeApprovedMedia(studio).replace(/\r\n/g, '\n')
+  const candidate = beforeApprovedInternshipCopy(beforeApprovedMedia(studio)).replace(/\r\n/g, '\n')
     .replace(/^      <article class="hobby hobby--pets" id="interest-dogs">[\s\S]*?^      <\/article>\n/m, '')
     .replace('      <p class="intro__lede">Currently looking for someone to peer pressure me into starting pickleball.</p>\n', '')
     .replace('    <p class="service-intro">I continue to volunteer in New Jersey, including park cleanups, community event support and the Making Strides Breast Cancer Awareness Walk.</p>\n', '')

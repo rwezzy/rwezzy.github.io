@@ -180,6 +180,10 @@
   /* ==================================================== OmniRing gesture pad */
   (function gesture() {
     const root = document.getElementById('demo-gesture'); if (!root) return;
+    // Keep canvas and inline status text legible on Studio's light instrument panel.
+    const gestureText = document.body.classList.contains('studio-site')
+      ? { muted: '#626854', accent: '#704b72' }
+      : { muted: C.ink3, accent: C.hw };
     const bars = root.querySelector('.bars'), traceCv = root.querySelector('.gesture__trace');
     const CLASSES = ['circle', 'left-right', 'up-down', 'rest'];
     CLASSES.forEach(c => { const d = document.createElement('div'); d.className = 'bar'; d.innerHTML = `<span>${c}</span><i></i><b>0.00</b>`; bars.append(d); });
@@ -219,7 +223,7 @@
       [...bars.children].forEach((b, i) => { b.classList.toggle('top', i === top); b.querySelector('i').style.setProperty('--v', (prob[i] * 100).toFixed(0) + '%'); b.querySelector('b').textContent = prob[i].toFixed(2); });
       const odd = !idle && Math.max(...prob) < 0.5;
       anomaly.textContent = idle ? 'waiting for a gesture' : odd ? 'anomaly: motion outside the reference patterns' : 'anomaly: none';
-      anomaly.style.color = odd ? C.hw : C.ink3;
+      anomaly.style.color = odd ? gestureText.accent : gestureText.muted;
     }
     function drawTrace() {
       const dpr = Math.min(devicePixelRatio || 1, 2), r = traceCv.getBoundingClientRect();
@@ -250,11 +254,11 @@
       ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
       for (let x = 20; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
       for (let y = 20; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-      if (!pts.length) { text(ctx, 'press and draw here', w / 2, h / 2, C.ink3, 12, 'center'); return; }
+      if (!pts.length) { text(ctx, 'press and draw here', w / 2, h / 2, gestureText.muted, 12, 'center'); return; }
       ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
       ctx.fillStyle = C.hw; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, 5, 0, Math.PI * 2); ctx.fill();
-      if (result) text(ctx, `→ ${result}`, 12, 22, C.hw, 13);
+      if (result) text(ctx, `→ ${result}`, 12, 22, gestureText.accent, 13);
     });
     s.ondown = () => { pts = []; result = null; recording = true; };
     s.onup = () => {

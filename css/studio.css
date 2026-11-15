@@ -22,6 +22,7 @@ body.studio-site { background:#f7f7f2; color:#282923; --studio-glass:rgba(255,25
 .s-introduction h1>span:not(.s-name-dot) { font-weight:400; }
 .s-name-dot { color:#81984c; }
 .s-home-description { color:#62675d; font-size:clamp(16px,1.4vw,20px); line-height:1.55; letter-spacing:-.3px; margin-bottom:0; }
+.s-home-description>a { display:block; margin-top:12px; }
 .s-location { margin-top:20px; display:flex; flex-direction:column; gap:6px; color:#565d50; font:11px/1.6 var(--mono); }
 .s-location span:last-child { color:#626a59; font-size:10px; letter-spacing:1px; }
 .s-discover { display:inline-flex; gap:12px; align-items:center; font-size:14px; font-weight:600; color:#282923; text-decoration:none; margin-top:24px; }
@@ -277,10 +278,19 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 #s-read-section span { margin-left:22px; }
 #s-read-section:hover { background:#ffffff16; border-color:#c6d5b3; }
 .s-content-root { scroll-margin-top:92px; }
-.s-reader .s-content-root { --ink:#e5ece5; --ink-2:#bdc9c3; --ink-3:#9baea1; --line:#ffffff26; --line-2:#ffffff40; --green:#c2d2a5; }
+/* Keep foreground and surface tokens together: nested badges and buttons use
+   the same palette as the reader, while demos reset both to their light theme. */
+.s-reader .s-content-root { --bg:#171522; --bg-2:#302c3f; --card:#292634; --ink:#edf3eb; --ink-2:#c5d0c8; --ink-3:#adbdaf; --line:#ffffff26; --line-2:#ffffff40; --green:#c2d2a5; --teal:#c6dbb5; --turq:#b4c9a6; --pink:#e1b6dd; --blue:#adc7df; }
+.s-reader .s-content-root .pill--solid { color:var(--bg); }
+.s-reader .s-content-root .pill--solid:hover { color:var(--bg); }
+.s-reader .s-content-root ::selection { background:#dfc9f4; color:#282533; }
+.studio-site .tag--re { color:#236638; }
 .s-reader .s-content-root :is(.section__head h2,.proj__intro h3,.intro h1,.contact h2,.arbor h3,.research__item h4,.hobby__body h4,.path h4,.mini h3) { color:#eef3eb; }
 .s-reader .s-content-root :is(.proj__intro>p:not(.ribbon),.intro__lede,.path p,.research__item p,.arbor p,.service p,.hobby__body p,.contact>p,.mini p) { color:#c5d0c8; }
-.s-reader .s-content-root :is(.proj__intro>p.proj__meta,.section__head>.label,.label,.path time) { color:#a9bba9; }
+.s-reader .s-content-root :is(.proj__intro>p.proj__meta,.section__head>.label,.path time) { color:#a9bba9; }
+.s-reader .s-content-root .label { color:var(--ink-3); }
+.s-reader .s-demo-instructions { color:var(--ink-2); }
+.s-reader .s-demo-instructions[open] summary { color:var(--ink); }
 .s-reader .s-content-root :is(.facts,.arbor,.mini,.hobby) { background:#ffffff08; border-color:#ffffff20; box-shadow:none; }
 .s-reader .s-content-root :is(.facts li,.proj,.path li,.service li,.research__item) { border-color:#ffffff20; }
 .s-reader .s-project-index a { color:#e6ede5; background:#ffffff08; border-color:#ffffff25; box-shadow:none; }
@@ -318,7 +328,7 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-reading[data-surface="notebook"] .s-header { background:rgba(244,238,220,.94); border-color:#6f68502b; }
 .s-reading[data-surface="notebook"] :is(.s-brand,.s-nav a,.s-contact-link,.s-back,.s-reader-toolbar p,.s-reader-footer,.s-reader-footer a,.s-reader-footer button) { color:#454a38; }
 .s-reading[data-surface="notebook"] .s-contact-link { border-color:#78725e50; }
-.s-reading[data-surface="notebook"] .s-content-root { --ink:#30382c; --ink-2:#565f4f; --ink-3:#617047; --line:#6f68502b; --line-2:#78725e50; --card:#fffcf2; }
+.s-reading[data-surface="notebook"] .s-content-root { --bg:#fffcf2; --bg-2:#eee9db; --card:#fffcf2; --ink:#30382c; --ink-2:#565f4f; --ink-3:#617047; --line:#6f68502b; --line-2:#78725e50; --green:#526b34; --teal:#526b34; --turq:#526b34; --pink:#855d81; --blue:#607386; }
 .s-reading[data-surface="notebook"] .s-content-root .contact h2 { color:#30382c; }
 .s-reading[data-surface="notebook"] .s-content-root .contact>p { color:#565f4f; }
 .s-reading[data-surface="notebook"] .s-content-root .contact .label { color:#617047; }
