@@ -97,6 +97,6 @@
   },
   {
     "before": "      <h1>I'm Keith, a computer engineering student at NJIT.</h1>",
-    "after": "      <h1>I'm Keith, a computer engineering student at NJIT.</h1>\n      <p class=\"intro__lede\">My full name is Keith Tinkamanyire Rwezahura, but I also go by Kama.</p>"
+    "after": "      <h1>I'm Keith, a computer engineering student at NJIT.</h1>\n      <p class=\"intro__lede\">My full name is Keith Tinkamanyire Rwezahura. Most people call me Keith, but I prefer Tinkamanyire or its shortened form, Kama.</p>"
   }
 ]
