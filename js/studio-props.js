@@ -98,81 +98,148 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   const brass = material('#b89d62', { roughness: .36, metalness: .65 });
 
   // ---------------------------------------------------------- running shoes
-  // Original, unbranded running-shoe silhouettes: layered soles, mesh panels,
-  // collars, tongues, eyelets, and individual laces, rather than a shoe asset.
-  const shoes = new THREE.Group(); shoes.name = 'Running — naturally leaning training shoes';
-  shoes.position.set(-.90, .001, .10); shoes.rotation.y = -.27; group.add(shoes);
-  const knit = material('#394249', { roughness: .96, metalness: 0 });
-  const soleFoam = material('#e4e6db', { roughness: .86, metalness: 0 });
-  const shoeAccent = material('#a7b36f', { roughness: .72, metalness: 0 });
-  const laceMaterial = material('#d6ddd4', { roughness: .88, metalness: 0 });
-  const soleOutline = new THREE.Shape();
-  soleOutline.moveTo(-.029, -.105);
-  soleOutline.bezierCurveTo(-.044, -.106, -.043, -.057, -.035, -.023);
-  soleOutline.bezierCurveTo(-.048, .018, -.050, .069, -.034, .099);
-  soleOutline.bezierCurveTo(-.017, .124, .027, .124, .044, .096);
-  soleOutline.bezierCurveTo(.052, .062, .046, .022, .036, -.020);
-  soleOutline.bezierCurveTo(.034, -.053, .043, -.103, .026, -.106);
-  soleOutline.quadraticCurveTo(0, -.117, -.029, -.105);
-  function soleLayer(depth, appearance, parent, y, scale = 1) {
-    const geometry = keep(new THREE.ExtrudeGeometry(soleOutline, { depth, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: .0018, bevelThickness: .0012, curveSegments: 20 }));
-    geometry.rotateX(-Math.PI / 2);
-    const object = mesh(geometry, appearance, parent); object.position.y = y; object.scale.set(scale, 1, scale);
-    return object;
+  // Original procedural red Hoka-style trainers: a continuous fitted upper
+  // over a deep rocker midsole, with actual collar openings and separate laces.
+  const shoes = new THREE.Group(); shoes.name = 'Running — red trainers resting on their toes';
+  shoes.position.set(-.98, .001, -.18); shoes.rotation.y = -.27; group.add(shoes);
+  const knitBump = canvasMap(128, 128, ctx => {
+    ctx.fillStyle = '#999'; ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#666';
+    for (let y = 0; y < 128; y += 8) for (let x = 0; x < 128; x += 8) ctx.fillRect(x + (y % 16 ? 3 : 0), y, 2, 4);
+  });
+  knitBump.colorSpace = THREE.NoColorSpace; knitBump.wrapS = knitBump.wrapT = THREE.RepeatWrapping; knitBump.repeat.set(3, 5);
+  const knit = material('#d52737', { roughness: .93, metalness: 0, bumpMap: knitBump, bumpScale: .00018 });
+  const shoeAccent = material('#a7192c', { roughness: .8, metalness: 0 });
+  const soleFoam = material('#f4f0df', { roughness: .88, metalness: 0 });
+  const soleGroove = material('#d5d0bc', { roughness: .92, metalness: 0 });
+  const laceMaterial = material('#ffccc0', { roughness: .96, metalness: 0 });
+  // z, half-width, lower surface, upper surface. Toe is negative z.
+  // The upturned ends and broad forefoot describe a running last, not spheres.
+  const soleSections = [
+    [-.124, .001, .024, .040], [-.116, .019, .016, .041], [-.101, .032, .007, .037],
+    [-.078, .041, .002, .031], [-.043, .042, .001, .031], [-.008, .037, .002, .034],
+    [.029, .034, .003, .038], [.068, .037, .005, .043], [.099, .032, .010, .046],
+    [.116, .018, .019, .047], [.124, .001, .027, .041],
+  ];
+  const upperSections = [
+    [-.116, .001, .037, .039], [-.107, .019, .036, .046], [-.091, .031, .032, .053],
+    [-.063, .038, .030, .059], [-.029, .035, .032, .067], [.002, .030, .035, .077],
+    [.029, .028, .039, .084], [.058, .030, .042, .086], [.084, .028, .045, .086],
+    [.103, .022, .046, .078], [.113, .001, .045, .063],
+  ];
+  const shoeSectionAt = (sections, z) => {
+    const next = sections.findIndex(row => row[0] >= z);
+    if (next <= 0) return sections[Math.max(0, next)];
+    const a = sections[next - 1], b = sections[next], t = (z - a[0]) / (b[0] - a[0]);
+    return a.map((value, index) => THREE.MathUtils.lerp(value, b[index], t));
+  };
+  function shoeLoft(sections, upper = false) {
+    const vertices = [], uvs = [], indices = [], around = 32, along = 64;
+    const start = sections[0][0], end = sections.at(-1)[0];
+    for (let i = 0; i <= along; i++) {
+      const [z, width, low, high] = shoeSectionAt(sections, THREE.MathUtils.lerp(start, end, i / along));
+      for (let j = 0; j <= around; j++) {
+        const angle = j / around * Math.PI * 2, c = Math.cos(angle), s = Math.sin(angle);
+        const x = width * (upper ? c : Math.sign(c) * Math.abs(c) ** .65);
+        const y = upper ? low + (high - low) * Math.max(0, s) : (low + high) / 2 + (high - low) / 2 * Math.sign(s) * Math.abs(s) ** .65;
+        vertices.push(x, y, z); uvs.push(j / around, i / along);
+        if (i < along && j < around) {
+          const a = i * (around + 1) + j, b = a + around + 1;
+          indices.push(a, a + 1, b + 1, a, b + 1, b);
+        }
+      }
+    }
+    const geometry = keep(new THREE.BufferGeometry());
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
   }
+  const foamGeometry = shoeLoft(soleSections), upperGeometry = shoeLoft(upperSections, true);
+  const shoeBrand = canvasMap(512, 128, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#fff5e7'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'italic 900 112px Arial, sans-serif'; ctx.fillText('HOKA', w / 2, h / 2 + 4);
+  });
+  const brandMaterial = material('#ffffff', { map: shoeBrand, transparent: true, roughness: .9, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });
+  const curvedLine = (points, radius, appearance, parent) => mesh(keep(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, radius, 5, false)), appearance, parent);
   function makeShoe(parent) {
     const shoe = new THREE.Group(); parent.add(shoe);
-    soleLayer(.004, rubber, shoe, 0);
-    soleLayer(.012, soleFoam, shoe, .004, .985);
-    soleLayer(.003, shoeAccent, shoe, .016, .97);
-    const upperGeometry = keep(new THREE.SphereGeometry(1, 36, 20));
-    const forefoot = mesh(upperGeometry, knit, shoe); forefoot.scale.set(.043, .027, .092); forefoot.position.set(.002, .028, -.025);
-    const heel = mesh(upperGeometry, knit, shoe); heel.scale.set(.034, .044, .046); heel.position.set(0, .039, .071);
-    const opening = mesh(keep(new THREE.SphereGeometry(1, 28, 16)), rubber, shoe); opening.scale.set(.024, .0015, .032); opening.position.set(0, .085, .068);
-    const collar = mesh(keep(new THREE.TorusGeometry(.026, .005, 10, 36)), knit, shoe);
-    collar.rotation.x = Math.PI / 2; collar.scale.y = 1.22; collar.position.set(0, .087, .068);
-    const tongue = mesh(box(.035, .007, .065, .003), knit, shoe); tongue.position.set(0, .052, .015); tongue.rotation.x = -.2;
-    for (let i = 0; i < 5; i++) {
-      const z = -.017 + i * .011, y = .052 + i * .003;
+    mesh(foamGeometry, soleFoam, shoe).name = 'Sculpted rocker midsole';
+    mesh(upperGeometry, knit, shoe).name = 'Continuous red mesh upper';
+    // Segmented rubber contact pads follow the rocker, leaving the foam exposed.
+    for (const z of [-.104, -.079, -.052, .064, .092]) {
+      const [, width, low] = shoeSectionAt(soleSections, z);
       for (const side of [-1, 1]) {
-        const eyelet = mesh(keep(new THREE.TorusGeometry(.002, .00065, 6, 12)), shoeAccent, shoe);
-        eyelet.rotation.x = Math.PI / 2; eyelet.position.set(side * .018, y, z);
+        const pad = mesh(box(width * .77, .003, .019, .001), rubber, shoe);
+        pad.position.set(side * width * .48, low + .0001, z);
+        pad.rotation.x = z < -.09 ? -.38 : z > .08 ? .3 : 0;
       }
-      tubeBetween([-.018, y + .001, z], [.018, y + .0035, z + .009], .0011, laceMaterial, shoe);
-      tubeBetween([.018, y + .001, z], [-.018, y + .0035, z + .009], .0011, laceMaterial, shoe);
     }
-    // Small stitched panels and ventilation perforations remain code-native.
-    for (const side of [-1, 1]) {
-      tubeBetween([side * .030, .040, .071], [side * .039, .036, -.028], .0017, shoeAccent, shoe);
-      tubeBetween([side * .038, .028, -.028], [side * .028, .027, -.087], .001, laceMaterial, shoe);
-      for (let i = 0; i < 7; i++) {
-        const vent = mesh(keep(new THREE.CircleGeometry(.0008, 7)), rubber, shoe);
-        vent.rotation.y = side * Math.PI / 2; vent.position.set(side * .040, .037, -.065 + i * .009);
+    const opening = mesh(keep(new THREE.CircleGeometry(.023, 40)), rubber, shoe);
+    opening.rotation.x = -Math.PI / 2; opening.scale.y = 1.28; opening.position.set(0, .087, .068);
+    const collar = mesh(keep(new THREE.TorusGeometry(.023, .0038, 10, 40)), shoeAccent, shoe);
+    collar.rotation.x = Math.PI / 2; collar.scale.y = 1.28; collar.position.set(0, .087, .068);
+    const tongue = mesh(box(.031, .004, .075, .002), shoeAccent, shoe); tongue.position.set(0, .075, .008); tongue.rotation.x = -.22;
+    const heelTab = mesh(box(.011, .018, .003, .001), shoeAccent, shoe); heelTab.position.set(0, .087, .103); heelTab.rotation.x = -.15;
+    for (let i = 0; i < 5; i++) {
+      const z = -.022 + i * .011, y = .069 + i * .0035;
+      for (const side of [-1, 1]) {
+        const eyelet = mesh(keep(new THREE.TorusGeometry(.0017, .0005, 6, 12)), shoeAccent, shoe);
+        eyelet.rotation.x = Math.PI / 2; eyelet.position.set(side * .015, y, z);
       }
+      tubeBetween([-.015, y + .001, z], [.015, y + .0035, z + .009], .0009, laceMaterial, shoe);
+      tubeBetween([.015, y + .001, z], [-.015, y + .0035, z + .009], .0009, laceMaterial, shoe);
+    }
+    // Small tied loops at the top of the lacing, rather than loose parallel bars.
+    for (const side of [-1, 1]) curvedLine([[0, .087, .029], [side * .014, .090, .024], [side * .018, .089, .034], [0, .087, .029]], .00085, laceMaterial, shoe);
+    for (const side of [-1, 1]) {
+      const sidewall = soleSections.slice(1, -1).map(([z, width, low, high]) => [side * width, low + (high - low) * .43, z]);
+      curvedLine(sidewall, .00065, soleGroove, shoe);
+      const seam = upperSections.slice(2, -1).map(([z, width, low]) => [side * width * .99, low + .003, z]);
+      curvedLine(seam, .0012, shoeAccent, shoe);
+      // A conforming side graphic follows the mesh instead of floating beside it.
+      const positions = [], uv = [], indices = [];
+      for (let i = 0; i <= 16; i++) {
+        const t = i / 16, z = -.043 + t * .074;
+        const [, width, low, high] = shoeSectionAt(upperSections, z);
+        for (let row = 0; row < 2; row++) {
+          const fraction = row ? .72 : .37;
+          positions.push(side * (width * Math.sqrt(1 - fraction * fraction) + .0005), low + (high - low) * fraction, z);
+          uv.push(side > 0 ? 1 - t : t, row);
+        }
+        if (i < 16) { const a = i * 2; if (side > 0) indices.push(a, a + 1, a + 3, a, a + 3, a + 2); else indices.push(a, a + 3, a + 1, a, a + 2, a + 3); }
+      }
+      const graphic = keep(new THREE.BufferGeometry());
+      graphic.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); graphic.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      graphic.setIndex(indices); graphic.computeVertexNormals(); mesh(graphic, brandMaterial, shoe);
     }
     return shoe;
   }
   const leftShoe = makeShoe(shoes), rightShoe = makeShoe(shoes);
-  leftShoe.position.set(-.049, 0, .016); leftShoe.rotation.set(1.18, -.10, -.07);
-  rightShoe.position.set(.049, 0, .004); rightShoe.rotation.set(1.28, .12, .06);
+  // Toes touch the desk; heels lean upward. YXZ keeps the red uppers facing
+  // the viewer after turning the shoes around, rather than displaying soles.
+  leftShoe.position.set(-.049, 0, .016); leftShoe.rotation.set(-1.18, Math.PI - .10, -.07, 'YXZ');
+  rightShoe.position.set(.049, 0, .004); rightShoe.rotation.set(-1.28, Math.PI + .12, .06, 'YXZ');
   for (const shoe of [leftShoe, rightShoe]) {
     shoes.updateWorldMatrix(true, true);
-    const bounds = new THREE.Box3().setFromObject(shoe);
-    shoe.position.y += shoes.position.y + .002 - bounds.min.y;
+    // The desk is at world y=0. Precise vertices avoid the false low corner
+    // of a tilted bounding box, which would leave a curved toe floating.
+    const bounds = new THREE.Box3().setFromObject(shoe, true);
+    shoe.position.y += .0002 - bounds.min.y;
   }
   const backstopMaterial = material('#e3e1d8', { roughness: .96, metalness: 0, envMapIntensity: .12 });
-  const backstop = mesh(box(.205, .175, .010, .003), backstopMaterial, shoes);
-  backstop.name = 'Low shoe backstop'; backstop.position.set(0, .088, -.048);
+  const backstop = mesh(box(.205, .205, .010, .003), backstopMaterial, shoes);
+  backstop.name = 'Low shoe backstop'; backstop.position.set(0, .103, -.048);
   const backstopFoot = mesh(box(.205, .004, .035, .0015), backstopMaterial, shoes);
   backstopFoot.position.set(0, .002, -.038);
-  const heelShadowMap = canvasMap(128, 128, ctx => {
+  const toeShadowMap = canvasMap(128, 128, ctx => {
     const gradient = ctx.createRadialGradient(64, 64, 5, 64, 64, 64);
     gradient.addColorStop(0, 'rgba(38,41,35,.23)'); gradient.addColorStop(.5, 'rgba(38,41,35,.10)'); gradient.addColorStop(1, 'rgba(38,41,35,0)');
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, 128, 128);
   });
-  for (const x of [-.049, .049]) {
-    const shadow = plane(.13, .105, basic({ map: heelShadowMap, transparent: true, depthWrite: false }), shoes);
-    shadow.rotation.x = -Math.PI / 2; shadow.position.set(x, .0006, .041); shadow.raycast = () => {};
+  for (const shoe of [leftShoe, rightShoe]) {
+    const toe = shoes.worldToLocal(shoe.localToWorld(new THREE.Vector3(0, .024, -.124)));
+    const shadow = plane(.105, .075, basic({ map: toeShadowMap, transparent: true, depthWrite: false }), shoes);
+    shadow.rotation.x = -Math.PI / 2; shadow.position.set(toe.x, .0001 - shoes.position.y, toe.z); shadow.raycast = () => {};
   }
   shoes.traverse(object => { if (object.isMesh) pageHit(object, 'hobbies'); });
 

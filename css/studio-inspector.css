@@ -41,19 +41,17 @@ body.studio-site.s-inspecting .s-telemetry { display:none; }
 }
 .studio-site .s-strava-link:hover { color:#fff; background:#367653; border-color:#c3e7cd; }
 .studio-site .s-strava-link:focus-visible { outline:3px solid #c0e9ca; outline-offset:3px; }
-.studio-site .s-language-symbol {
-  display:grid;
-  place-items:center;
+.studio-site .hobby > .s-hobby-art {
+  display:block;
   width:100%;
+  height:auto;
   aspect-ratio:16/10;
-  color:#f0e7ff;
-  background:radial-gradient(ellipse at 30% 30%,#796a9b,#423550 80%);
+  object-fit:contain;
+  background:#292437;
   border-bottom:1px solid #ffffff20;
-  font:500 clamp(50px,7vw,94px)/1.1 var(--sans,system-ui,sans-serif);
-  letter-spacing:-.065em;
 }
-.studio-site .s-language>h4 { margin:25px 28px 0; color:inherit; font:500 23px/1.3 var(--sans,system-ui,sans-serif); letter-spacing:-.4px; }
-.studio-site .s-language>p { margin:9px 28px 25px; color:inherit; font-size:16px; line-height:1.7; }
+.studio-site .s-content-root .hobby__body .s-language-streak { display:inline-block; margin-top:18px; padding:10px 14px; border:1px solid #bacfa17a; border-radius:12px; background:#303e2c; color:#edf6e5; font-size:16px; font-weight:500; }
+.studio-site .s-language-streak > span:first-child { font-variant-numeric:tabular-nums; }
 
 .studio-inspector {
   --si-ink:#faf6ff;

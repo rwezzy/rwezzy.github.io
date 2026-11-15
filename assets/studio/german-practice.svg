@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Original illustration created for this portfolio; no third-party branding. -->
+  <rect width="800" height="500" fill="#292437"/>
+  <g fill="none" stroke="#b8a6cd" opacity=".15">
+    <path d="M0 100H800M0 200H800M0 300H800M0 400H800M100 0V500M200 0V500M300 0V500M400 0V500M500 0V500M600 0V500M700 0V500"/>
+  </g>
+  <path d="M116 100H495Q520 100 520 125V240Q520 265 495 265H218L158 307V265H116Q90 265 90 240V125Q90 100 116 100Z" fill="#e9e2f2"/>
+  <text x="143" y="209" fill="#30243f" font-family="Georgia,serif" font-size="82">Hallo.</text>
+  <path d="M352 278H684Q710 278 710 304V377Q710 403 684 403H650V437L602 403H352Q326 403 326 377V304Q326 278 352 278Z" fill="#b8cba4"/>
+  <text x="365" y="359" fill="#223126" font-family="Arial,sans-serif" font-size="47">Guten Tag!</text>
+  <rect x="590" y="110" width="96" height="23" rx="2" fill="#111118"/>
+  <rect x="590" y="133" width="96" height="23" fill="#cb4a55"/>
+  <rect x="590" y="156" width="96" height="23" rx="2" fill="#e8bb65"/>
+</svg>

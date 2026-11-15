@@ -350,9 +350,9 @@ const approvedMedia = {
           <p>Feeding puzzles are a form of enrichment: they encourage natural behaviours such as foraging and give the chimpanzees opportunities to explore and solve problems while finding food. <a href="https://www.pasa.org/post/primate-enrichment-at-pasa-wildlife-centers" target="_blank" rel="noopener">How enrichment works ↗</a></p>
         </div>
         <figure class="s-personal-photo s-portrait-media s-service-photo">
-          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp" width="368" height="650" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
-            <source src="assets/ngamba-island/enrichment-preparation.mp4" type="video/mp4">
-            <a href="assets/ngamba-island/enrichment-preparation.mp4">Watch the enrichment preparation clip</a>.
+          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp?v=2" width="480" height="848" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
+            <source src="assets/ngamba-island/enrichment-preparation.mp4?v=2" type="video/mp4">
+            <a href="assets/ngamba-island/enrichment-preparation.mp4?v=2">Watch the enrichment preparation clip</a>.
           </video>
           <figcaption>Preparing enrichment for the chimpanzees.</figcaption>
         </figure>
@@ -468,12 +468,37 @@ function beforeApprovedInternshipCopy(source) {
   return source;
 }
 
+function beforeApprovedAboutAndSenateCopy(source) {
+  const lineEnding = source.includes('\r\n') ? '\r\n' : '\n';
+  const changes = [
+    // The portrait has already been restored by beforeApprovedMedia. Only the
+    // repeated highlights beneath it are removed at the user's request.
+    [`    <div class="intro__side">
+      <figure class="slot portrait" data-src="images/me.jpg" data-caption=""></figure>
+    </div>`, `    <div class="intro__side">
+      <figure class="slot portrait" data-src="images/me.jpg" data-caption=""></figure>
+      <ul class="facts">
+        <li><b>1st</b> place, Viam robotics hackathon</li>
+        <li><b>Dean's List</b>, Albert Dorman Honors College</li>
+        <li><b>180+</b> students at the school supported by Urban Arbor</li>
+      </ul>
+    </div>`],
+    ["<li><time class=\"mono\">Oct 2025</time><div><h4>Computer Engineering Senator</h4><p>I was elected to NJIT's Student Senate, where I represent over 200 computer engineering students.</p></div></li>", '<li><time class="mono">Oct 2025</time><div><h4>Student Senator</h4><p>I was elected to represent Computer Engineering in the Student Senate.</p></div></li>'],
+  ];
+  for (const [current, original] of changes) {
+    const expected = current.replace(/\n/g, lineEnding);
+    assert.equal(source.split(expected).length, 2, 'Each approved About and Senate edit must occur exactly once');
+    source = source.replace(expected, original.replace(/\n/g, lineEnding));
+  }
+  return source;
+}
+
 test('original portfolio sections survive apart from the requested personal content, responsibilities and internship edits', () => {
   // Original sections contain no nested sections. Exact source comparison also protects
   // links, media paths, captions, labels, and the demo DOM contracts inside each section.
   const sections = [...classic.replace(/\r\n/g, '\n').matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 7, 'The frozen classic snapshot should contain seven sections');
-  const candidate = beforeApprovedInternshipCopy(beforeApprovedMedia(studio)).replace(/\r\n/g, '\n')
+  const candidate = beforeApprovedInternshipCopy(beforeApprovedAboutAndSenateCopy(beforeApprovedMedia(studio))).replace(/\r\n/g, '\n')
     .replace(/^      <article class="hobby hobby--pets" id="interest-dogs">[\s\S]*?^      <\/article>\n/m, '')
     .replace('      <p class="intro__lede">Currently looking for someone to peer pressure me into starting pickleball.</p>\n', '')
     .replace('    <p class="service-intro">I continue to volunteer in New Jersey, including park cleanups, community event support and the Making Strides Breast Cancer Awareness Walk.</p>\n', '')
@@ -491,7 +516,13 @@ test('original portfolio sections survive apart from the requested personal cont
     assert.ok(candidate.includes(section), `Unrequested section change or missing content: ${label}`);
   }
   assert.ok(studio.includes('<h2>Responsibilities</h2>'));
-  assert.ok(studio.includes('I represent more than 300 computer engineering students in the Student Senate.'));
+  assert.ok(studio.includes(`<article id="student-senate">
+        <p class="proj__meta mono">NJIT · Student Senate</p>
+        <h3>Computer Engineering Senator</h3>
+        <p>I represent over 200 computer engineering students in NJIT's Student Senate.</p>
+      </article>`.replace(/\n/g, studio.includes('\r\n') ? '\r\n' : '\n')));
+  assert.ok(!studio.includes('<ul class="facts">'), 'The repeated About highlights must stay removed');
+  assert.ok(!studio.includes('300 computer engineering students'), 'The outdated representation count must not return');
   assert.ok(studio.includes('Through EOP, I taught 50 incoming students mathematics, physics, English and Python.'));
   assert.ok(studio.includes('<article class="hobby hobby--pets" id="interest-dogs">'));
   assert.ok(studio.includes('<img src="assets/personal/casper-dimitri-rafiki.webp"'));

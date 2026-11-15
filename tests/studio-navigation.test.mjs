@@ -279,6 +279,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
       return { createStudioScene: async (_, options) => { hooks = options; hooks.onReady?.(); return scene; } };
     },
     loadDemo: async () => { calls.push(['loadDemo']); return {}; },
+    loadStreak: async () => ({ mountStreak: element => { calls.push(['mountStreak', element.textContent]); return () => {}; } }),
     loadInspector: async () => {
       calls.push(['loadInspector']);
       if (inspectorGate) await inspectorGate.promise;
@@ -287,6 +288,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   };
   context.window = context;
   const executable = shell.replace(/import\('\.\/studio-scene\.js[^']*'\)/, 'loadScene()')
+    .replace(/import\('\.\/studio-streak\.js[^']*'\)/g, 'loadStreak()')
     .replace(/import\('\.\/pick\.js[^']*'\)/g, 'loadDemo()')
     .replace(/import\('\.\/studio-inspector\.js[^']*'\)/g, 'loadInspector()');
   assert.notEqual(executable, shell, 'The graphics import must be stubbed');
@@ -493,7 +495,7 @@ test('Beyond cards reach IEEE and every interest while preserving the open Beyon
     ['IEEE × Viam', 'ieee-viam'], ['Urban Arbor', 'urban-arbor'],
     ['Volunteering', 'volunteering'], ['Running', 'interest-running'],
     ['Reading', 'interest-reading'], ['Cooking', 'interest-cooking'], ['Writing', 'interest-writing'],
-    ['Pets', 'interest-dogs'], ['Learning German', 'interest-german'],
+    ['Pets', 'interest-dogs'], ['Listening to music', 'interest-music'], ['Learning German', 'interest-german'],
   ]) {
     const card = app.card(title);
     assert.ok(card, `Beyond must expose ${title}`);

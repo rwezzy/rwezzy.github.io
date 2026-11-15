@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Original record illustration, not album art. -->
+  <rect width="800" height="500" fill="#292437"/>
+  <circle cx="320" cy="250" r="204" fill="#18161e" stroke="#74647f" stroke-width="2"/>
+  <g fill="none" stroke="#56495e" stroke-width="1.5">
+    <circle cx="320" cy="250" r="188"/><circle cx="320" cy="250" r="174"/><circle cx="320" cy="250" r="160"/><circle cx="320" cy="250" r="146"/><circle cx="320" cy="250" r="132"/><circle cx="320" cy="250" r="118"/>
+  </g>
+  <circle cx="320" cy="250" r="93" fill="#c6d6b5"/>
+  <text x="320" y="238" text-anchor="middle" fill="#29352a" font-family="Georgia,serif" font-size="38" letter-spacing="3">Enya</text>
+  <circle cx="320" cy="269" r="6" fill="#18161e"/>
+  <path d="M583 99H633V276L576 338" fill="none" stroke="#cfc2d9" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="608" cy="100" r="24" fill="#665774" stroke="#d5c7e0" stroke-width="3"/>
+  <path d="M568 328L584 342L559 371L543 357Z" fill="#e8bb65"/>
+  <path d="M576 413H690" stroke="#74647f" stroke-width="2"/>
+  <circle cx="610" cy="413" r="6" fill="#c6d6b5"/>
+</svg>

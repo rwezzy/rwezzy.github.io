@@ -252,6 +252,10 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-reader-frost::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 8% 35%,rgba(115,76,222,.21),transparent 44%),radial-gradient(ellipse at 87% 72%,rgba(61,102,190,.12),transparent 42%); }
 .s-reader-frost::after { content:''; position:absolute; inset:88px 20px 20px; border:1px solid rgba(224,215,255,.14); border-top-color:rgba(239,231,255,.28); border-left-color:rgba(232,222,255,.24); border-radius:22px; box-shadow:inset 0 1px 0 #ffffff08,0 12px 48px -32px #08061066; }
 .s-reading .s-reader-frost { display:block; }
+/* About opens on a plain surface; the desk portrait stays on the desk. */
+.s-reading[data-surface="frame"] .s-scene-wrap { visibility:hidden; }
+.s-reading[data-surface="frame"] .s-reader-frost { background:#11101d; backdrop-filter:none; -webkit-backdrop-filter:none; }
+.s-reading[data-surface="frame"] .s-reader-frost::before { background:none; }
 .s-reader { width:100%; margin:0; border:0; border-radius:0; background:none; box-shadow:none; color:#e9eeeb; min-height:calc(100svh - 74px); }
 .s-reading .s-header { background:rgba(20,18,33,.84); border-color:#e8deff26; }
 .s-reading .s-brand,.s-reading .s-nav a:hover,.s-reading .s-nav a.is-current,.s-reading .s-contact-link { color:#f0f4ed; }

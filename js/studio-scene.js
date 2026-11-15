@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
 import { prepareJointPath, sampleJointPath } from './studio-motion.js';
-import { createStudioProps } from './studio-props.js?v=desk8';
+import { createStudioProps } from './studio-props.js?v=red-shoes5';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
 // nothing in this module connects to, or issues commands to, robot hardware.

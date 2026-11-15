@@ -45,11 +45,22 @@
   }
   const hobbies = document.querySelector('#offclock .hobbies');
   if (hobbies) {
+    const music = document.createElement('article'); music.className = 'hobby s-music'; music.id = 'interest-music';
+    const record = document.createElement('img'); record.src = 'assets/studio/music-listening.svg'; record.alt = ''; record.width = 800; record.height = 500; record.loading = 'lazy'; record.className = 's-hobby-art';
+    const musicBody = document.createElement('div'); musicBody.className = 'hobby__body';
+    const musicTitle = document.createElement('h4'); musicTitle.textContent = 'Listening to music';
+    const musicDescription = document.createElement('p'); musicDescription.textContent = 'Enya is my favourite artist. More than anything else, I listen to Enya.';
+    musicBody.append(musicTitle, musicDescription); music.append(record, musicBody); hobbies.append(music);
     const language = document.createElement('article'); language.className = 'hobby s-language'; language.id = 'interest-german';
-    const label = document.createElement('span'); label.className = 's-language-symbol'; label.textContent = 'Hallo.'; label.setAttribute('aria-hidden', 'true');
+    const illustration = document.createElement('img'); illustration.src = 'assets/studio/german-practice.svg'; illustration.alt = ''; illustration.width = 800; illustration.height = 500; illustration.loading = 'lazy'; illustration.className = 's-hobby-art';
+    const languageBody = document.createElement('div'); languageBody.className = 'hobby__body';
     const title = document.createElement('h4'); title.textContent = 'Learning German';
-    const description = document.createElement('p'); description.textContent = 'I am also learning German on Duolingo.';
-    language.append(label, title, description); hobbies.append(language);
+    const description = document.createElement('p'); description.textContent = 'I am learning German on Duolingo.';
+    const streak = document.createElement('p'); streak.className = 's-language-streak';
+    const count = document.createElement('span'); count.textContent = '414';
+    const caption = document.createElement('span'); caption.textContent = '-day streak on Duolingo';
+    streak.append(count, caption); languageBody.append(title, description, streak); language.append(illustration, languageBody); hobbies.append(language);
+    import('./studio-streak.js?v=1').then(({ mountStreak }) => mountStreak(count)).catch(error => console.warn('The daily streak counter could not be loaded.', error));
   }
   const sectionLinks = {
     projects: [
@@ -80,6 +91,7 @@
       ['interest-cooking', 'Cooking', 'Chapatis and Ugandan cuisine'],
       ['interest-writing', 'Writing', 'Fiction, children’s stories and familiar characters'],
       ['interest-dogs', 'Pets', 'The dogs, Dimitri and who is actually in charge'],
+      ['interest-music', 'Listening to music', 'Enya, above all'],
       ['interest-german', 'Learning German', 'Practising on Duolingo'],
     ],
   };
@@ -168,7 +180,7 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=photos1').then(async module => {
+  const sceneReady = import('./studio-scene.js?v=red-shoes5').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
       onPartSelect: id => inspector?.selectPart(id),
