@@ -359,10 +359,18 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-personal-photo img { display:block; width:100%; height:auto; border-radius:14px; }
 .s-personal-photo figcaption { padding-top:12px; color:#b9c7bd; font:12px/1.65 var(--sans); }
 .s-photo-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; align-items:start; }
-.s-arbor-more { border-top:1px solid #ffffff26; }
-.s-arbor-more summary { padding:18px 0; cursor:pointer; color:#d4ddce; font:13px/1.5 var(--sans); }
-.s-arbor-more summary span { float:right; }
-.s-arbor-more[open] summary span { transform:rotate(45deg); }
+.s-arbor-more,.s-service-more { border-top:1px solid #ffffff26; }
+.s-arbor-more summary,.s-service-more summary { padding:18px 0; cursor:pointer; color:#d4ddce; font:13px/1.5 var(--sans); }
+.s-arbor-more summary span,.s-service-more summary span { float:right; }
+.s-arbor-more[open] summary span,.s-service-more[open] summary span { transform:rotate(45deg); }
+.s-content-root .service .s-service-feature { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:28px; align-items:start; }
+.s-content-root .s-service-feature p a { color:#c6dbb5; text-underline-offset:3px; }
+.s-content-root .service .s-service-wide { grid-column:1/-1; }
+.s-service-more { grid-column:1/-1; margin-top:12px; }
+.s-cleanup-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; align-items:start; }
+.s-personal-photo video { display:block; width:100%; height:auto; border-radius:14px; background:#111; }
+.s-senior-gallery { margin:24px 0; }
+.s-service-selfie { max-width:640px; }
 .s-content-root #service-making-strides { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:32px; align-items:start; }
 .s-service-photo { margin-top:6px; }
 .s-soundscope-photos { grid-column:1/-1; grid-template-columns:minmax(0,.86fr) minmax(0,1.17fr); margin:12px 0 24px; }
@@ -385,6 +393,8 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 @media(max-width:760px) {
  .s-photo-gallery { grid-template-columns:1fr; gap:24px; }
  .s-content-root #service-making-strides { grid-template-columns:1fr; gap:18px; }
+ .s-content-root .service .s-service-feature { grid-template-columns:1fr; gap:18px; }
+ .s-cleanup-gallery { grid-template-columns:1fr; }
  .s-workspace-photo { margin-top:0; }
  .studio-site .hobby--running { grid-template-columns:1fr; }
  .s-running-badge { grid-row:auto; padding:24px; }

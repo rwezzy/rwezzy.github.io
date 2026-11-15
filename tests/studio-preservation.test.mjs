@@ -207,6 +207,71 @@ const approvedMedia = {
         </figure>
 `,
   },
+  springReinsSummary: {
+    current: 'helping with a spring cleanup at Spring Reins of Hope',
+    original: 'caring for therapy animals at Spring Reins of Hope',
+  },
+  springReins: {
+    current: `      <li id="service-spring-reins" class="s-service-feature">
+        <div>
+          <h4>Spring Reins of Hope</h4>
+          <p class="service-hours mono">Spring cleanup</p>
+          <p>I volunteered for a spring cleanup at Spring Reins of Hope, helping clear the grounds and animal enclosures with the other volunteers.</p>
+          <p>Spring Reins of Hope &amp; Growth offers equine-assisted psychotherapy and learning: activities with horses that support mental health, personal growth and skills such as communication and teamwork.</p>
+          <p><a href="https://www.springreinsofhope.com/about-us" target="_blank" rel="noopener">About Spring Reins of Hope ↗</a></p>
+        </div>
+        <figure class="s-personal-photo s-service-photo">
+          <a href="assets/spring-reins/team.webp" target="_blank" rel="noopener"><img src="assets/spring-reins/team.webp" alt="Our volunteer group at Spring Reins of Hope, with a horse in the background" width="1591" height="1080" loading="lazy" decoding="async"></a>
+          <figcaption>The spring cleanup team.</figcaption>
+        </figure>
+        <details class="s-service-more">
+          <summary>Photos and video from the cleanup <span aria-hidden="true">＋</span></summary>
+          <div class="s-cleanup-gallery">
+            <figure class="s-personal-photo">
+              <a href="assets/spring-reins/cleanup.webp" target="_blank" rel="noopener"><img src="assets/spring-reins/cleanup.webp" alt="Emptying a tub of cleared bedding into a trailer during the spring cleanup" width="739" height="1600" loading="lazy" decoding="async"></a>
+              <figcaption>Clearing out the animal enclosures.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <a href="assets/spring-reins/briefing.webp" target="_blank" rel="noopener"><img src="assets/spring-reins/briefing.webp" alt="Volunteers gathered for a briefing outside the barn, with goats nearby" width="900" height="1600" loading="lazy" decoding="async"></a>
+              <figcaption>A briefing with the team.</figcaption>
+            </figure>
+            <figure class="s-personal-photo">
+              <video controls muted playsinline preload="none" poster="assets/spring-reins/cleanup-poster.webp" width="392" height="848" aria-label="Spring cleanup at Spring Reins of Hope, raking an outdoor enclosure">
+                <source src="assets/spring-reins/cleanup.mp4" type="video/mp4">
+                <a href="assets/spring-reins/cleanup.mp4">Watch the spring cleanup video</a>.
+              </video>
+              <figcaption>Raking the enclosure. A short clip from the day.</figcaption>
+            </figure>
+          </div>
+        </details>
+      </li>
+`,
+  },
+  seniorTech: {
+    current: `      <li id="service-senior-tech" class="s-service-wide">
+        <h4>Technology help for senior citizens</h4>
+        <p class="service-hours mono">Device support</p>
+        <p>I volunteered to teach senior citizens how to use their phones and other gadgets.</p>
+        <div class="s-photo-gallery s-senior-gallery" aria-label="Senior technology support volunteering">
+          <figure class="s-personal-photo">
+            <a href="assets/senior-tech/teaching.webp" target="_blank" rel="noopener"><img src="assets/senior-tech/teaching.webp" alt="Helping a participant use a phone at a table during the technology support session" width="1600" height="739" loading="lazy" decoding="async"></a>
+            <figcaption>Working through a phone together.</figcaption>
+          </figure>
+          <figure class="s-personal-photo">
+            <a href="assets/senior-tech/group.webp" target="_blank" rel="noopener"><img src="assets/senior-tech/group.webp" alt="Volunteers and participants posing together at the technology support session" width="1600" height="739" loading="lazy" decoding="async"></a>
+            <figcaption>The volunteers and participants together.</figcaption>
+          </figure>
+        </div>
+        <details class="s-service-more">
+          <summary>One more from the day <span aria-hidden="true">＋</span></summary>
+          <figure class="s-personal-photo s-service-selfie">
+            <a href="assets/senior-tech/selfie.webp" target="_blank" rel="noopener"><img src="assets/senior-tech/selfie.webp" alt="A group selfie with volunteers and participants at the technology support session" width="1600" height="1200" loading="lazy" decoding="async"></a>
+            <figcaption>A group selfie from the day.</figcaption>
+          </figure>
+        </details>
+      </li>
+`,
+  },
 };
 
 function beforeApprovedMedia(source, names = Object.keys(approvedMedia)) {

@@ -14,6 +14,8 @@ This version is maintained in the separate `portfolio-studio` checkout on `desig
 
 Urban Arbor includes supplied team, planting, donation and picnic photos, with credit to Sai, Paul, John, Chisom, Selihom, Matthew, Kaya and Pro Bono founder Aiko. Its photo sources are recorded in `assets/urban-arbor/README.md`. The Making Strides service entry includes Keith's volunteer photo.
 
+Volunteering also includes the spring cleanup at Spring Reins of Hope and helping senior citizens use their devices. Spring Reins' service description links to the organization's own overview. The cleanup gallery contains three supplied photos and a short, manually played video; the technology support entry contains three supplied photos. Preparation notes are in `assets/spring-reins/README.md` and `assets/senior-tech/README.md`.
+
 - `js/studio-shell.js`: section navigation, focus handling and intact demo-node placement.
 - `js/studio-scene.js`: the homepage robot, plaques and pick/return animation.
 - `js/studio-motion.js`: precomputed joint paths and continuous playback interpolation.
@@ -53,6 +55,8 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 | `images/obstacle-robot.jpg` | Obstacle-avoiding robot |
 | `assets/urban-arbor/` | Urban Arbor: planting, team, donation day and picnic photos |
 | `assets/personal/making-strides-volunteer.webp` | Making Strides volunteering |
+| `assets/spring-reins/` | Spring cleanup photos and video |
+| `assets/senior-tech/` | Senior technology support photos |
 | `images/ngamba.jpg` | Service: Ngamba Island |
 | `images/newark.jpg` | Service: Newark volunteering |
 | `resume.pdf` | The résumé button in the contact section |
