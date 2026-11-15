@@ -440,6 +440,7 @@ const approvedMedia = {
 };
 
 function beforeApprovedMedia(source, names = Object.keys(approvedMedia)) {
+  source = source.replaceAll('<a href="https://en.wikipedia.org/wiki/Lake_Victoria" target="_blank" rel="noopener">Lake Victoria</a>', 'Lake Victoria');
   const lineEnding = source.includes('\r\n') ? '\r\n' : '\n';
   for (const name of names) {
     const { current, original = '' } = approvedMedia[name];

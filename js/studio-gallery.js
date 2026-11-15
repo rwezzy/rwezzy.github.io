@@ -1,4 +1,4 @@
-import { galleryItems, portraitItems } from './studio-gallery-data.js?v=books2';
+import { galleryItems, portraitItems } from './studio-gallery-data.js?v=reads3';
 
 export const turnCard = (index, direction = 1) => ((index + direction) % (portraitItems.length + 1) + portraitItems.length + 1) % (portraitItems.length + 1);
 export const galleryFor = category => category === 'All' ? [...galleryItems] : galleryItems.filter(item => item.category === category);
