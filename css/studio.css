@@ -450,3 +450,28 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
  .s-run-snapshots { grid-template-columns:1fr; gap:20px; }
  .s-run-snapshots figcaption { font-size:12px; }
 }
+
+/* Shared second row: keep the way home and hiring links beside every page. */
+.s-reader-actions { display:none; }
+.s-reading .s-header { flex-wrap:wrap; row-gap:8px; }
+.s-reading .s-reader-actions { display:flex; order:4; flex:0 0 100%; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px 26px; padding:8px 0 3px; border-top:1px solid #ffffff22; }
+.s-reader-actions a,.s-reader-actions .s-back { font:12px var(--sans); color:#e5ece8; padding:8px 0; min-height:36px; display:inline-flex; align-items:center; }
+.s-reader-actions a:hover,.s-reader-actions .s-back:hover { color:white; text-decoration:underline; text-underline-offset:4px; }
+.s-reading[data-surface="notebook"] .s-reader-actions { border-color:#6f68502b; }
+.s-reading[data-surface="notebook"] .s-reader-actions a { color:#454a38; }
+@media(max-width:600px) {
+ .s-reading .s-reader-actions { gap:6px 17px; padding-bottom:8px; }
+ .s-reader-actions a,.s-reader-actions .s-back { font-size:11px; }
+}
+.s-link-icon { width:16px; height:16px; flex:none; margin-right:6px; }
+.s-pointer-halo { position:fixed; top:0; left:0; width:0; height:0; z-index:2147483647; pointer-events:none; opacity:0; }
+.s-pointer-halo::before { content:''; position:absolute; width:24px; height:24px; left:-12px; top:-12px; border-radius:50%; background:rgba(147,164,125,.13); box-shadow:0 0 9px 3px rgba(147,164,125,.12); border:1px solid rgba(147,164,125,.22); }
+.s-pointer-halo.is-visible { opacity:1; }
+@media (hover:none), (pointer:coarse) { .s-pointer-halo { display:none; } }
+@media (hover:hover) and (pointer:fine) {
+ .studio-site { cursor:auto; }
+ .studio-site :is(a,button) { cursor:pointer; }
+ .s-plaque-button { transition:transform .2s ease,box-shadow .2s ease; }
+ .s-plaque-button:hover { transform:translateY(-5px); box-shadow:0 8px 20px #15191a15; }
+}
+@media(prefers-reduced-motion:reduce) { .s-plaque-button:hover { transform:none; } }

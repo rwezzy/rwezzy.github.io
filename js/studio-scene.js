@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { forward, inverse, multiply, pose } from './den/lite6.js';
 import { prepareJointPath, sampleJointPath } from './studio-motion.js';
-import { createStudioProps } from './studio-props.js?v=gallery3';
+import { createStudioProps } from './studio-props.js?v=shoes7';
 import { drawingBufferSize } from './studio-render-budget.js';
 
 // A visual-only Lite 6. These are the manufacturer's meshes and joint frames;
@@ -390,6 +390,37 @@ export async function createStudioScene(canvas, {
     const from = cameraProgress;
     return tween(duration, amount => setCamera(from + (progress - from) * amount));
   };
+  let hoverFrame = 0;
+  const hoverOffsets = new Map();
+  function clearHoverMotion() {
+    cancelAnimationFrame(hoverFrame); hoverFrame = 0;
+    for (const [object, origin] of hoverOffsets) {
+      if (object.matrixAutoUpdate) object.position.copy(origin);
+      else object.matrix.copy(origin);
+    }
+    hoverOffsets.clear();
+    if (!selection) studioProps.setNotebookOpen(0);
+  }
+  function animateHover(target) {
+    clearHoverMotion();
+    if (!target || reduceMotion.matches || selection) return;
+    const object = target.mesh || target.object;
+    const origin = object.matrixAutoUpdate ? object.position.clone() : object.matrix.clone();
+    hoverOffsets.set(object, origin);
+    const start = performance.now();
+    const frame = now => {
+      if (disposed || selection || hovered !== target) { clearHoverMotion(); return; }
+      const t = Math.min(1, (now - start) / 480);
+      const pulse = Math.sin(Math.PI * t);
+      if (target.kind === 'notebook') studioProps.setNotebookOpen(.055 * pulse * (1 + .28 * Math.sin(t * Math.PI * 5)));
+      else if (target.kind === 'plaque') { object.matrix.copy(origin); object.matrix.elements[14] += .014 * pulse; }
+      else if (target.id !== 'hobbies') object.position.y = origin.y + .006 * pulse;
+      renderer.shadowMap.needsUpdate = true; render();
+      if (t < 1) hoverFrame = requestAnimationFrame(frame);
+      else clearHoverMotion();
+    };
+    hoverFrame = requestAnimationFrame(frame);
+  }
   function hover(pageId) {
     if (disposed) return;
     const id = pageId === 'path' ? 'background' : pageId;
@@ -402,7 +433,7 @@ export async function createStudioScene(canvas, {
       plaque.material.emissiveIntensity = plaque === hovered ? 0.045 : 0;
       plaque.material.opacity = 0.94;
     });
-    canvas.style.cursor = hovered ? 'pointer' : 'default'; render();
+    canvas.style.cursor = hovered ? 'pointer' : 'default'; animateHover(hovered); render();
   }
   function highlightPart(id) {
     if (partOutline) {
@@ -489,6 +520,7 @@ export async function createStudioScene(canvas, {
     return operation;
   }
   const pick = (pageId, { immediate = false } = {}) => enqueue(async () => {
+    clearHoverMotion();
     if (profiling) { frameSamples = []; bufferResizes = 0; }
     const id = pageId === 'path' ? 'background' : pageId;
     const target = plaques.find(item => item.id === id) || studioProps?.targets[id];
@@ -526,6 +558,7 @@ export async function createStudioScene(canvas, {
   const putBack = (options = {}) => enqueue(() => returnHeld(options));
 
   const inspect = (id, { immediate = false } = {}) => enqueue(async () => {
+    clearHoverMotion();
     const target = studioProps?.targets[id];
     if (target?.kind !== 'assembly') throw new RangeError(`Unknown desk assembly: ${id}`);
     if (selection === target) return describeAssembly(target);
@@ -654,7 +687,10 @@ export async function createStudioScene(canvas, {
     if (!down || down.id !== event.pointerId || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 8) return;
     const plaque = hitPlaque(event);
     if (plaque?.kind === 'part') { highlightPart(plaque.id); onPartSelect(plaque.id); }
-    else if (plaque) onSelect(plaque.kind === 'assembly' ? `inspect:${plaque.id}` : plaque.id === 'hobbies' ? 'offclock' : plaque.id);
+    else if (plaque) {
+      if (!reduceMotion.matches && event.pointerType === 'touch') navigator.vibrate?.(8);
+      onSelect(plaque.kind === 'assembly' ? `inspect:${plaque.id}` : plaque.id === 'hobbies' ? 'offclock' : plaque.id);
+    }
   };
   const onContextLost = event => {
     event.preventDefault(); contextLost = true;
@@ -675,7 +711,7 @@ export async function createStudioScene(canvas, {
   function dispose() {
     if (disposed) return;
     disposed = true; active = false;
-    cancelMotion?.(); cancelAnimationFrame(animationFrame);
+    clearHoverMotion(); cancelMotion?.(); cancelAnimationFrame(animationFrame);
     observer.disconnect(); window.removeEventListener('resize', resize);
     canvas.removeEventListener('pointermove', onPointerMove);
     canvas.removeEventListener('pointerleave', onPointerLeave);

@@ -101,7 +101,7 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
   // Original procedural red/green Hoka-style trainers: a continuous fitted upper
   // over a deep rocker midsole, with actual collar openings and separate laces.
   const shoes = new THREE.Group(); shoes.name = 'Running — red and green trainers resting on their toes';
-  shoes.position.set(-1.25, .001, -.065); shoes.rotation.y = 2.60; group.add(shoes);
+  shoes.position.set(-1.13, .001, .18); shoes.rotation.y = 1.30; group.add(shoes);
   const knitBump = canvasMap(256, 256, ctx => {
     ctx.fillStyle = '#999'; ctx.fillRect(0, 0, 256, 256);
     for (let y = 0; y < 256; y += 8) for (let x = 0; x < 256; x += 8) {
@@ -249,10 +249,9 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     return shoe;
   }
   const leftShoe = makeShoe(shoes), rightShoe = makeShoe(shoes);
-  // A staggered pair faces mainly to the right. The toes still meet the desk;
-  // the yaw exposes the side graphics, sculpted foam and green heel panels.
-  leftShoe.position.set(.055, 0, -.035); leftShoe.rotation.set(-.80, Math.PI - .07, -.04, 'YXZ');
-  rightShoe.position.set(-.055, 0, .035); rightShoe.rotation.set(-.88, Math.PI + .08, .04, 'YXZ');
+  // Toes point forward and slightly right; raised heels lean on a low wall.
+  leftShoe.position.set(.055, 0, 0); leftShoe.rotation.set(-1.10, Math.PI - .04, -.025, 'YXZ');
+  rightShoe.position.set(-.055, 0, .008); rightShoe.rotation.set(-1.13, Math.PI + .04, .025, 'YXZ');
   for (const shoe of [leftShoe, rightShoe]) {
     shoes.updateWorldMatrix(true, true);
     // The desk is at world y=0. Precise vertices avoid the false low corner
@@ -260,6 +259,22 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
     const bounds = new THREE.Box3().setFromObject(shoe, true);
     shoe.position.y += .0002 - bounds.min.y;
   }
+  shoes.updateWorldMatrix(true, true);
+  // Find the backmost actual vertex in the pair's coordinates so the support
+  // touches the heels without intersecting them or leaving a floating gap.
+  let back = Infinity;
+  const supportVertex = new THREE.Vector3();
+  for (const shoe of [leftShoe, rightShoe]) shoe.traverse(object => {
+    const positions = object.geometry?.attributes.position;
+    if (!positions) return;
+    for (let i = 0; i < positions.count; i++) {
+      supportVertex.fromBufferAttribute(positions, i).applyMatrix4(object.matrixWorld);
+      shoes.worldToLocal(supportVertex);
+      back = Math.min(back, supportVertex.z);
+    }
+  });
+  const backstop = mesh(box(.29, .28, .012, .004), material('#e4e6e1', { roughness: .95, metalness: 0 }), shoes);
+  backstop.position.set(0, .139, back - .006);
   const toeShadowMap = canvasMap(128, 128, ctx => {
     const gradient = ctx.createRadialGradient(64, 64, 5, 64, 64, 64);
     gradient.addColorStop(0, 'rgba(38,41,35,.23)'); gradient.addColorStop(.5, 'rgba(38,41,35,.10)'); gradient.addColorStop(1, 'rgba(38,41,35,0)');
@@ -467,10 +482,17 @@ export function createStudioProps({ scene, onSelect = () => {}, portraitUrl = nu
       record.target.up.copy(record.localUp).transformDirection(record.object.matrixWorld);
     }
   }
+  const flutterLeaves = [0, 1, 2].map(i => {
+    const hinge = new THREE.Group(); hinge.position.set(0, .0145 + i * .0006, -.075); notebook.add(hinge);
+    const leaf = mesh(box(.201, .0003, .146, .0001), paper, hinge);
+    leaf.position.z = .073;
+    return hinge;
+  });
   function setNotebookOpen(value) {
     if (disposed) return;
     const t = clamp01(value);
     coverHinge.rotation.x = -Math.PI * .95 * t;
+    flutterLeaves.forEach((leaf, i) => { leaf.rotation.x = t < .08 ? -t * (1.1 + i * .35) : 0; });
     targets.contact.openProgress = t;
     updateTargets(t);
   }

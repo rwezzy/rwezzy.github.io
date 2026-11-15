@@ -195,7 +195,7 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0, telemetryPhase = '', telemetryAngles = '', lastBlend = '';
-  const sceneReady = window.portfolioGraphics?.lightweight ? Promise.resolve(null) : import('./studio-scene.js?v=gallery3').then(async module => {
+  const sceneReady = window.portfolioGraphics?.lightweight ? Promise.resolve(null) : import('./studio-scene.js?v=shoes7').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
       onPartSelect: id => inspector?.selectPart(id),
