@@ -16,5 +16,6 @@ These images were supplied by Keith for his portfolio. Originals remain unchange
 | `running-7-mile.webp` | `IMG_3306.jpg` | Activity and route crop, 7.39 miles |
 | `running-6-mile.webp` | `IMG_3807.PNG` | Activity and route crop, 6.25 miles |
 | `running-september.webp` | `IMG_4624.PNG` | Metrics and route crop, 6.31 miles on September 22, 2026; call overlay excluded |
+| `making-strides-volunteer.webp` | Supplied Making Strides volunteer photo | Full photograph, 1600 × 1200; orientation corrected and resized |
 
 The 49:41 graphic is a recorded 10K result, not a claim about the current personal best. The 49:21 activity time covers 6.31 miles. The goal widget therefore keeps its personal-best field unset. SoundScope stills document the setup and interface, not verified localization accuracy; the separate browser simulation retains its existing explanation.

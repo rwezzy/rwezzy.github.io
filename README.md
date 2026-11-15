@@ -12,6 +12,8 @@ Beyond groups IEEE outreach, Student Senate and EOP teaching under Responsibilit
 
 This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
 
+Urban Arbor includes supplied team, planting, donation and picnic photos, with credit to Sai, Paul, John, Chisom, Selihom, Matthew, Kaya and Pro Bono founder Aiko. Its photo sources are recorded in `assets/urban-arbor/README.md`. The Making Strides service entry includes Keith's volunteer photo.
+
 - `js/studio-shell.js`: section navigation, focus handling and intact demo-node placement.
 - `js/studio-scene.js`: the homepage robot, plaques and pick/return animation.
 - `js/studio-motion.js`: precomputed joint paths and continuous playback interpolation.
@@ -49,8 +51,8 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 | `images/omniring-1.jpg` | OmniRing: the XIAO prototype |
 | `images/einstein-ui.png` | Einstein: a screenshot of the Gradio chat |
 | `images/obstacle-robot.jpg` | Obstacle-avoiding robot |
-| `images/urban-arbor-1.jpg` | Urban Arbor: planting day at KSPH |
-| `images/urban-arbor-2.jpg` | Urban Arbor: the donated equipment |
+| `assets/urban-arbor/` | Urban Arbor: planting, team, donation day and picnic photos |
+| `assets/personal/making-strides-volunteer.webp` | Making Strides volunteering |
 | `images/ngamba.jpg` | Service: Ngamba Island |
 | `images/newark.jpg` | Service: Newark volunteering |
 | `resume.pdf` | The résumé button in the contact section |

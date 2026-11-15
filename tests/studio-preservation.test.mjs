@@ -94,8 +94,8 @@ function soundscopeArticle(html) {
   return match[0];
 }
 
-// Explicitly approved user media, not a regenerated baseline or a general HTML
-// filter. Any change outside these exact blocks still reaches the frozen checks.
+// Explicitly approved user media and its supplied credits, not a regenerated
+// baseline or a general HTML filter. Other changes reach the frozen checks.
 const approvedMedia = {
   portrait: {
     current: '      <figure class="portrait s-personal-photo"><img src="assets/personal/keith-portrait.webp" alt="Keith in a striped shirt, sitting in sunlight" width="640" height="800" decoding="async"></figure>\n',
@@ -157,6 +157,55 @@ const approvedMedia = {
   cooking: {
     current: '        <img src="assets/personal/chapati.webp" alt="One of my chapatis browning in the pan" width="1600" height="1200" loading="lazy" decoding="async">\n',
     original: '        <img src="assets/cooking.jpg" alt="A pot steaming on a stove" loading="lazy">\n',
+  },
+  urbanArborCredit: {
+    current: '        <p>I worked on Urban Arbor with Sai, Paul, John, Chisom, Selihom, Matthew and Kaya, alongside Aiko, the founder of Pro Bono.</p>\n',
+  },
+  urbanArborPhotos: {
+    current: `      <div class="arbor__photos s-photo-gallery" aria-label="Urban Arbor planting and donation days">
+        <figure class="s-personal-photo">
+          <a href="assets/urban-arbor/team.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/team.webp" alt="Our volunteer team gathered on painted tires beneath a tree" width="1080" height="810" loading="lazy" decoding="async"></a>
+          <figcaption>The team on planting day.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/urban-arbor/donation-day.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/donation-day.webp" alt="Volunteers, students and staff gathered with the donated equipment" width="1024" height="768" loading="lazy" decoding="async"></a>
+          <figcaption>Together on donation day.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/urban-arbor/planting.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/planting.webp" alt="Volunteers planting and watering a young tree in the school grounds" width="960" height="1280" loading="lazy" decoding="async"></a>
+          <figcaption>Planting and watering a young tree at KSPH.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/urban-arbor/equipment.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/equipment.webp" alt="Green barrels, a handwashing stand, chairs, baskets and watering cans arranged indoors" width="768" height="1024" loading="lazy" decoding="async"></a>
+          <figcaption>Some of the equipment we donated.</figcaption>
+        </figure>
+      </div>
+      <details class="s-arbor-more">
+        <summary>More from both days <span aria-hidden="true">＋</span></summary>
+        <div class="s-photo-gallery">
+          <figure class="s-personal-photo">
+            <a href="assets/urban-arbor/picnic.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/picnic.webp" alt="Volunteers preparing food on an outdoor table beneath the trees" width="768" height="1024" loading="lazy" decoding="async"></a>
+            <figcaption>Getting the picnic ready after planting.</figcaption>
+          </figure>
+          <figure class="s-personal-photo">
+            <a href="assets/urban-arbor/presentation.webp" target="_blank" rel="noopener"><img src="assets/urban-arbor/presentation.webp" alt="The volunteer team presenting the donated equipment to students and staff" width="1024" height="768" loading="lazy" decoding="async"></a>
+            <figcaption>Sharing the equipment with the school.</figcaption>
+          </figure>
+        </div>
+      </details>
+`,
+    original: `      <div class="arbor__photos">
+        <figure class="slot" data-src="images/urban-arbor-1.jpg" data-caption="Planting day at KSPH"></figure>
+        <figure class="slot" data-src="images/urban-arbor-2.jpg" data-caption="The donated equipment"></figure>
+      </div>
+`,
+  },
+  makingStridesPhoto: {
+    current: `        <figure class="s-personal-photo s-service-photo">
+          <a href="assets/personal/making-strides-volunteer.webp" target="_blank" rel="noopener"><img src="assets/personal/making-strides-volunteer.webp" alt="Me volunteering at Making Strides, wearing my volunteer badge and holding a pink direction sign" width="1600" height="1200" loading="lazy" decoding="async"></a>
+          <figcaption>Volunteering at Making Strides Against Breast Cancer.</figcaption>
+        </figure>
+`,
   },
 };
 

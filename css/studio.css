@@ -359,6 +359,12 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-personal-photo img { display:block; width:100%; height:auto; border-radius:14px; }
 .s-personal-photo figcaption { padding-top:12px; color:#b9c7bd; font:12px/1.65 var(--sans); }
 .s-photo-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; align-items:start; }
+.s-arbor-more { border-top:1px solid #ffffff26; }
+.s-arbor-more summary { padding:18px 0; cursor:pointer; color:#d4ddce; font:13px/1.5 var(--sans); }
+.s-arbor-more summary span { float:right; }
+.s-arbor-more[open] summary span { transform:rotate(45deg); }
+.s-content-root #service-making-strides { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:32px; align-items:start; }
+.s-service-photo { margin-top:6px; }
 .s-soundscope-photos { grid-column:1/-1; grid-template-columns:minmax(0,.86fr) minmax(0,1.17fr); margin:12px 0 24px; }
 .s-event-photos { grid-column:1/-1; grid-template-columns:minmax(0,1.5fr) minmax(0,1.333fr); gap:24px; margin:0 0 20px; }
 .s-workspace-photo { grid-column:1/-1; width:100%; max-width:850px; margin:12px auto 0; }
@@ -378,6 +384,7 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .s-run-snapshots figcaption { font-size:10px; }
 @media(max-width:760px) {
  .s-photo-gallery { grid-template-columns:1fr; gap:24px; }
+ .s-content-root #service-making-strides { grid-template-columns:1fr; gap:18px; }
  .s-workspace-photo { margin-top:0; }
  .studio-site .hobby--running { grid-template-columns:1fr; }
  .s-running-badge { grid-row:auto; padding:24px; }
