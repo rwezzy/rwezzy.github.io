@@ -23,38 +23,38 @@ const ROOM = { min: { x: -2.8, y: 0, z: -2.4 }, max: { x: 2.8, y: 2.7, z: 2.4 } 
 const DESK = { x: 0.55, z: 2.06, width: 1.3, depth: 0.6, height: 0.74 };
 const FEED = { width: 640, height: 400, fov: 55 };
 const ROUNDS = 5;
-const MODEL = id => `models/room/${id}/${id}.gltf`;
 
 // Furniture first, then the four things that make sounds. `on` names what an object starts on.
 const FURNITURE = [
-  { id: 'tv_cabinet', file: 'modern_wooden_cabinet', name: 'TV cabinet', at: [0, -2.13], turn: 0 },
-  { id: 'sofa', file: 'sofa_03', name: 'sofa', at: [-1.3, -0.55], turn: Math.PI / 2 },
-  { id: 'coffee_table', file: 'CoffeeTable_01', name: 'coffee table', at: [0.05, -0.7], turn: Math.PI / 2 },
-  { id: 'armchair', file: 'ArmChair_01', name: 'armchair', at: [1.65, -0.35], turn: -2.2 },
-  { id: 'shelf', file: 'Shelf_01', name: 'shelf', at: [-2.0, -2.4], turn: 0 },
-  { id: 'side_table', file: 'side_table_01', name: 'side table', at: [2.3, -1.95], turn: -Math.PI / 4 },
-  { id: 'plant', file: 'potted_plant_04', name: 'plant', at: [0.95, -2.15], turn: 0.4, on: 'tv_cabinet', scale: 1.5 },
+  { id: 'tv_cabinet', name: 'TV cabinet', at: [0, -2.13], turn: 0 },
+  { id: 'sofa', name: 'sofa', at: [-1.3, -0.55], turn: Math.PI / 2 },
+  { id: 'coffee_table', name: 'coffee table', at: [0.05, -0.7], turn: Math.PI / 2 },
+  { id: 'armchair', name: 'armchair', at: [1.65, -0.35], turn: -2.2 },
+  { id: 'shelf', name: 'shelf', at: [-2.0, -2.4], turn: 0 },
+  { id: 'side_table', name: 'side table', at: [2.3, -1.95], turn: -Math.PI / 4 },
+  { id: 'plant', name: 'plant', at: [0.95, -2.15], turn: 0.4, on: 'tv_cabinet' },
 ];
 const SOURCES = [
-  { id: 'alarm', file: 'alarm_clock_01', name: 'alarm clock', sound: 'alarm', at: [0.2, -0.45], turn: 0.5, on: 'coffee_table', button: 'Ring the alarm clock' },
-  { id: 'kettle', file: 'vintage_electric_kettle', name: 'kettle', sound: 'kettle', at: [2.3, -1.95], turn: -0.6, on: 'side_table', button: 'Boil the kettle' },
-  { id: 'boombox', file: 'boombox', name: 'boombox', sound: 'music', at: [-2.3, -1.2], turn: Math.PI / 2, on: 'floor', button: 'Play the boombox' },
-  { id: 'tv', file: 'Television_01', name: 'television', sound: 'speech', at: [-0.15, -2.15], turn: 0, on: 'tv_cabinet', scale: 1.35, button: 'Turn on the TV' },
+  { id: 'alarm', name: 'alarm clock', sound: 'alarm', at: [0.2, -0.45], turn: 0.5, on: 'coffee_table', button: 'Ring the alarm clock' },
+  { id: 'kettle', name: 'kettle', sound: 'kettle', at: [2.3, -1.95], turn: -0.6, on: 'side_table', button: 'Boil the kettle' },
+  { id: 'boombox', name: 'portable speaker', sound: 'music', at: [-2.3, -1.2], turn: Math.PI / 2, on: 'floor', button: 'Play the portable speaker' },
+  { id: 'tv', name: 'television', sound: 'speech', at: [-0.15, -2.15], turn: 0, on: 'tv_cabinet', button: 'Turn on the TV' },
 ];
 
 async function initLab(root) {
   const $ = selector => root.querySelector(selector);
   const THREE = await import('three');
-  const [{ GLTFLoader }, { OrbitControls }, { RGBELoader }, { loadCarrier }] = await Promise.all([
-    import('three/addons/loaders/GLTFLoader.js'), import('three/addons/controls/OrbitControls.js'),
-    import('three/addons/loaders/RGBELoader.js'), import('./soundscope-hardware.js?v=3d1'),
+  const [{ createModernRoomProps }, { OrbitControls }, { RoomEnvironment }, { loadCarrier }, { RoundedBoxGeometry }] = await Promise.all([
+    import('./soundscope-modern-props.js?v=modern1'), import('three/addons/controls/OrbitControls.js'),
+    import('three/addons/environments/RoomEnvironment.js'), import('./soundscope-hardware.js?v=3d1'),
+    import('three/addons/geometries/RoundedBoxGeometry.js'),
   ]);
   const canvas = $('#ss-room'), feed = $('#ss-feed'), feedCtx = feed.getContext('2d');
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const say = (text, hot = false) => { const el = $('#ss-say'); el.textContent = text; el.classList.toggle('hot', hot); };
   say('Loading the room…');
 
-  // Textures can finish while model loading yields; defer rendering until setup is complete.
+  // Model loading yields during setup; defer rendering until all room state is ready.
   let frame = 0, animating = false, active = true, audio = null;
   let renderReady = false;
 
@@ -66,7 +66,7 @@ async function initLab(root) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#eef2ee');
+  scene.background = new THREE.Color('#eaf0f5');
   const camera = new THREE.PerspectiveCamera(45, 4 / 3, 0.05, 40);
   camera.position.set(3.1, 2.7, 4.3);
   const controls = new OrbitControls(camera, canvas);
@@ -75,11 +75,11 @@ async function initLab(root) {
   controls.minDistance = 1.6; controls.maxDistance = 8; controls.maxPolarAngle = 1.48;
   controls.update();
 
-  const loader = new GLTFLoader(), textures = new THREE.TextureLoader();
-  const [environment] = await Promise.all([new RGBELoader().loadAsync('models/room/env/brown_photostudio_02_1k.hdr')]);
+  const modernProps = createModernRoomProps();
+  const environment = new RoomEnvironment();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromEquirectangular(environment).texture;
-  scene.environmentIntensity = 0.55;
+  scene.environment = pmrem.fromScene(environment, .04).texture;
+  scene.environmentIntensity = 0.7;
   environment.dispose(); pmrem.dispose();
 
   // ------------------------------------------------------------------- the room
@@ -88,21 +88,13 @@ async function initLab(root) {
   const register = (object, item) => {
     object.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; child.userData.item = item; surfaces.push(child); } });
   };
-  const floorMaps = ['diff', 'rough', 'nor'].map(kind => {
-    const texture = textures.load(`models/room/floor/laminate_floor_02_${kind}_1k.jpg`, () => {
-      if (root.dataset.roomReady === 'ready') { captureFeed(); drawFeed(); } else requestRender();
-    });
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(2.8, 2.4); texture.anisotropy = 8;
-    if (kind === 'diff') texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  });
   const width = ROOM.max.x - ROOM.min.x, depth = ROOM.max.z - ROOM.min.z, height = ROOM.max.y;
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth),
-    new THREE.MeshStandardMaterial({ map: floorMaps[0], roughnessMap: floorMaps[1], normalMap: floorMaps[2], roughness: 1 }));
+    new THREE.MeshStandardMaterial({ color: '#cfd9e1', roughness: .66, metalness: .03 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
   floor.userData.item = { name: 'floor', kind: 'floor' };
   scene.add(floor); surfaces.push(floor);
-  const wallMaterial = new THREE.MeshStandardMaterial({ color: '#ebe6de', roughness: 0.93 });
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: '#ecf1f6', roughness: .88 });
   const walls = [
     { name: 'back wall', size: [width, height], position: [0, height / 2, ROOM.min.z], turn: 0 },
     { name: 'front wall', size: [width, height], position: [0, height / 2, ROOM.max.z], turn: Math.PI },
@@ -114,32 +106,32 @@ async function initLab(root) {
     mesh.position.set(...wall.position); mesh.rotation.y = wall.turn; mesh.receiveShadow = true;
     mesh.userData.item = { name: wall.name, kind: 'wall' };
     scene.add(mesh); surfaces.push(mesh);
-    const skirting = new THREE.Mesh(new THREE.BoxGeometry(wall.size[0], 0.09, 0.015), new THREE.MeshStandardMaterial({ color: '#f6f4ef', roughness: 0.6 }));
-    skirting.position.set(wall.position[0], 0.045, wall.position[2]); skirting.rotation.y = wall.turn;
+    const skirting = new THREE.Mesh(new THREE.BoxGeometry(wall.size[0], 0.045, 0.015), new THREE.MeshStandardMaterial({ color: '#a7b6c5', roughness: .55, metalness: .2 }));
+    skirting.position.set(wall.position[0], 0.0225, wall.position[2]); skirting.rotation.y = wall.turn;
     skirting.translateZ(0.008); scene.add(skirting);
   }
   // A window on the left wall: a bright pane plus the sunlight that comes through it.
   const pane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.2), new THREE.MeshBasicMaterial({ color: '#f7fbff' }));
   pane.position.set(ROOM.min.x + 0.006, 1.55, -0.9); pane.rotation.y = Math.PI / 2; scene.add(pane);
-  const frameMaterial = new THREE.MeshStandardMaterial({ color: '#fbfaf7', roughness: 0.5 });
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: '#455565', roughness: .35, metalness: .5 });
   for (const [w, h, y, z] of [[1.6, 0.06, 2.18, -0.9], [1.6, 0.06, 0.92, -0.9], [0.06, 1.3, 1.55, -1.67], [0.06, 1.3, 1.55, -0.13], [0.04, 1.2, 1.55, -0.9]]) {
     const bar = new THREE.Mesh(new THREE.BoxGeometry(0.05, h, w), frameMaterial);
     bar.position.set(ROOM.min.x + 0.02, y, z); scene.add(bar);
   }
-  scene.add(new THREE.HemisphereLight('#fffaf0', '#8b7d6b', 0.35));
-  const sun = new THREE.DirectionalLight('#fff1dc', 2.4);
+  scene.add(new THREE.HemisphereLight('#eef7ff', '#71879c', .65));
+  const sun = new THREE.DirectionalLight('#f5faff', 2.0);
   sun.position.set(-5.5, 4.2, -1.4); sun.target.position.set(0.4, 0, 0);
-  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.00015; sun.shadow.normalBias = .008; sun.shadow.radius = 3;
   Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 14 });
   scene.add(sun, sun.target);
-  const lamp = new THREE.PointLight('#ffd9a8', 1.6, 6, 1.6);
+  const lamp = new THREE.PointLight('#c9e1ff', 1.0, 6, 1.6);
   lamp.position.set(1.6, 2.3, 1.2); scene.add(lamp);
 
   // The desk with the laptop and the SoundScope rig on a small tripod.
   const deskGroup = new THREE.Group();
-  const walnut = new THREE.MeshPhysicalMaterial({ color: '#6b4a32', roughness: 0.45, clearcoat: 0.35, clearcoatRoughness: 0.4 });
+  const desktop = new THREE.MeshPhysicalMaterial({ color: '#dfe8ef', roughness: .42, clearcoat: .2, clearcoatRoughness: .3 });
   const steel = new THREE.MeshStandardMaterial({ color: '#2b2f31', roughness: 0.38, metalness: 0.7 });
-  const top = new THREE.Mesh(new THREE.BoxGeometry(DESK.width, 0.035, DESK.depth), walnut);
+  const top = new THREE.Mesh(new RoundedBoxGeometry(DESK.width, .035, DESK.depth, 5, .012), desktop);
   top.position.set(0, DESK.height - 0.0175, 0); deskGroup.add(top);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, DESK.height - 0.035, 0.04), steel);
@@ -176,8 +168,7 @@ async function initLab(root) {
 
   // ------------------------------------------------------------------ the models
   const loadItem = async spec => {
-    const gltf = await loader.loadAsync(MODEL(spec.file));
-    const object = gltf.scene;
+    const object = modernProps.create(spec.id);
     object.rotation.y = spec.turn ?? 0;
     if (spec.scale) object.scale.setScalar(spec.scale);
     return object;
@@ -199,14 +190,14 @@ async function initLab(root) {
     register(object, item); items.set(spec.id, item);
   }
   // The laptop shows the SoundScope feed on its screen.
-  const laptop = await loader.loadAsync(MODEL('classic_laptop'));
-  laptop.scene.scale.setScalar(0.62); laptop.scene.rotation.y = -0.35;
-  laptop.scene.position.set(DESK.x + 0.28, DESK.height, DESK.z + 0.02);
-  scene.add(laptop.scene); register(laptop.scene, { name: 'laptop', kind: 'furniture' });
+  const laptop = modernProps.create('laptop');
+  laptop.rotation.y = -0.35;
+  laptop.position.set(DESK.x + 0.28, DESK.height, DESK.z + 0.02);
+  scene.add(laptop); register(laptop, { name: 'laptop', kind: 'furniture' });
   const screenTexture = new THREE.CanvasTexture(feed);
-  screenTexture.colorSpace = THREE.SRGBColorSpace; screenTexture.flipY = false;
-  laptop.scene.traverse(child => {
-    if (child.isMesh && child.material?.name === 'classic_laptop_screen') {
+  screenTexture.colorSpace = THREE.SRGBColorSpace;
+  laptop.traverse(child => {
+    if (child.isMesh && child.material?.name === 'modern_laptop_screen') {
       child.material = new THREE.MeshBasicMaterial({ map: screenTexture, toneMapped: false });
     }
   });
@@ -267,7 +258,7 @@ async function initLab(root) {
   function resize() {
     const rect = canvas.getBoundingClientRect();
     if (rect.width < 1) return;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio || 1, 1.5), 2));
     renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
     camera.aspect = rect.width / rect.height; camera.updateProjectionMatrix();
     requestRender();
@@ -277,6 +268,7 @@ async function initLab(root) {
 
   // ------------------------------------------------- the SoundScope camera feed
   const target = new THREE.WebGLRenderTarget(FEED.width, FEED.height, { colorSpace: THREE.SRGBColorSpace });
+  target.samples = Math.min(4, renderer.capabilities.maxSamples);
   const pixels = new Uint8Array(FEED.width * FEED.height * 4);
   const base = document.createElement('canvas'); base.width = FEED.width; base.height = FEED.height;
   const baseCtx = base.getContext('2d');

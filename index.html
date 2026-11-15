@@ -23,6 +23,7 @@
 
 <link rel="stylesheet" href="css/studio.css?v=interests1">
   <link rel="stylesheet" href="css/studio-demos.css?v=contrast1">
+  <link rel="stylesheet" href="css/omniring-demo.css?v=room1">
   <link rel="stylesheet" href="css/studio-inspector.css?v=interests1">
 </head><body class="studio-site">
 <a class="skip" href="#projects" data-view="projects" data-instant>Skip animation and read projects</a>
@@ -164,10 +165,10 @@
           <div><p class="label mono">interactive demo</p><h4>Sound direction simulation</h4></div>
           <span class="ss-badge mono">browser simulation</span>
         </div>
-        <p class="ss-lab-intro">The SoundScope carrier stands on a tripod on the desk, beside a laptop, facing a furnished room. Selecting the alarm clock, kettle, boombox or television plays its sound: each of the four simulated microphones receives a slightly delayed copy, and the direction is estimated from those delays, as on the device. The panel on the right shows what the carrier's camera sees, with the direction drawn over it. Objects can be dragged to new places, including behind the sofa. In the guessing game, a sound plays from a hidden position and you mark where you think it is before SoundScope's estimate is shown.</p>
+        <p class="ss-lab-intro">The SoundScope carrier stands on a tripod on the desk, beside a laptop, facing a furnished room. Selecting the alarm clock, kettle, portable speaker or television plays its sound: each of the four simulated microphones receives a slightly delayed copy, and the direction is estimated from those delays, as on the device. The panel on the right shows what the carrier's camera sees, with the direction drawn over it. Objects can be dragged to new places, including behind the sofa. In the guessing game, a sound plays from a hidden position and you mark where you think it is before SoundScope's estimate is shown.</p>
         <div class="ss-lab-grid">
           <div class="ss-stage">
-            <canvas id="ss-room" aria-label="3D room with a desk holding the SoundScope carrier on a tripod and a laptop, facing a sofa, coffee table, television, shelf, side table and armchair. Drag the room to look around; drag the alarm clock, kettle, boombox or television to move them; select one to play its sound. The buttons below play the same sounds."></canvas>
+            <canvas id="ss-room" aria-label="3D room with a desk holding the SoundScope carrier on a tripod and a laptop, facing a sofa, coffee table, television, shelf, side table and armchair. Drag the room to look around; drag the alarm clock, kettle, portable speaker or television to move them; select one to play its sound. The buttons below play the same sounds."></canvas>
             <p class="ss-say" id="ss-say" aria-live="polite">loading the room…</p>
           </div>
           <aside class="ss-app" aria-label="SoundScope view">
@@ -191,7 +192,7 @@
               <div class="ss-sounds">
                 <button type="button" class="pill" data-source="alarm">Ring the alarm clock</button>
                 <button type="button" class="pill" data-source="kettle">Boil the kettle</button>
-                <button type="button" class="pill" data-source="boombox">Play the boombox</button>
+                <button type="button" class="pill" data-source="boombox">Play the portable speaker</button>
                 <button type="button" class="pill" data-source="tv">Turn on the TV</button>
               </div>
             </div>
@@ -327,17 +328,40 @@
         <p class="proj__foot mono">C++ · Edge Impulse · TensorFlow Lite Micro</p>
       </div>
       <div class="proj__media">
-        <div class="demo" id="demo-gesture">
-          <div class="demo__top mono"><span>draw a gesture</span><span class="demo__state">a circle, side to side, up and down, or barely move</span></div>
-          <div class="gesture">
-            <canvas class="gesture__pad" aria-label="Drawing pad: draw a gesture with your mouse or finger"></canvas>
-            <div class="gesture__out mono" aria-live="polite">
-              <div class="bars"></div>
-              <canvas class="gesture__trace" aria-hidden="true"></canvas>
-              <p class="gesture__axes">x and y velocity of your stroke</p>
+        <div class="demo or-demo" id="demo-gesture" data-living-room>
+          <div class="or-heading">
+            <div><p class="or-eyebrow">OMNIRING / INTERACTION STUDY</p><h4>A gesture. A response.</h4></div>
+            <span class="or-simulation-label">Simulated ring input</span>
+          </div>
+          <div class="or-layout">
+            <div class="or-scene">
+              <canvas class="or-room-canvas" aria-label="A modern 3D living room with a television responding to simulated gestures"></canvas>
+              <p class="or-room-loading" data-room-loading>Setting the scene…</p>
+              <p class="or-room-error" data-room-error hidden>The 3D room could not load. The gesture controls and TV status are still available below.</p>
+              <div class="or-scene-label"><span class="or-scene-dot" aria-hidden="true"></span> THE LIVING ROOM <span>01 / CONCEPT</span></div>
+            </div>
+            <div class="or-controls">
+              <div class="or-pad-heading"><h5>Try a gesture</h5><button type="button" class="or-reset" data-gesture-reset>Reset</button></div>
+              <p class="or-instructions" id="or-draw-help">Draw a circle to turn on the TV. Then swipe to change the volume or channel.</p>
+              <canvas class="or-gesture-pad" aria-label="Draw a circle or swipe up, down, left or right" aria-describedby="or-draw-help or-simulation-note"></canvas>
+              <p class="or-feedback" data-gesture-status role="status" aria-live="polite">Ready. Draw a circle to turn on the TV.</p>
+              <p class="or-preset-label">Or try a gesture with a button</p>
+              <div class="or-presets" aria-label="Simulate a ring gesture">
+                <button type="button" data-gesture="circle" aria-label="Simulate a circle: toggle TV power"><span aria-hidden="true">○</span><span>Power</span></button>
+                <button type="button" data-gesture="up" aria-label="Simulate an upward swipe: volume up"><span aria-hidden="true">↑</span><span>Volume +</span></button>
+                <button type="button" data-gesture="down" aria-label="Simulate a downward swipe: volume down"><span aria-hidden="true">↓</span><span>Volume −</span></button>
+                <button type="button" data-gesture="left" aria-label="Simulate a left swipe: previous channel"><span aria-hidden="true">←</span><span>Previous</span></button>
+                <button type="button" data-gesture="right" aria-label="Simulate a right swipe: next channel"><span aria-hidden="true">→</span><span>Next</span></button>
+              </div>
             </div>
           </div>
-          <p class="demo__cap">This browser demonstration classifies pointer movements using features of the drawn stroke. It illustrates gesture input, but does not use the physical motion sensor or the trained OmniRing network.</p>
+          <div class="or-tv-state" aria-label="Simulated TV status">
+            <div><span>TV POWER</span><strong data-tv-power>Off</strong></div>
+            <div><span>VOLUME</span><strong data-tv-volume>35%</strong></div>
+            <div><span>CHANNEL</span><strong data-tv-channel>01 · Aurora</strong></div>
+            <p>Circle → power<br>Up / down → volume · Left / right → channels</p>
+          </div>
+          <p class="or-disclaimer" id="or-simulation-note">Interactive concept demo. Your mouse, finger or the gesture buttons simulate ring input. This uses browser gesture rules, not the physical ring, its motion sensor or its trained network. The TV and volume are simulated; no device is connected and no audio plays.</p>
         </div>
         <figure class="slot" data-src="images/omniring-1.jpg" data-caption="The XIAO nRF52840 Sense prototype"></figure>
       </div>
@@ -795,7 +819,8 @@
 <noscript><div class="s-noscript">The interactive desk needs JavaScript. <a href="classic.html">Read the complete portfolio.</a></div></noscript>
 <script src="js/studio-shell.js?v=interests1"></script>
 <script src="js/slots.js"></script>
-<script src="js/demos.js?v=contrast1"></script>
+<script src="js/demos.js?v=room1"></script>
+<script type="module" src="js/omniring-demo.js?v=room1"></script>
 <script src="js/main.js"></script>
-<script type="module" src="js/soundscope.js?v=studio2"></script>
+<script type="module" src="js/soundscope.js?v=modern1"></script>
 </body></html>

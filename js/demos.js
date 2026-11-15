@@ -180,6 +180,7 @@
   /* ==================================================== OmniRing gesture pad */
   (function gesture() {
     const root = document.getElementById('demo-gesture'); if (!root) return;
+    if (root.hasAttribute('data-living-room')) return; // Studio uses the simulated living-room interaction.
     // Keep canvas and inline status text legible on Studio's light instrument panel.
     const gestureText = document.body.classList.contains('studio-site')
       ? { muted: '#626854', accent: '#704b72' }

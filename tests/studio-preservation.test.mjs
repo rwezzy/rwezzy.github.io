@@ -25,8 +25,12 @@ for (const path of protectedFiles) {
 }
 
 // Restore only the approved Studio text palette, preserving the frozen demo bytes.
-test('gesture demo matches its frozen baseline except for Studio text contrast', () => {
+test('legacy gesture demo is preserved apart from Studio contrast and the new demo routing guard', () => {
   let source = read('js/demos.js').toString('utf8');
+  const routingGuard = "    if (root.hasAttribute('data-living-room')) return; // Studio uses the simulated living-room interaction.\n";
+  const ending = source.includes('\r\n') ? '\r\n' : '\n';
+  assert.equal(source.split(routingGuard.replace(/\n/g, ending)).length, 2);
+  source = source.replace(routingGuard.replace(/\n/g, ending), '');
   const palette = "    // Keep canvas and inline status text legible on Studio's light instrument panel.\r\n    const gestureText = document.body.classList.contains('studio-site')\r\n      ? { muted: '#626854', accent: '#704b72' }\r\n      : { muted: C.ink3, accent: C.hw };\r\n";
   const changes = [
     [palette, ''],
@@ -35,60 +39,67 @@ test('gesture demo matches its frozen baseline except for Studio text contrast',
     ['12, 22, gestureText.accent, 13);', '12, 22, C.hw, 13);'],
   ];
   for (const [current, original] of changes) {
-    assert.equal(source.split(current).length, 2, 'Each approved text contrast change must occur exactly once');
-    source = source.replace(current, original);
+    const expected = current.replace(/\r?\n/g, ending);
+    assert.equal(source.split(expected).length, 2, 'Each approved text contrast change must occur exactly once');
+    source = source.replace(expected, original);
   }
-  assert.equal(hash(source), manifest['js/demos.js'], 'Gesture behavior and classic colors must match the original demo');
+  assert.equal(hash(source.replace(/\r?\n/g, '\r\n')), manifest['js/demos.js'], 'Gesture behavior and classic colors must match the original demo');
 });
 
-// Permit only the reviewed initialization-order fix, then verify every original byte.
-function beforeRenderInitializationFix(source) {
-  const changes = [
-    ['\n  // Textures can finish while model loading yields; defer rendering until setup is complete.\n  let frame = 0, animating = false, active = true, audio = null;\n  let renderReady = false;\n', ''],
-    ['  const buffers = new Map();', '  let frame = 0, animating = false, active = true, audio = null;\n  const buffers = new Map();'],
-    ['    if (!renderReady || frame || !active) return;', '    if (frame || !active) return;'],
-    ['  renderReady = true;\n  showLesson();', '  showLesson();'],
+test('SoundScope preserves its audio, interaction, and placement logic while the room is modernized', () => {
+  const source = soundscope.replace(/\r\n/g, '\n');
+  // These bounded fingerprints were independently captured from pre-change HEAD,
+  // not the revised renderer. The original frozen manifest remains untouched.
+  const regions = [
+    ['  // ------------------------------------------------------------------- audio', null, 'f9a274d4146c4116d3b6fb3f7a161cc4a701b3f0f1e133f02151c7f4c876cf9b'],
+    ['  const restingHeight =', '  // The laptop', '7dc2661bcafcd2784be664e0f60abcf92e594956ce33145872465488b7b0505e'],
   ];
-  for (const [current, original] of changes) {
-    assert.equal(source.split(current).length, 2, 'The reviewed scheduler change must appear exactly once');
-    source = source.replace(current, original);
+  for (const [start, end, expected] of regions) {
+    assert.equal(source.split(start).length, 2, `Protected region must have a unique start: ${start}`);
+    if (end) assert.equal(source.split(end).length, 2, `Protected region must have a unique end: ${end}`);
+    const from = source.indexOf(start), to = end ? source.indexOf(end) : source.length;
+    assert.ok(to > from, 'Protected region boundaries must remain ordered');
+    assert.equal(hash(source.slice(from, to)), expected, `Nonvisual SoundScope logic changed: ${start}`);
   }
-  return source;
-}
-
-test('SoundScope matches its frozen baseline except for the reviewed render initialization fix', () => {
-  assert.equal(hash(beforeRenderInitializationFix(soundscope)), manifest['js/soundscope.js']);
 });
 
-test('a texture finishing during model loading waits for setup before scheduling a render', async () => {
-  // Run the production callback and scheduler in their source order. The microtask
-  // stands in for a texture completion while initLab is suspended on a model load.
+test('SoundScope rendering waits for setup, coalesces requests, and pauses when inactive', async () => {
+  // Exercise the actual scheduler around a model-loading yield. Modern props no
+  // longer have the old floor texture callback, but early render requests still
+  // must not reach an incomplete scene.
   async function exercise(source) {
-    const parts = [];
-    for (const pattern of [/let frame = [^;]+;/, /let renderReady = false;/, /renderReady = true;/, /function requestRender\(\) \{[\s\S]*?\n  \}/]) {
-      const match = source.match(pattern);
-      if (match) parts.push({ at: match.index, code: match[0] });
-    }
-    const texture = source.match(/const texture = textures\.load\([^,]+, \(\) => \{([\s\S]*?)\n    \}\);/);
-    assert.ok(texture, 'Production floor texture callback must be exercised');
-    parts.push({ at: texture.index, code: `
-      await new Promise((resolve, reject) => queueMicrotask(() => {
-        try {
-          ${texture[1]}
-          assert.equal(frames.length, 0, 'No frame may use incomplete scene state');
-          resolve();
-        } catch (error) { reject(error); }
-      }));
-    ` });
+    source = source.replace(/\r\n/g, '\n');
+    const extract = pattern => {
+      const matches = [...source.matchAll(new RegExp(pattern.source, 'g'))];
+      assert.equal(matches.length, 1, `Production scheduler part must appear exactly once: ${pattern}`);
+      return matches[0];
+    };
+    const state = extract(/let frame = [^;]+;/);
+    const unready = extract(/let renderReady = false;/);
+    const ready = extract(/renderReady = true;/);
+    const scheduler = extract(/function requestRender\(\) \{[\s\S]*?\n  \}/);
+    const modelYield = extract(/const carrier = await loadCarrier\(\);/);
+    assert.ok(state.index < modelYield.index && unready.index < modelYield.index, 'Scheduler state must exist before asynchronous model loading');
+    assert.ok(ready.index > scheduler.index && ready.index > modelYield.index, 'Rendering becomes ready only after scene and scheduler setup');
     const frames = [];
     let renders = 0;
     const context = {
-      assert, queueMicrotask, frames, root: { dataset: {} },
+      assert, queueMicrotask, frames,
       requestAnimationFrame: callback => { frames.push(callback); return frames.length; },
       render: () => { renders += 1; },
     };
     await runInNewContext(`(async () => {
-      ${parts.sort((a, b) => a.at - b.at).map(part => part.code).join('\n')}
+      ${state[0]}
+      ${unready[0]}
+      ${scheduler[0]}
+      await new Promise((resolve, reject) => queueMicrotask(() => {
+        try {
+          requestRender();
+          assert.equal(frames.length, 0, 'No frame may use incomplete scene state');
+          resolve();
+        } catch (error) { reject(error); }
+      }));
+      ${ready[0]}
       requestRender(); requestRender();
       assert.equal(frames.length, 1, 'Ready requests coalesce into one frame');
       frames.shift()();
@@ -100,8 +111,9 @@ test('a texture finishing during model loading waits for setup before scheduling
     })()`, context);
     assert.equal(renders, 2);
   }
-  await assert.rejects(exercise(beforeRenderInitializationFix(soundscope)),
-    error => error.name === 'ReferenceError' && /frame/.test(error.message));
+  await assert.rejects(exercise(soundscope.replace('!renderReady || ', '')),
+    error => error.name === 'AssertionError' && /incomplete scene state/.test(error.message),
+    'The fixture must catch removal of the initialization guard');
   await exercise(soundscope);
 });
 
@@ -438,8 +450,32 @@ function beforeApprovedMedia(source, names = Object.keys(approvedMedia)) {
   return source;
 }
 
-test('SoundScope preserves every original word, control, and attribute apart from its approved photo gallery', () => {
-  assert.equal(soundscopeArticle(beforeApprovedMedia(studio, ['soundscope'])), soundscopeArticle(classic));
+function beforeApprovedSpeakerCopy(source) {
+  const changes = [
+    ['Selecting the alarm clock, kettle, portable speaker or television plays its sound:', 'Selecting the alarm clock, kettle, boombox or television plays its sound:'],
+    ['drag the alarm clock, kettle, portable speaker or television to move them;', 'drag the alarm clock, kettle, boombox or television to move them;'],
+    ['<button type="button" class="pill" data-source="boombox">Play the portable speaker</button>', '<button type="button" class="pill" data-source="boombox">Play the boombox</button>'],
+  ];
+  for (const [current, original] of changes) {
+    assert.equal(source.split(current).length, 2, 'Each approved portable speaker label must occur exactly once');
+    source = source.replace(current, original);
+  }
+  return source;
+}
+
+function beforeApprovedOmniRingDemo(source) {
+  const ending = source.includes('\r\n') ? '\r\n' : '\n';
+  const originalPattern = /^        <div class="demo" id="demo-gesture">[\s\S]*?(?=^        <figure class="slot" data-src="images\/omniring-1\.jpg")/gm;
+  const currentPattern = /^        <div class="demo or-demo" id="demo-gesture" data-living-room>[\s\S]*?(?=^        <figure class="slot" data-src="images\/omniring-1\.jpg")/gm;
+  const originals = [...classic.replace(/\r\n/g, '\n').matchAll(originalPattern)];
+  const currents = [...source.replace(/\r\n/g, '\n').matchAll(currentPattern)];
+  assert.equal(originals.length, 1, 'Classic gesture demo must have one bounded baseline');
+  assert.equal(currents.length, 1, 'Simulated living room must occupy only the original demo slot');
+  return source.replace(currents[0][0].replace(/\n/g, ending), originals[0][0].replace(/\n/g, ending));
+}
+
+test('SoundScope preserves every original word, control, and attribute apart from its approved gallery and speaker labels', () => {
+  assert.equal(soundscopeArticle(beforeApprovedSpeakerCopy(beforeApprovedMedia(studio, ['soundscope']))), soundscopeArticle(classic));
 });
 
 test('the SoundScope region still matches its frozen manifest fingerprint', () => {
@@ -451,7 +487,7 @@ test('the SoundScope region still matches its frozen manifest fingerprint', () =
   };
   assert.match(manifest.soundscope_article ?? '', /^[a-f0-9]{64}$/);
   assert.equal(hash(region(classic)), manifest.soundscope_article, 'Classic SoundScope snapshot changed');
-  assert.equal(hash(region(beforeApprovedMedia(studio, ['soundscope']))), manifest.soundscope_article, 'Original Studio SoundScope region changed outside the approved gallery');
+  assert.equal(hash(region(beforeApprovedSpeakerCopy(beforeApprovedMedia(studio, ['soundscope'])))), manifest.soundscope_article, 'Original Studio SoundScope region changed outside the approved gallery and speaker labels');
 });
 
 function beforeApprovedInternshipCopy(source) {
@@ -493,12 +529,12 @@ function beforeApprovedAboutAndSenateCopy(source) {
   return source;
 }
 
-test('original portfolio sections survive apart from the requested personal content, responsibilities and internship edits', () => {
+test('original portfolio sections survive apart from the requested content and simulated living room demo edits', () => {
   // Original sections contain no nested sections. Exact source comparison also protects
   // links, media paths, captions, labels, and the demo DOM contracts inside each section.
   const sections = [...classic.replace(/\r\n/g, '\n').matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 7, 'The frozen classic snapshot should contain seven sections');
-  const candidate = beforeApprovedInternshipCopy(beforeApprovedAboutAndSenateCopy(beforeApprovedMedia(studio))).replace(/\r\n/g, '\n')
+  const candidate = beforeApprovedOmniRingDemo(beforeApprovedSpeakerCopy(beforeApprovedInternshipCopy(beforeApprovedAboutAndSenateCopy(beforeApprovedMedia(studio))))).replace(/\r\n/g, '\n')
     .replace(/^      <article class="hobby hobby--pets" id="interest-dogs">[\s\S]*?^      <\/article>\n/m, '')
     .replace('      <p class="intro__lede">Currently looking for someone to peer pressure me into starting pickleball.</p>\n', '')
     .replace('    <p class="service-intro">I continue to volunteer in New Jersey, including park cleanups, community event support and the Making Strides Breast Cancer Awareness Walk.</p>\n', '')
@@ -506,7 +542,8 @@ test('original portfolio sections survive apart from the requested personal cont
   for (const [originalSection] of sections) {
     let section = originalSection;
     // These are the user's explicitly requested changes, not a new baseline.
-    // All project copy, demo DOM and other text remain compared byte-for-byte.
+    // Project copy and demo DOM outside the explicitly replaced OmniRing slot
+    // remain compared byte-for-byte.
     section = section.replace('      <li><h4>IEEE · Senate · EOP</h4><p>As an Outreach Officer for NJIT\'s IEEE branch, I find industry speakers for our students. I also represent more than 200 computer engineering students in the Student Senate, and through the Educational Opportunity Program I taught 50 incoming students mathematics, physics, English and Python.</p></li>\n', '');
     section = section.replace('          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>', '          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>\n          <p>“How did your calves get so big?”<br>A decade of trying to reach the top shelf.</p>');
     section = section.replace('I enjoy cooking and experimenting with different preparations.', "I like cooking chapatis and Ugandan cuisine, but I'm also generally a pretty good cook when I'm not burning the food.");
