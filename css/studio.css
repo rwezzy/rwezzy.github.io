@@ -475,3 +475,6 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
  .s-plaque-button:hover { transform:translateY(-5px); box-shadow:0 8px 20px #15191a15; }
 }
 @media(prefers-reduced-motion:reduce) { .s-plaque-button:hover { transform:none; } }
+
+.s-nickname { margin:-6px 0 22px; font:400 16px var(--sans); color:#566348; }
+.s-nickname strong { font-weight:600; color:#30372b; }
