@@ -351,3 +351,38 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .studio-site .service .service-hours { color:#a9bba9; font-size:11px; letter-spacing:.03em; margin:8px 0 14px; }
 @media(max-width:760px){.studio-site .hobby--pets{grid-template-columns:1fr;}.studio-site .hobby--pets .s-dogs-illustration{min-height:150px;}}
 @media(max-width:760px){.studio-site .s-responsibility-grid{grid-template-columns:1fr;}}
+
+/* Supplied photos retain their composition; captions stay outside the image. */
+.s-personal-photo { margin:0; min-width:0; }
+.s-personal-photo a { display:block; border-radius:14px; }
+.s-personal-photo a:focus-visible { outline:2px solid #d4beff; outline-offset:5px; }
+.s-personal-photo img { display:block; width:100%; height:auto; border-radius:14px; }
+.s-personal-photo figcaption { padding-top:12px; color:#b9c7bd; font:12px/1.65 var(--sans); }
+.s-photo-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; align-items:start; }
+.s-soundscope-photos { grid-column:1/-1; grid-template-columns:minmax(0,.86fr) minmax(0,1.17fr); margin:12px 0 24px; }
+.s-event-photos { grid-column:1/-1; grid-template-columns:minmax(0,1.5fr) minmax(0,1.333fr); gap:24px; margin:0 0 20px; }
+.s-workspace-photo { grid-column:1/-1; width:100%; max-width:850px; margin:12px auto 0; }
+.s-content-root .intro__side { align-content:start; }
+.s-content-root .portrait { width:min(100%,340px); }
+.studio-site .hobby--running { grid-column:1/-1; display:grid; grid-template-columns:minmax(210px,.7fr) minmax(0,1.3fr); align-items:start; }
+.s-running-badge { grid-row:1/3; height:100%; display:grid; place-items:center; background:#222321; padding:20px; }
+.s-running-badge img { max-width:270px; border-radius:0; }
+.hobby--running .s-strava-link { grid-column:2; margin:0 28px 25px; width:fit-content; font-size:13px; color:#c6dbb5; }
+.s-content-root .hobby>img[src="assets/personal/chapati.webp"] { height:auto; aspect-ratio:4/3; }
+.s-run-history { margin-top:24px; border-top:1px solid #ffffff26; }
+.s-run-history summary { padding:18px 0 10px; cursor:pointer; color:#d4ddce; font:13px/1.5 var(--sans); }
+.s-run-history summary span { float:right; }
+.s-run-history[open] summary span { transform:rotate(45deg); }
+.s-run-snapshots { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:8px 0; }
+.s-run-snapshots img { border-radius:6px; }
+.s-run-snapshots figcaption { font-size:10px; }
+@media(max-width:760px) {
+ .s-photo-gallery { grid-template-columns:1fr; gap:24px; }
+ .s-workspace-photo { margin-top:0; }
+ .studio-site .hobby--running { grid-template-columns:1fr; }
+ .s-running-badge { grid-row:auto; padding:24px; }
+ .s-running-badge img { max-width:210px; }
+ .hobby--running .s-strava-link { grid-column:1; }
+ .s-run-snapshots { grid-template-columns:1fr; gap:20px; }
+ .s-run-snapshots figcaption { font-size:12px; }
+}

@@ -21,7 +21,7 @@
   } }
   </script>
 
-<link rel="stylesheet" href="css/studio.css?v=desk9">
+<link rel="stylesheet" href="css/studio.css?v=photos1">
   <link rel="stylesheet" href="css/studio-demos.css">
   <link rel="stylesheet" href="css/studio-inspector.css?v=desk8">
 </head><body class="studio-site">
@@ -81,13 +81,17 @@
       </p>
     </div>
     <div class="intro__side">
-      <figure class="slot portrait" data-src="images/me.jpg" data-caption=""></figure>
+      <figure class="portrait s-personal-photo"><img src="assets/personal/keith-portrait.webp" alt="Keith in a striped shirt, sitting in sunlight" width="640" height="800" decoding="async"></figure>
       <ul class="facts">
         <li><b>1st</b> place, Viam robotics hackathon</li>
         <li><b>Dean's List</b>, Albert Dorman Honors College</li>
         <li><b>180+</b> students at the school supported by Urban Arbor</li>
       </ul>
     </div>
+    <figure class="s-personal-photo s-workspace-photo">
+      <a href="assets/personal/robotics-desk.webp" target="_blank" rel="noopener"><img src="assets/personal/robotics-desk.webp" alt="My desk by the window, with the robot arm, SoundScope hardware, laptop and bench power supply" width="1600" height="1200" loading="lazy" decoding="async"></a>
+      <figcaption>My desk, with a few projects sharing the space.</figcaption>
+    </figure>
   </section>
 
   <!-- ========================================================== LOOK TO PICK -->
@@ -147,6 +151,17 @@
           <p class="ss-hardware-status mono" data-hardware-status aria-live="polite">Loading the carrier's CAD…</p>
           <p class="demo__cap">Assembly model of the adjustable v3 carrier. Camera and microphone shapes represent the dimensions of the Gemini 2 and reSpeaker XVF3800; the tripod is omitted. <a href="models/soundscope/carrier-v3.glb" download>Download the carrier model</a> · <a href="models/soundscope/README.md">Model notes</a></p>
         </div>
+      </div>
+
+      <div class="s-photo-gallery s-soundscope-photos" aria-label="SoundScope prototype photos">
+        <figure class="s-personal-photo">
+          <a href="assets/personal/soundscope-video-hardware.webp" target="_blank" rel="noopener"><img src="assets/personal/soundscope-video-hardware.webp" alt="SoundScope microphone array and depth camera in the printed carrier, on a tripod beside the laptop" width="1080" height="1260" loading="lazy" decoding="async"></a>
+          <figcaption>The assembled prototype on my desk.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/personal/soundscope-video-live-app.webp" target="_blank" rel="noopener"><img src="assets/personal/soundscope-video-live-app.webp" alt="SoundScope running on the laptop, with its camera feed, heatmap and tentative annotations" width="1080" height="920" loading="lazy" decoding="async"></a>
+          <figcaption>The camera feed and heatmap in the physical prototype's app. Still from a demo recording.</figcaption>
+        </figure>
       </div>
 
       <div class="ss-lab" id="soundscope-lab">
@@ -422,6 +437,16 @@
         <p>As an Outreach Officer for NJIT's IEEE branch, I initiated a collaboration with Viam after my team's Gaze Arm project won their September 2026 hackathon. Working with other IEEE officers and Viam staff, I helped organize a robotics hackathon at Viam's New York City headquarters on November 6. Teams of three built robotic-arm demonstrations around the theme “Robotics for Everyday Life.”</p>
         <p>I helped with applications, participant communication and Viam 101 preparation, led a briefing before the event, and prepared a technical guide covering project ideas, perception and motion planning. During the hackathon, I worked with teams to discuss their projects and help with technical questions and project scope.</p>
       </div>
+      <div class="s-photo-gallery s-event-photos" aria-label="IEEE NJIT at Viam">
+        <figure class="s-personal-photo">
+          <a href="assets/personal/viam-education.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-education.webp" alt="Four of us posing together at Viam" width="1600" height="1066" loading="lazy" decoding="async"></a>
+          <figcaption>At Viam with fellow organizers and the education team.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/personal/viam-group.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-group.webp" alt="Our group selfie outside Viam after the event" width="1600" height="1200" loading="lazy" decoding="async"></a>
+          <figcaption>One more photo before heading home.</figcaption>
+        </figure>
+      </div>
     </article>
     <div class="s-responsibility-grid">
       <article id="student-senate">
@@ -494,13 +519,21 @@
       <h2>Outside engineering</h2>
     </header>
     <div class="hobbies">
-      <article class="hobby">
-        <img src="assets/running.jpg" alt="A runner on a forest trail" loading="lazy">
+      <article class="hobby hobby--running">
+        <figure class="s-personal-photo s-running-badge"><img src="assets/personal/running-10k.webp" alt="A Strava 10K record: 49 minutes 41 seconds, at 8 minutes per mile" width="450" height="500" loading="lazy" decoding="async"></figure>
         <div class="hobby__body">
           <h4>Running</h4>
           <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>
           <p>“How did your calves get so big?”<br>“A decade of trying to reach the top shelf.”</p>
           <div class="pace mono" id="pace" data-pb=""><div class="pace__track"><i class="pace__fill"></i></div><p class="pace__line"></p></div>
+          <details class="s-run-history">
+            <summary>A few runs along the way <span aria-hidden="true">＋</span></summary>
+            <div class="s-run-snapshots">
+              <figure class="s-personal-photo"><a href="assets/personal/running-7-mile.webp" target="_blank" rel="noopener"><img src="assets/personal/running-7-mile.webp" alt="Strava activity showing 7.39 miles at 10:03 per mile and a route through Newark" width="900" height="1048" loading="lazy" decoding="async"></a><figcaption>7.39 mi · 10:03 / mi</figcaption></figure>
+              <figure class="s-personal-photo"><a href="assets/personal/running-6-mile.webp" target="_blank" rel="noopener"><img src="assets/personal/running-6-mile.webp" alt="Strava activity showing 6.25 miles in 55:10, at 8:49 per mile" width="900" height="1065" loading="lazy" decoding="async"></a><figcaption>6.25 mi · 55:10</figcaption></figure>
+              <figure class="s-personal-photo"><a href="assets/personal/running-september.webp" target="_blank" rel="noopener"><img src="assets/personal/running-september.webp" alt="September 22 Strava activity showing 6.31 miles in 49:21, at 7:49 per mile" width="900" height="922" loading="lazy" decoding="async"></a><figcaption>22 Sept 2026 · 6.31 mi · 49:21</figcaption></figure>
+            </div>
+          </details>
         </div>
       </article>
       <article class="hobby hobby--book">
@@ -511,7 +544,7 @@
         </div>
       </article>
       <article class="hobby">
-        <img src="assets/cooking.jpg" alt="A pot steaming on a stove" loading="lazy">
+        <img src="assets/personal/chapati.webp" alt="One of my chapatis browning in the pan" width="1600" height="1200" loading="lazy" decoding="async">
         <div class="hobby__body">
           <h4>Cooking</h4>
           <p>I like cooking chapatis and Ugandan cuisine, but I'm also generally a pretty good cook when I'm not burning the food.</p>
@@ -554,7 +587,7 @@
 </div>
 <div class="s-transition-label" id="s-transition-label" aria-hidden="true"></div>
 <noscript><div class="s-noscript">The interactive desk needs JavaScript. <a href="classic.html">Read the complete portfolio.</a></div></noscript>
-<script src="js/studio-shell.js?v=desk9"></script>
+<script src="js/studio-shell.js?v=photos1"></script>
 <script src="js/slots.js"></script>
 <script src="js/demos.js"></script>
 <script src="js/main.js"></script>

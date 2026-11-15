@@ -657,7 +657,7 @@ export async function createStudioScene(canvas, {
   try {
     notify('Preparing the studio');
     buildStage();
-    studioProps = createStudioProps({ scene, onSelect });
+    studioProps = createStudioProps({ scene, onSelect, portraitUrl: new URL('../assets/personal/keith-desk-portrait.webp', import.meta.url).href });
     resize();
     const rest = inverse(REST, INITIAL_JOINTS, { iterations: 220 });
     if (!rest.ok) throw new Error('The Lite 6 could not reach its resting pose.');

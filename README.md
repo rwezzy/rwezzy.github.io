@@ -6,9 +6,9 @@ A static site built with HTML, CSS, JavaScript and Three.js. No build step is re
 
 The homepage uses the Lite6 CAD model to pick up translucent plaques for Projects, Research, Background and Beyond. The arm presents the selected plaque before the camera moves into its reading view. Selecting a different section zooms out, returns the current plaque and picks the next one from the wide view. About zooms into a standing frame without using the arm; Contact opens a notebook. The Motion control and the system's reduced-motion preference allow navigation without the animation.
 
-The glass reading view has an uninterrupted dark frosted surface, with the suction tool softened behind it. Opening a plaque shows clickable glass tiles for that page's sections. These links scroll to the existing content without repeating the pickup, and can be opened directly by URL. The corner display reports the angles used to render the simulated arm during transitions, not telemetry from physical hardware. Desk props include the original adjustable SoundScope carrier on a tripod, detailed schematic sensors, and an OMEN-inspired laptop displaying the supplied screen image. The frame uses an initials insert until a portrait is supplied.
+The glass reading view has an uninterrupted dark frosted surface, with the suction tool softened behind it. Opening a plaque shows clickable glass tiles for that page's sections. These links scroll to the existing content without repeating the pickup, and can be opened directly by URL. The corner display reports the angles used to render the simulated arm during transitions, not telemetry from physical hardware. Desk props include the original adjustable SoundScope carrier on a tripod, detailed schematic sensors, and an OMEN-inspired laptop displaying the supplied screen image. About uses Keith's supplied striped-shirt portrait, while the desk frame uses his red-background portrait.
 
-Beyond groups IEEE outreach, Student Senate and EOP teaching under Responsibilities. Its IEEE NJIT × Viam event entry is based on the supplied project record and distinguishes the November 6 organizing work from the September Gaze Arm project. Event photos can sit below that entry once supplied; none were embedded in the record. The interests section includes running and the supplied Strava link, cooking, writing, pets and learning German. Existing project wording and demo mechanisms remain unchanged.
+Beyond groups IEEE outreach, Student Senate and EOP teaching under Responsibilities. Its IEEE NJIT × Viam event entry is based on the supplied project record and distinguishes the November 6 organizing work from the September Gaze Arm project. Two supplied event photos appear below that entry. The interests section includes running and the supplied Strava screenshots and link, cooking with Keith's chapati photo, writing, pets and learning German. About includes the physical desk setup; SoundScope includes two stills from the supplied recording. Existing project wording and demo mechanisms remain unchanged. Photo sources and crop notes are in `assets/personal/README.md`.
 
 This version is maintained in the separate `portfolio-studio` checkout on `design/studio-pages`. The original checkout is independent. `classic.html` retains the source page from the redesign snapshot; the existing demo implementations and project text are retained in `index.html`.
 
@@ -42,7 +42,8 @@ Every photo spot on the page is a dashed box that says exactly which file it wan
 
 | File | Where it shows |
 |---|---|
-| `images/me.jpg` | You, next to the intro (portrait, 4:5) |
+| `assets/personal/keith-portrait.webp` | About portrait (4:5) |
+| `assets/personal/keith-desk-portrait.webp` | Portrait in the 3D desk frame (4:5) |
 | `images/gaze-arm-1.jpg` | Gaze Arm: the xArm6 at the hackathon |
 | `videos/gaze-arm-demo.mp4` | Gaze Arm: a short demo clip (muted, loops) |
 | `images/omniring-1.jpg` | OmniRing: the XIAO prototype |

@@ -94,8 +94,85 @@ function soundscopeArticle(html) {
   return match[0];
 }
 
-test('SoundScope article preserves every word, control, and attribute from the classic snapshot', () => {
-  assert.equal(soundscopeArticle(studio), soundscopeArticle(classic));
+// Explicitly approved user media, not a regenerated baseline or a general HTML
+// filter. Any change outside these exact blocks still reaches the frozen checks.
+const approvedMedia = {
+  portrait: {
+    current: '      <figure class="portrait s-personal-photo"><img src="assets/personal/keith-portrait.webp" alt="Keith in a striped shirt, sitting in sunlight" width="640" height="800" decoding="async"></figure>\n',
+    original: '      <figure class="slot portrait" data-src="images/me.jpg" data-caption=""></figure>\n',
+  },
+  workspace: {
+    current: `    <figure class="s-personal-photo s-workspace-photo">
+      <a href="assets/personal/robotics-desk.webp" target="_blank" rel="noopener"><img src="assets/personal/robotics-desk.webp" alt="My desk by the window, with the robot arm, SoundScope hardware, laptop and bench power supply" width="1600" height="1200" loading="lazy" decoding="async"></a>
+      <figcaption>My desk, with a few projects sharing the space.</figcaption>
+    </figure>
+`,
+  },
+  soundscope: {
+    current: `      <div class="s-photo-gallery s-soundscope-photos" aria-label="SoundScope prototype photos">
+        <figure class="s-personal-photo">
+          <a href="assets/personal/soundscope-video-hardware.webp" target="_blank" rel="noopener"><img src="assets/personal/soundscope-video-hardware.webp" alt="SoundScope microphone array and depth camera in the printed carrier, on a tripod beside the laptop" width="1080" height="1260" loading="lazy" decoding="async"></a>
+          <figcaption>The assembled prototype on my desk.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/personal/soundscope-video-live-app.webp" target="_blank" rel="noopener"><img src="assets/personal/soundscope-video-live-app.webp" alt="SoundScope running on the laptop, with its camera feed, heatmap and tentative annotations" width="1080" height="920" loading="lazy" decoding="async"></a>
+          <figcaption>The camera feed and heatmap in the physical prototype's app. Still from a demo recording.</figcaption>
+        </figure>
+      </div>
+
+`,
+  },
+  viam: {
+    current: `      <div class="s-photo-gallery s-event-photos" aria-label="IEEE NJIT at Viam">
+        <figure class="s-personal-photo">
+          <a href="assets/personal/viam-education.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-education.webp" alt="Four of us posing together at Viam" width="1600" height="1066" loading="lazy" decoding="async"></a>
+          <figcaption>At Viam with fellow organizers and the education team.</figcaption>
+        </figure>
+        <figure class="s-personal-photo">
+          <a href="assets/personal/viam-group.webp" target="_blank" rel="noopener"><img src="assets/personal/viam-group.webp" alt="Our group selfie outside Viam after the event" width="1600" height="1200" loading="lazy" decoding="async"></a>
+          <figcaption>One more photo before heading home.</figcaption>
+        </figure>
+      </div>
+`,
+  },
+  running: {
+    current: `      <article class="hobby hobby--running">
+        <figure class="s-personal-photo s-running-badge"><img src="assets/personal/running-10k.webp" alt="A Strava 10K record: 49 minutes 41 seconds, at 8 minutes per mile" width="450" height="500" loading="lazy" decoding="async"></figure>
+`,
+    original: `      <article class="hobby">
+        <img src="assets/running.jpg" alt="A runner on a forest trail" loading="lazy">
+`,
+  },
+  runHistory: {
+    current: `          <details class="s-run-history">
+            <summary>A few runs along the way <span aria-hidden="true">＋</span></summary>
+            <div class="s-run-snapshots">
+              <figure class="s-personal-photo"><a href="assets/personal/running-7-mile.webp" target="_blank" rel="noopener"><img src="assets/personal/running-7-mile.webp" alt="Strava activity showing 7.39 miles at 10:03 per mile and a route through Newark" width="900" height="1048" loading="lazy" decoding="async"></a><figcaption>7.39 mi · 10:03 / mi</figcaption></figure>
+              <figure class="s-personal-photo"><a href="assets/personal/running-6-mile.webp" target="_blank" rel="noopener"><img src="assets/personal/running-6-mile.webp" alt="Strava activity showing 6.25 miles in 55:10, at 8:49 per mile" width="900" height="1065" loading="lazy" decoding="async"></a><figcaption>6.25 mi · 55:10</figcaption></figure>
+              <figure class="s-personal-photo"><a href="assets/personal/running-september.webp" target="_blank" rel="noopener"><img src="assets/personal/running-september.webp" alt="September 22 Strava activity showing 6.31 miles in 49:21, at 7:49 per mile" width="900" height="922" loading="lazy" decoding="async"></a><figcaption>22 Sept 2026 · 6.31 mi · 49:21</figcaption></figure>
+            </div>
+          </details>
+`,
+  },
+  cooking: {
+    current: '        <img src="assets/personal/chapati.webp" alt="One of my chapatis browning in the pan" width="1600" height="1200" loading="lazy" decoding="async">\n',
+    original: '        <img src="assets/cooking.jpg" alt="A pot steaming on a stove" loading="lazy">\n',
+  },
+};
+
+function beforeApprovedMedia(source, names = Object.keys(approvedMedia)) {
+  const lineEnding = source.includes('\r\n') ? '\r\n' : '\n';
+  for (const name of names) {
+    const { current, original = '' } = approvedMedia[name];
+    const expected = current.replace(/\n/g, lineEnding);
+    assert.equal(source.split(expected).length, 2, `Approved ${name} media must appear exactly once and match its reviewed markup`);
+    source = source.replace(expected, original.replace(/\n/g, lineEnding));
+  }
+  return source;
+}
+
+test('SoundScope preserves every original word, control, and attribute apart from its approved photo gallery', () => {
+  assert.equal(soundscopeArticle(beforeApprovedMedia(studio, ['soundscope'])), soundscopeArticle(classic));
 });
 
 test('the SoundScope region still matches its frozen manifest fingerprint', () => {
@@ -107,7 +184,7 @@ test('the SoundScope region still matches its frozen manifest fingerprint', () =
   };
   assert.match(manifest.soundscope_article ?? '', /^[a-f0-9]{64}$/);
   assert.equal(hash(region(classic)), manifest.soundscope_article, 'Classic SoundScope snapshot changed');
-  assert.equal(hash(region(studio)), manifest.soundscope_article, 'Studio SoundScope region changed');
+  assert.equal(hash(region(beforeApprovedMedia(studio, ['soundscope']))), manifest.soundscope_article, 'Original Studio SoundScope region changed outside the approved gallery');
 });
 
 test('original portfolio sections survive apart from the requested personal content and responsibility edits', () => {
@@ -115,7 +192,7 @@ test('original portfolio sections survive apart from the requested personal cont
   // links, media paths, captions, labels, and the demo DOM contracts inside each section.
   const sections = [...classic.replace(/\r\n/g, '\n').matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 7, 'The frozen classic snapshot should contain seven sections');
-  const candidate = studio.replace(/\r\n/g, '\n')
+  const candidate = beforeApprovedMedia(studio).replace(/\r\n/g, '\n')
     .replace(/^      <article class="hobby hobby--pets" id="interest-dogs">[\s\S]*?^      <\/article>\n/m, '')
     .replace('      <p class="intro__lede">Currently looking for someone to peer pressure me into starting pickleball.</p>\n', '')
     .replace('    <p class="service-intro">I continue to volunteer in New Jersey, including park cleanups, community event support and the Making Strides Breast Cancer Awareness Walk.</p>\n', '')

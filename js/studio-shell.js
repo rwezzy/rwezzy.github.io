@@ -168,7 +168,7 @@
   const presentStage = options => fitStage(true, options);
   const retractStage = options => (desired?.view || nextView) === 'home' ? fitStage(false, options) : Promise.resolve();
   let telemetryTime = 0;
-  const sceneReady = import('./studio-scene.js?v=desk8').then(async module => {
+  const sceneReady = import('./studio-scene.js?v=photos1').then(async module => {
     scene = await module.createStudioScene(document.querySelector('#s-scene'), {
       onSelect: id => id.startsWith('inspect:') ? openInspector(id.slice(8)) : navigate(id),
       onPartSelect: id => inspector?.selectPart(id),
