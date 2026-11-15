@@ -318,17 +318,6 @@
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Mar 2026 – now</p>
           <h4>Does depth improve gaze estimation?</h4>
           <p>I am investigating whether depth provides information about gaze that an ordinary camera cannot reliably recover, particularly when the model encounters someone it has not seen during training. I developed an RGB pipeline in PyTorch, combining face and eye features with head-geometry measurements, and investigated timing errors between webcam frames and eye-tracker labels.</p>
-          <p>Adding another sensor is only useful if its contribution can be distinguished from variation in training. In my November 13 experiment on RGBDGaze, I compared RGB, RGB with depth, and depth alone while keeping the network and training settings fixed. Each condition ran with three random seeds, with eight participants held out from training and validation.</p>
-          <div class="s-research-result">
-            <p class="label mono">RGBDGaze experiment · November 13, 2026</p>
-            <table>
-              <caption>Screen-position error on held-out participants; lower is better.</caption>
-              <thead><tr><th scope="col">Input</th><th scope="col">Mean error</th></tr></thead>
-              <tbody><tr><th scope="row">RGB</th><td>2.15 cm</td></tr><tr><th scope="row">RGB + depth</th><td>2.08 cm</td></tr><tr><th scope="row">Depth only</th><td>3.78 cm</td></tr></tbody>
-            </table>
-            <p>The 0.07 cm difference between RGB and RGB with depth did not establish a reliable improvement: three of eight test participants improved, and the participant-paired 95% interval for the change was −0.33 to +0.20 cm. The result gives me a reason to examine how depth enters the network before assuming that more input will produce better estimates.</p>
-            <details class="s-research-method"><summary>Method and limits of this comparison</summary><p>The experiment used 60,345 face crops from 45 participants: 31 for training, six for validation and eight for testing. Error was averaged within each participant, then across participants and three seeds. The exact paired permutation test gave p = 0.58.</p><p>The comparison used a ResNet-18 with depth added at the input. A separate depth branch and a RealSense D435 recording study remain next steps. These are preliminary, unpublished results on a public dataset, not measurements from my planned RealSense setup or a direct replication of the original paper's evaluation.</p></details>
-          </div>
         </div>
         <div class="research__item">
           <p class="proj__meta mono"><span class="tag tag--sw">software</span> Sept – Dec 2025</p>
