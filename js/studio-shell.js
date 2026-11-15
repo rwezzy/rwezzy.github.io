@@ -78,8 +78,8 @@
       ['interest-running', 'Running', 'Working toward a sub-40-minute 10 km'],
       ['interest-reading', 'Reading', 'The Alignment Problem'],
       ['interest-cooking', 'Cooking', 'Chapatis and Ugandan cuisine'],
-      ['interest-writing', 'Writing', 'Developing a fictional universe'],
-      ['interest-dogs', 'Dogs', 'A lot of company back home'],
+      ['interest-writing', 'Writing', 'Fiction, children’s stories and familiar characters'],
+      ['interest-dogs', 'Pets', 'The dogs, Dimitri and who is actually in charge'],
       ['interest-german', 'Learning German', 'Practising on Duolingo'],
     ],
   };

@@ -156,6 +156,9 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   add(add(beyond, 'article', { class: 'arbor' }), 'h3').textContent = 'Urban Arbor';
   const service = add(beyond, 'ul', { class: 'service' });
   add(add(service, 'li'), 'h4').textContent = 'New Jersey, 2025';
+  for (const [id, title] of [['service-nrhh', 'National Residence Hall Honorary (NRHH)'], ['service-st-patricks', "St. Patrick's Pro-Cathedral"], ['service-making-strides', 'Making Strides Breast Cancer Awareness Walk']]) {
+    add(add(service, 'li', { id }), 'h4').textContent = title;
+  }
   const hobbies = add(content.querySelector('#offclock'), 'div', { class: 'hobbies' });
   for (const title of ['Running', 'Reading', 'Cooking', 'Writing']) {
     add(add(hobbies, 'article', { class: 'hobby' }), 'h4').textContent = title;
@@ -163,7 +166,7 @@ function browser({ hash = '', pickGate = null, immediatePickGate = null, sceneGa
   const campus = add(content, 'section', { id: 'campus' });
   add(add(campus, 'header', { id: 'responsibilities' }), 'h2').textContent = 'Responsibilities';
   add(add(campus, 'article', { id: 'ieee-viam' }), 'h3').textContent = 'IEEE × Viam';
-  add(add(hobbies, 'article', { class: 'hobby', id: 'interest-dogs' }), 'h4').textContent = 'Dogs';
+  add(add(hobbies, 'article', { class: 'hobby hobby--pets', id: 'interest-dogs' }), 'h4').textContent = 'Pets';
   add(reader, 'button', { id: 's-next' });
   const document = {
     body, documentElement: new Element('html'), createElement: tag => new Element(tag),
@@ -490,7 +493,7 @@ test('Beyond cards reach IEEE and every interest while preserving the open Beyon
     ['IEEE × Viam', 'ieee-viam'], ['Urban Arbor', 'urban-arbor'],
     ['Volunteering', 'volunteering'], ['Running', 'interest-running'],
     ['Reading', 'interest-reading'], ['Cooking', 'interest-cooking'], ['Writing', 'interest-writing'],
-    ['Dogs', 'interest-dogs'], ['Learning German', 'interest-german'],
+    ['Pets', 'interest-dogs'], ['Learning German', 'interest-german'],
   ]) {
     const card = app.card(title);
     assert.ok(card, `Beyond must expose ${title}`);

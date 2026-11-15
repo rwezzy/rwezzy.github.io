@@ -110,26 +110,32 @@ test('the SoundScope region still matches its frozen manifest fingerprint', () =
   assert.equal(hash(region(studio)), manifest.soundscope_article, 'Studio SoundScope region changed');
 });
 
-test('original portfolio sections survive apart from the requested hobbies and responsibility edits', () => {
+test('original portfolio sections survive apart from the requested personal content and responsibility edits', () => {
   // Original sections contain no nested sections. Exact source comparison also protects
   // links, media paths, captions, labels, and the demo DOM contracts inside each section.
   const sections = [...classic.replace(/\r\n/g, '\n').matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)];
   assert.equal(sections.length, 7, 'The frozen classic snapshot should contain seven sections');
-  const candidate = studio.replace(/\r\n/g, '\n').replace(/^      <article class="hobby hobby--dogs"[\s\S]*?^      <\/article>\n/m, '');
+  const candidate = studio.replace(/\r\n/g, '\n')
+    .replace(/^      <article class="hobby hobby--pets" id="interest-dogs">[\s\S]*?^      <\/article>\n/m, '')
+    .replace('      <p class="intro__lede">Currently looking for someone to peer pressure me into starting pickleball.</p>\n', '')
+    .replace('    <p class="service-intro">I continue to volunteer in New Jersey, including park cleanups, community event support and the Making Strides Breast Cancer Awareness Walk.</p>\n', '')
+    .replace(/^      <li id="service-(?:nrhh|st-patricks|making-strides)">[\s\S]*?^      <\/li>\n/gm, '');
   for (const [originalSection] of sections) {
     let section = originalSection;
     // These are the user's explicit November 14 changes, not a new baseline.
     // All project copy, demo DOM and other text remain compared byte-for-byte.
     section = section.replace('      <li><h4>IEEE · Senate · EOP</h4><p>As an Outreach Officer for NJIT\'s IEEE branch, I find industry speakers for our students. I also represent more than 200 computer engineering students in the Student Senate, and through the Educational Opportunity Program I taught 50 incoming students mathematics, physics, English and Python.</p></li>\n', '');
-    section = section.replace('          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>', '          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>\n          <p>People ask why my calves are so big when I do not go to the gym. I tell them there are plenty of things to run away from in Uganda.</p>');
+    section = section.replace('          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>', '          <p>I am working toward a 10 km time below 40 minutes, which requires maintaining an average pace of just under four minutes per kilometre across the full distance.</p>\n          <p>“How did your calves get so big?”<br>“A decade of trying to reach the top shelf.”</p>');
     section = section.replace('I enjoy cooking and experimenting with different preparations.', 'I particularly enjoy making chapatis and Ugandan food. I am also generally a pretty good cook, provided I have not burned the food.');
+    section = section.replace('          <p>I have written stories since I was six, and I am now developing a fictional universe of my own.</p>', `          <p>When my thoughts aren't haunting me, I'm turning them into fiction. I now have a pretty haunting repertoire of emotionally damaged characters and love-bound protagonists.</p>
+          <p>I share these fun little stories with family and friends (whose characters have not yet made their way into my fiction). I do write children's stories, though, and I hope to one day publish them.</p>`);
     const label = section.match(/^<section[^>]*>/)[0];
     assert.ok(candidate.includes(section), `Unrequested section change or missing content: ${label}`);
   }
   assert.ok(studio.includes('<h2>Responsibilities</h2>'));
-  assert.ok(studio.includes('I represent more than 200 computer engineering students in the Student Senate.'));
+  assert.ok(studio.includes('I represent more than 300 computer engineering students in the Student Senate.'));
   assert.ok(studio.includes('Through EOP, I taught 50 incoming students mathematics, physics, English and Python.'));
-  assert.ok(studio.includes('I have a lot of dogs back home in Uganda, and I enjoy spending time with them.'));
+  assert.ok(studio.includes('<article class="hobby hobby--pets" id="interest-dogs">'));
 });
 
 test('original demo IDs remain unique and available for selectors and deep links', () => {

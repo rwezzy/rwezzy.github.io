@@ -346,4 +346,8 @@ body.studio-site .s-demo-instructions>.ss-lab-intro { padding:0; margin:0; font-
 .studio-site .s-responsibility-grid p { line-height:1.75; }
 .studio-site .s-dogs-illustration { min-height:210px; display:grid; place-items:center; background:radial-gradient(ellipse at 30% 25%,#305a43,#172b25); }
 .studio-site .s-dogs-illustration svg { width:135px; height:135px; stroke:#a4d9b6; stroke-width:2; fill:#91cba712; }
+.studio-site .hobby--pets { grid-column:1/-1; display:grid; grid-template-columns:minmax(150px,.38fr) minmax(0,1fr); }
+.studio-site .service-intro { color:#c5d0c8; font-size:17px; line-height:1.8; margin:32px 0 0; max-width:75ch; }
+.studio-site .service .service-hours { color:#a9bba9; font-size:11px; letter-spacing:.03em; margin:8px 0 14px; }
+@media(max-width:760px){.studio-site .hobby--pets{grid-template-columns:1fr;}.studio-site .hobby--pets .s-dogs-illustration{min-height:150px;}}
 @media(max-width:760px){.studio-site .s-responsibility-grid{grid-template-columns:1fr;}}
