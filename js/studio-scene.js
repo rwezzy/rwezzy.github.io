@@ -181,7 +181,7 @@ export async function createStudioScene(canvas, {
     camera.updateProjectionMatrix();
     // The shoes sit farther left than the photo wall. Leave a little breathing
     // room on small screens, blending the margin without a breakpoint jump.
-    const edgeMargin = THREE.MathUtils.lerp(1.08, 1, THREE.MathUtils.smoothstep(width, 600, 900));
+    const edgeMargin = THREE.MathUtils.lerp(1.18, 1.15, THREE.MathUtils.smoothstep(width, 600, 900));
     const distance = 1.62 * edgeMargin * Math.max(1, 1.64 / camera.aspect);
     homePosition.copy(homeTarget).addScaledVector(homeDirection, distance);
     setCamera(cameraProgress);
