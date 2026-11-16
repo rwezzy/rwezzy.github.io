@@ -56,6 +56,7 @@
   <link rel="stylesheet" href="css/omniring-demo.css?v=room1">
   <link rel="stylesheet" href="css/studio-inspector.css?v=interests1">
 <link rel="stylesheet" href="css/studio-editorial.css?v=books1">
+<link rel="stylesheet" href="experiments/mobile-loading/loading.css?v=bca84ec31b">
 <meta name="google-site-verification" content="iUoQGlZNy27k6CxCa3I7_HKUUszNPTPI-IfE8gGPmk4" />
 </head><body class="studio-site">
 <a class="skip" href="#projects" data-view="projects" data-instant>Skip animation and read projects</a>
@@ -86,7 +87,13 @@
    <a class="s-discover" href="#projects" data-view="projects"><span class="s-arrow-circle" aria-hidden="true">↗</span>Explore my work</a>
   </div>
   <div class="s-scene-wrap" id="s-scene-wrap">
-   <canvas id="s-scene" aria-label="Interactive desk: click SoundScope or OmniRing to explore their parts, running shoes for hobbies, the red photo wall for About, or a plaque to read a page."></canvas>
+   <div class="desk-loading" role="status" aria-live="polite">
+    <span class="desk-loading-ring" aria-hidden="true"></span>
+    <strong>Loading the interactive desk</strong>
+    <span>You’ll be able to tap the objects to explore.</span>
+    <a href="#projects">Explore my projects while it loads ↗</a>
+   </div>
+   <canvas id="s-scene" aria-label="Interactive desk: click SoundScope or OmniRing to explore their parts, the red flip notebook for Contact, the kr. frame for About and photos, or a plaque to read a page."></canvas>
    <div class="s-scene-label"><span class="s-cross" aria-hidden="true">+</span> UFACTORY LITE6 <span>01—06</span></div>
    <p class="s-model-note">Interactive model · suction tool</p>
   </div>
@@ -94,7 +101,6 @@
  <section class="s-selection" aria-label="Choose a page">
   <div class="s-selection-label"><span><b>Choose a section.</b> Explore the desk.</span><span class="s-scene-status" id="s-status" role="status" aria-live="polite">Loading the desk…</span></div>
   <nav class="s-object-links" aria-label="Explore desk objects"><button type="button" data-inspect="soundscope">Inside SoundScope <span aria-hidden="true">↗</span></button><button type="button" data-inspect="omniring">OmniRing concept <span aria-hidden="true">↗</span></button><a href="#offclock">Off the clock <span aria-hidden="true">↗</span></a></nav>
-  <nav class="s-dock" aria-label="Page plaques"><button class="s-plaque-button" data-view="about" type="button"><span class="s-plaque-number">01</span><span class="s-plaque-title">About</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="projects" type="button"><span class="s-plaque-number">02</span><span class="s-plaque-title">Projects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="research" type="button"><span class="s-plaque-number">03</span><span class="s-plaque-title">Research</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="background" type="button"><span class="s-plaque-number">04</span><span class="s-plaque-title">Background</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="beyond" type="button"><span class="s-plaque-number">05</span><span class="s-plaque-title">Beyond</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button class="s-plaque-button" data-view="contact" type="button"><span class="s-plaque-number">06</span><span class="s-plaque-title">Contact</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button></nav>
  </section>
  <footer class="s-home-footer"><span>HARDWARE / SOFTWARE / RESEARCH</span><div class="s-clocks">Newark <b id="clock-nwk">--:--</b><span>·</span>Kampala <b id="clock-kla">--:--</b></div><a class="s-mode-link" href="?mode=lite">Lightweight view</a><button id="s-motion" type="button" aria-pressed="true">Motion on <span aria-hidden="true">◉</span></button></footer>
 </main>
@@ -129,7 +135,7 @@
       </p>
     </div>
     <div class="intro__side">
-      <figure class="portrait s-personal-photo"><img src="assets/personal/keith-portrait.webp" alt="Keith in a striped shirt, sitting in sunlight" width="640" height="800" decoding="async"></figure>
+      <figure class="portrait s-personal-photo"><img loading="lazy" src="assets/personal/keith-portrait.webp" alt="Keith in a striped shirt, sitting in sunlight" width="640" height="800" decoding="async"></figure>
     </div>
     <figure class="s-personal-photo s-workspace-photo">
       <a href="assets/personal/robotics-desk.webp" target="_blank" rel="noopener"><img src="assets/personal/robotics-desk.webp" alt="My desk by the window, with the robot arm, SoundScope hardware, laptop and bench power supply" width="1600" height="1200" loading="lazy" decoding="async"></a>
@@ -198,7 +204,7 @@
       </div>
 
       <figure class="s-hardware-recording" id="soundscope-recording">
-        <video controls muted playsinline preload="none" poster="assets/personal/soundscope-video-hardware.webp" width="720" height="1280" aria-label="SoundScope hardware and live interface running together on my desk">
+        <video controls muted playsinline preload="none" data-preview-poster="assets/personal/soundscope-video-hardware.webp" width="720" height="1280" aria-label="SoundScope hardware and live interface running together on my desk">
           <source src="assets/personal/soundscope-prototype.mp4" type="video/mp4">
           <a href="assets/personal/soundscope-prototype.mp4">Watch the hardware recording</a>.
         </video>
@@ -362,7 +368,7 @@
             <span class="seg" role="group" aria-label="Rule"><button class="on" data-op="AND">person AND car</button><button data-op="OR">OR</button><button data-op="XOR">XOR</button><button data-op="NOTA">NOT person</button></span>
           </div>
           <div class="demo__video">
-            <video src="assets/crossing.mp4" poster="assets/crossing-poster.jpg" muted loop playsinline preload="none"></video>
+            <video src="assets/crossing.mp4" data-preview-poster="assets/crossing-poster.jpg" muted loop playsinline preload="none"></video>
             <canvas aria-label="Street video with detected people and cars and a draggable zone"></canvas>
           </div>
           <div class="zone__panel mono">
@@ -706,7 +712,7 @@
               <figcaption>A briefing with the team.</figcaption>
             </figure>
             <figure class="s-personal-photo">
-              <video controls muted playsinline preload="none" poster="assets/spring-reins/cleanup-poster.webp" width="392" height="848" aria-label="Spring cleanup at Spring Reins of Hope, raking an outdoor enclosure">
+              <video controls muted playsinline preload="none" data-preview-poster="assets/spring-reins/cleanup-poster.webp" width="392" height="848" aria-label="Spring cleanup at Spring Reins of Hope, raking an outdoor enclosure">
                 <source src="assets/spring-reins/cleanup.mp4" type="video/mp4">
                 <a href="assets/spring-reins/cleanup.mp4">Watch the spring cleanup video</a>.
               </video>
@@ -773,7 +779,7 @@
           </div>
         </div>
         <figure class="s-personal-photo s-portrait-media s-service-photo">
-          <video controls muted playsinline preload="none" poster="assets/ngamba-island/enrichment-poster.webp?v=24" width="480" height="848" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
+          <video controls muted playsinline preload="none" data-preview-poster="assets/ngamba-island/enrichment-poster.webp?v=24" width="480" height="848" aria-label="Me in a pink patterned shirt preparing a food puzzle for the chimpanzees at Ngamba Island">
             <source src="assets/ngamba-island/enrichment-preparation.mp4?v=2" type="video/mp4">
             <a href="assets/ngamba-island/enrichment-preparation.mp4?v=2">Watch the enrichment preparation clip</a>.
           </video>
@@ -911,11 +917,11 @@
 <div class="s-transition-label" id="s-transition-label" aria-hidden="true"></div>
 <noscript><div class="s-noscript">The interactive desk needs JavaScript. <a href="classic.html">Read the complete portfolio.</a></div></noscript>
 <script src="js/studio-performance.js?v=2"></script>
-<script src="js/studio-shell.js?v=framing8"></script>
-<script type="module" src="js/studio-gallery.js?v=reads3"></script>
+<script src="js/preview-fast-shell.js?v=bca84ec31b"></script>
+<script type="module" src="js/preview-fast-gallery.js?v=bca84ec31b"></script>
 <script src="js/slots.js?v=editorial1"></script>
 <script src="js/demos.js?v=editorial1"></script>
 <script type="module" src="js/omniring-demo.js?v=editorial1"></script>
 <script src="js/main.js?v=editorial1"></script>
 <script type="module" src="js/soundscope.js?v=editorial1"></script>
-<script src="js/studio-feedback.js?v=2"></script></body></html>
+<script src="js/studio-feedback.js?v=2"></script><script src="experiments/mobile-loading/deferred-media.js" defer></script></body></html>
