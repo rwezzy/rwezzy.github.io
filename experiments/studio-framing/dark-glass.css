@@ -1,0 +1,67 @@
+/* Neutral charcoal beneath translucent surfaces and restrained coloured light. */
+html[data-theme="dark"] body.studio-site {
+ --green:#b1f56a; --teal:#a3e4cd; --turq:#91ddea;
+ --pink:#d5b4ef; --blue:#a8c8f4;
+ background-color:#0e0e0f;
+ background-image:radial-gradient(ellipse at 78% 30%,#a3e4cd08,transparent 42%),radial-gradient(ellipse at 18% 80%,#b7a0f408,transparent 45%);
+ background-attachment:fixed;
+}
+html[data-theme="dark"] body.studio-site .s-header { background:#0e0e0fd9!important; backdrop-filter:blur(18px) saturate(1.15); -webkit-backdrop-filter:blur(18px) saturate(1.15); border-bottom-color:#ffffff20!important; }
+html[data-theme="dark"] body.studio-site :is(.s-name-dot,.s-cross) { color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site .s-live-dot { background:#b1f56a; box-shadow:0 0 0 4px #b1f56a12,0 0 14px #b1f56a45; }
+html[data-theme="dark"] body.studio-site .s-nav a.is-current::after { background:#b1f56a; box-shadow:0 0 10px #b1f56a42; }
+html[data-theme="dark"] body.studio-site :is(.s-home-links a,.s-object-links a,.s-object-links button,.s-contact-link,.plaque-guide button,.s-section-tile,.s-responsibility-grid article,.s-theme-toggle) {
+ background:linear-gradient(135deg,#ffffff0d,#ffffff03 62%),#17171988!important;
+ border-color:#ffffff30!important; border-top-color:#ffffff55!important;
+ box-shadow:inset 0 1px 0 #ffffff0d,0 10px 24px -20px #000b!important;
+ backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2);
+}
+html[data-theme="dark"] body.studio-site .s-home-links .s-resume-link { background:linear-gradient(135deg,#bbf5de,#8ed7be)!important; color:#14241e!important; border-color:#c5ffe7!important; box-shadow:0 0 22px -12px #a3e4cd88!important; }
+html[data-theme="dark"] body.studio-site :is(.s-home-links a,.s-object-links a,.s-object-links button,.s-contact-link,.plaque-guide button,.s-section-tile,.s-theme-toggle):hover {
+ background:linear-gradient(135deg,#b1f56a16,#a3e4cd08),#191b1bcc!important;
+ border-color:#b1f56a88!important; box-shadow:inset 0 1px 0 #e1ffbd30,0 0 24px -12px #b1f56a40!important;
+}
+html[data-theme="dark"] body.studio-site .s-reader-frost { background:#0e0e0fbf!important; backdrop-filter:blur(12px) saturate(1.15); -webkit-backdrop-filter:blur(12px) saturate(1.15); }
+html[data-theme="dark"] body.studio-site .s-reader-frost::before { background:radial-gradient(ellipse at 8% 35%,#b6a0f41c,transparent 45%),radial-gradient(ellipse at 87% 72%,#a3e4cd13,transparent 44%); }
+html[data-theme="dark"] body.studio-site .s-reader-frost::after { border-color:#ffffff16; border-top-color:#ffffff35; box-shadow:inset 0 1px 0 #ffffff08; }
+html[data-theme="dark"] body.studio-site[data-surface="frame"] .s-reader-frost { background:#0e0e0f!important; backdrop-filter:none; -webkit-backdrop-filter:none; }
+html[data-theme="dark"] body.studio-site .s-reader .s-content-root { --bg:#0e0e0f; --bg-2:#1d1d20; --card:#1d1d20; --green:#b1f56a; --teal:#a3e4cd; --turq:#91ddea; --pink:#d5b4ef; --blue:#a8c8f4; }
+html[data-theme="dark"] body.studio-site .s-section-tile:nth-child(3n+2) { border-top-color:#d5b4ef66!important; }
+html[data-theme="dark"] body.studio-site .s-section-tile:nth-child(3n) { border-top-color:#91ddea66!important; }
+html[data-theme="dark"] body.studio-site :is(.s-section-arrow,.s-section-number) { color:#b1f56a!important; }
+/* Repeat the active-tab lime through small navigational details. */
+html[data-theme="dark"] body.studio-site :is(.s-home-description a,.s-mode-link,.plaque-guide-arrow,.s-cross,.s-lead-index,.s-project-index .s-index-number) { color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site .s-content-root a:not(.pill):not(.s-section-tile):not(.s-gallery-tile) { text-decoration-color:#b1f56a88; }
+html[data-theme="dark"] body.studio-site .s-content-root a:not(.pill):hover { color:#b1f56a; text-decoration-color:#b1f56a; }
+html[data-theme="dark"] body.studio-site :is(.s-back,.s-reader-footer a,.s-reader-footer button):hover { color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site :is(.s-home-links a,.s-object-links a,.s-object-links button) svg { color:#b1f56a; }
+html[data-theme="dark"] body.studio-site .s-home-links .s-resume-link svg { color:#14241e; }
+html[data-theme="dark"] body.studio-site :focus-visible { outline-color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site input[type="range"] { accent-color:#b1f56a; }
+html[data-theme="dark"] body.studio-site .s-gallery-filters button[aria-pressed="true"] { background:#b1f56a!important; color:#18210f!important; border-color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site .plaque-guide>svg :is(path.is-active,circle.is-active) { stroke:#b1f56a; }
+/* Lime is the primary accent; mint remains in the quiet leader lines and cyan glass highlights. */
+html[data-theme="dark"] body.studio-site {
+ --preview-outline:#b1f56a; --green:#b1f56a; --teal:#b1f56a;
+}
+html[data-theme="dark"] body.studio-site .s-home-links .s-resume-link {
+ background:linear-gradient(135deg,#c5fa90,#a5e55c)!important;
+ border-color:#d0ff9f!important; color:#19230f!important;
+ box-shadow:0 0 22px -12px #b1f56a88!important;
+}
+html[data-theme="dark"] body.studio-site .s-theme-toggle { color:#b1f56a!important; }
+html[data-theme="dark"] body.studio-site .desk-loading a { color:#b1f56a; }
+html[data-theme="dark"] body.studio-site .desk-loading-ring { border-top-color:#b1f56a; border-right-color:#b1f56a; }
+html[data-theme="dark"] body.studio-site ::selection { background:#b1f56a; color:#19230f; }
+html[data-theme="dark"] body.studio-site .s-reader .s-content-root { --teal:#b1f56a; }
+/* The monogram frame is a selected backdrop just like the section plaques. */
+html[data-theme="dark"] body.studio-site.s-reading[data-surface="frame"] .s-scene-wrap { visibility:visible; }
+html[data-theme="dark"] body.studio-site[data-surface="frame"] .s-reader-frost { background:#0e0e0fbf!important; backdrop-filter:blur(12px) saturate(1.15); -webkit-backdrop-filter:blur(12px) saturate(1.15); }
+/* Keep the selected monogram present in both themes without washing out text. */
+body.studio-site.s-reading[data-surface="frame"] .s-scene-wrap { visibility:visible; }
+html:not([data-theme="dark"]) body.studio-site[data-surface="frame"] .s-reader-frost {
+ background:rgba(17,16,29,.83)!important; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+html[data-theme="dark"] body.studio-site[data-surface="frame"] .s-reader-frost {
+ background:rgba(14,14,15,.88)!important; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}

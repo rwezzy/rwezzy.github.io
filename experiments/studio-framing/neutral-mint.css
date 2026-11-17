@@ -1,0 +1,41 @@
+/* Colour experiment. The approved rectangular layout remains untouched. */
+html[data-theme="dark"] body.studio-site {
+ --bg:#0e0e0f; --bg-2:#202020; --card:#202020;
+ --ink:#f0f0f0; --ink-2:#cccccc; --ink-3:#b2b2b2;
+ --line:#3c3c3c; --line-2:#626262;
+ --green:#a3e4cd; --teal:#a3e4cd; --turq:#a3e4cd;
+ --green-l:#303030; --preview-outline:#a3e4cd; --preview-border:#626262;
+ background:#0e0e0f; color:#f0f0f0; color-scheme:dark;
+}
+html[data-theme="dark"] body.studio-site .s-header { background:#0e0e0fed!important; border-color:#3c3c3c!important; }
+html[data-theme="dark"] body.studio-site :is(.s-brand,.s-introduction h1,.s-discover,.s-selection-label b,.s-nav a:hover,.s-nav a.is-current) { color:#f0f0f0!important; }
+html[data-theme="dark"] body.studio-site :is(.s-home-description,.s-location,.s-location span,.s-eyebrow,.s-nav a,.s-scene-label,.s-scene-label span,.s-selection-label,.s-scene-status,.s-home-footer,.s-clocks b,#s-motion,.s-alias) { color:#bcbcbc!important; }
+html[data-theme="dark"] body.studio-site :is(.s-name-dot,.s-cross,.s-home-description a,.s-mode-link,.plaque-guide-arrow) { color:#a3e4cd!important; }
+html[data-theme="dark"] body.studio-site .s-live-dot { background:#a3e4cd; box-shadow:0 0 0 4px #303030; }
+html[data-theme="dark"] body.studio-site .s-introduction p:not(.s-home-description),html[data-theme="dark"] body.studio-site .s-introduction p strong { color:#cccccc!important; }
+html[data-theme="dark"] body.studio-site :is(.s-selection,.s-arrow-circle) { border-color:#3c3c3c; }
+html[data-theme="dark"] body.studio-site :is(.s-home-links a,.s-object-links a,.s-object-links button,.s-contact-link,.plaque-guide button) {
+ background:#202020!important; color:#f0f0f0!important; border:1px solid #626262!important; box-shadow:none!important;
+}
+html[data-theme="dark"] body.studio-site .s-home-links .s-resume-link { background:#a3e4cd!important; border-color:#a3e4cd!important; color:#14241e!important; }
+html[data-theme="dark"] body.studio-site :is(.s-home-links a,.s-object-links a,.s-object-links button,.s-contact-link,.plaque-guide button):hover {
+ background:#303030!important; color:#d7ffef!important; border-color:#a3e4cd!important;
+}
+html[data-theme="dark"] body.studio-site .plaque-guide>svg :is(path,circle) { stroke:#79ae9c; }
+html[data-theme="dark"] body.studio-site .plaque-guide>svg circle { fill:#a3e4cd; }
+html[data-theme="dark"] body.studio-site .s-nav a.is-current::after { background:#a3e4cd; }
+html[data-theme="dark"] body.studio-site :focus-visible { outline-color:#a3e4cd!important; }
+html[data-theme="dark"] body.studio-site ::selection { background:#a3e4cd; color:#14241e; }
+html[data-theme="dark"] body.studio-site .desk-loading,html[data-theme="dark"] body.studio-site .s-fallback { background:#0e0e0f; color:#f0f0f0; border-color:#3c3c3c; }
+html[data-theme="dark"] body.studio-site .desk-loading>span:not(.desk-loading-ring),html[data-theme="dark"] body.studio-site .s-fallback small { color:#bcbcbc; }
+html[data-theme="dark"] body.studio-site .desk-loading a { color:#a3e4cd; }
+html[data-theme="dark"] body.studio-site .desk-loading-ring { border-color:#3c3c3c; border-top-color:#a3e4cd; border-right-color:#a3e4cd; }
+html[data-theme="dark"] body.studio-site .s-reader-frost { background:#0e0e0fe8!important; }
+html[data-theme="dark"] body.studio-site .s-reader-frost::before { background:none; }
+html[data-theme="dark"] body.studio-site .s-reader-frost::after { border-color:#3c3c3c; box-shadow:none; }
+html[data-theme="dark"] body.studio-site .s-reader .s-content-root { --bg:#0e0e0f; --bg-2:#202020; --card:#202020; --ink:#f0f0f0; --ink-2:#cccccc; --ink-3:#b2b2b2; --green:#a3e4cd; --teal:#a3e4cd; --turq:#a3e4cd; --line:#3c3c3c; --line-2:#626262; }
+html[data-theme="dark"] body.studio-site :is(.s-section-tile,.s-responsibility-grid article) { background:#202020; border-color:#3c3c3c; box-shadow:none; }
+html[data-theme="dark"] body.studio-site .s-section-tile:hover { background:#303030; border-color:#a3e4cd; }
+html[data-theme="dark"] body.studio-site :is(.s-section-description,.s-section-number,.s-section-arrow,.s-reader-toolbar,.s-back,.s-reader-footer,.s-reader-footer a,.s-reader-footer button) { color:#cccccc!important; }
+html[data-theme="dark"] body.studio-site[data-surface="notebook"] .s-content-root { background:#0e0e0f; color:#f0f0f0; }
+html[data-theme="dark"] body.studio-site[data-surface="notebook"] .contact :is(h2,p) { color:#f0f0f0!important; }

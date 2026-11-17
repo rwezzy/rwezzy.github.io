@@ -1,0 +1,7 @@
+.s-theme-toggle { flex:none; min-height:38px; padding:8px 12px; border:1px solid #8b9683; background:transparent; color:#30372c; font:500 12px var(--sans); cursor:pointer; }
+.s-theme-toggle:hover { background:#e8eddc; }
+/* Keep the label boxes quiet. The existing leaders still identify each plaque. */
+.plaque-guide button .plaque-guide-arrow { display:none; }
+html[data-theme="dark"] .s-theme-toggle { color:#a3e4cd; border-color:#656565; background:#202020; }
+html[data-theme="dark"] .s-theme-toggle:hover { background:#303030; border-color:#a3e4cd; }
+@media(max-width:700px) { .s-theme-toggle { position:fixed; right:12px; bottom:12px; z-index:100; background:#f7f7f2; min-height:44px; box-shadow:0 2px 12px #0003; } }
