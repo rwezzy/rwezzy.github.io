@@ -1,0 +1,23 @@
+/* One corner treatment for controls, media and containers throughout the preview. */
+body :is(a,button,input,select,textarea,summary,dialog,article,figure,img,video,canvas,[role="button"],.s-reader,.hobby,.mini,.facts,.arbor,.s-arrow-circle,.portrait-card,.gallery-card,.plaque-guide button) {
+  border-radius: 0 !important;
+}
+body :is(a,button,[role="button"]):focus-visible {
+  outline: 2px solid #718548;
+  outline-offset: 4px;
+}
+body :is(.s-contact-link,.s-plaque-button,.plaque-guide button) {
+  box-shadow: none;
+  background-image: none;
+}
+body :is(.s-contact-link,.s-plaque-button,.plaque-guide button):hover {
+  border-color: #718548;
+  background-color: #e8eddc;
+}
+.s-arrow-circle { background: transparent; }
+.portrait.s-portrait-stack .s-portrait-card>img,
+.portrait.s-portrait-stack .s-portrait-mosaic img,
+.s-reader-frost::after,
+.s-gallery-play,
+.s-content-root :is(.card,.panel,.demo,.tag,.chip) { border-radius:0 !important; }
+/* Status dots and loading rings remain indicators, rather than button shapes. */
