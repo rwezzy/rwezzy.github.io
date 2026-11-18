@@ -5,3 +5,12 @@
 html[data-theme="dark"] .s-theme-toggle { color:#a3e4cd; border-color:#656565; background:#202020; }
 html[data-theme="dark"] .s-theme-toggle:hover { background:#303030; border-color:#a3e4cd; }
 @media(max-width:700px) { .s-theme-toggle { position:fixed; right:12px; bottom:12px; z-index:100; background:#f7f7f2; min-height:44px; box-shadow:0 2px 12px #0003; } }
+/* A filtered header contains fixed descendants, so keep the toggle in flow. */
+@media(max-width:700px) {
+ .s-header .s-theme-toggle { position:static; margin-left:auto; padding:6px 8px; min-height:40px; box-shadow:none; font-size:11px; }
+ .s-header .s-contact-link { margin-left:6px; }
+ .s-header .s-brand { gap:6px; }
+ .s-header .s-brand span:not(.s-monogram) { display:none; }
+ .s-reading .s-header .s-theme-toggle,.s-presenting .s-header .s-theme-toggle { order:4; margin:0 0 4px auto; min-height:32px; }
+}
+
